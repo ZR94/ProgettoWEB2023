@@ -1,0 +1,23 @@
+{
+  "name": "progetto",
+  "version": "1.0.0",
+  "description": "ProgettoServer",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "bootstrap": "^5.3.2",
+    "express": "^4.18.2",
+    "express-session": "^1.17.3",
+    "morgan": "^1.10.0",
+    "node": "^21.2.0",
+    "nodemon": "^3.0.2",
+    "passport": "^0.7.0",
+    "passport-local": "^1.0.0",
+    "session": "^0.1.0"
+  }
+}

@@ -1,0 +1,136 @@
+body {
+    font-family: Verdana, Tahoma, sans-serif;
+    font-size: 16px;
+    line-height: 1.8em;
+    letter-spacing: .015em;
+    font-weight: 300;
+}
+
+
+h1 {
+    font-size: 150px;
+    font-weight: bold;
+    color: white;
+    text-align: center;
+    line-height: .9em;
+    text-transform: none;
+    text-decoration: none;
+    letter-spacing: 0px;
+    font-weight: 400;
+    hyphens: auto;
+    position: relative;
+    z-index: inherit;
+}
+
+h2 {
+    margin-top: 20px;
+    font-size: 60px;
+    text-transform: uppercase;
+    font-weight: 400;
+    color: #333;
+}
+
+h3 {
+    font-weight: 900;
+}
+
+th {
+    margin: auto;
+    width: 100rem;
+    padding-bottom: 3%;
+}
+
+td {
+    padding-bottom: 3%;
+}
+
+.row-1 {
+    background-image: url(images/weights.jpeg);
+    background-repeat: no-repeat;
+    background-size: cover;
+    background-attachment: fixed;
+    padding: 10%;
+}
+
+.row-2 {
+    background-color: white;
+}
+
+.row-2 > h2 > p {
+    padding-top: 5%;
+}
+
+.row-3, .row-5 {
+    padding-top: 5%;
+    padding-bottom: 5%;
+    padding-left: 21%;
+    padding-right: 21%;
+}
+
+.row-4 {
+    background-image: url(images/FLF_risetothehighest.jpg);
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+    background-size: cover;
+    padding: 5%;
+}
+
+.card {
+    left: 0px;
+    top: 0px;
+    width: 225px;
+    height: 225px;
+}
+
+.col {
+    padding: 1%;
+}
+
+.col-left {
+    margin-left: 20%;
+}
+
+.col-right {
+    margin-right: 20%;
+}
+
+.list-group-1, .list-group-2, .list-group-3 {
+    text-align: start;
+    list-style: circle inside;
+}
+
+.nav-link {
+    color: whitesmoke;
+}
+
+.footer-wrapper {
+    background-color: #2e2e2e;
+    padding-top: 2%;
+}
+
+.footerInfo {
+    table-layout: fixed; width: auto;
+    text-align: center;
+    color: whitesmoke;
+    
+}
+
+.containerLogin {
+    margin-bottom: 5%;
+}
+
+.loginTitle {
+    margin-top: 2%;
+}
+
+.bodySmall {
+    font-size: 12.64px;
+    font-size: .79rem;
+    line-height: 18.96px;
+    line-height: 1.185rem;
+    font-weight: 400;
+}
+
+#homeButton {
+    color: gray;
+};
