@@ -1,5 +1,6 @@
 import Api from './api.js';
 import {createLoginForm} from './templates/login-template.js';
+import {createHomeForm} from './templates/home-template.js';
 import page from "//unpkg.com/page/page.mjs";
 
 
@@ -19,20 +20,17 @@ class App {
         
         // very simple example of how to handle a 404 Page Not Found 
         // page('*', () => this.appContainer.innerHTML = 'Page not found!');
+        //page('/', );
         page();
-
-
     }
 
+    showHome = async () => {
+        try {
+            //const home = 
 
-
-    /**
-     * Perform the logout
-     */
-    logout = async () => {
-        await Api.doLogout();
-        this.logoutLink.classList.add('invisible');
-        page.redirect('/login');
+        } catch(error) {
+            page.redirect('/home');
+        }
     }
 
     /**
@@ -71,6 +69,15 @@ class App {
                 }
             }
         }
+    }
+
+    /**
+    * Perform the logout
+    */
+    logout = async () => {
+        await Api.doLogout();
+        this.logoutLink.classList.add('invisible');
+        page.redirect('/login');
     }
 
 }

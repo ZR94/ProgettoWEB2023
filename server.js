@@ -35,6 +35,39 @@ passport.use(new LocalStrategy(
     }
   ));
 
+// POST /users
+// Sign up
+app.post('/api/users', /* [add here some validity checks], */ (req, res) => {
+  // create a user object from the signup form
+  // additional fields may be useful (name, role, etc.)
+  const user = {
+    email: req.body.email,
+    password: req.body.password,
+  };
+
+  dao.createUser(user)
+  .then((result) => res.status(201).header('Location', `/users/${result}`).end())
+  .catch((err) => res.status(503).json({ error: 'Database error during the signup'}));
+});
+
+// POST /sessions 
+// Login
+app.post('/api/sessions', function(req, res, next) {
+  passport.authenticate('local', function(err, user, info) {
+      if (err) { return next(err) }
+      if (!user) {
+          // display wrong login messages
+          return res.status(401).json(info);
+      }
+      // success, perform the login
+      req.login(user, function(err) {
+        if (err) { return next(err); }
+        // req.user contains the authenticated user
+        return res.json(req.user.username);
+      });
+  })(req, res, next);
+});
+
 
 app.get('*', (req,res)=> {
 res.sendFile(path.resolve(__dirname,'myapp/index.html'));
