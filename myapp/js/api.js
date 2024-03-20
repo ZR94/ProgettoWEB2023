@@ -1,3 +1,5 @@
+import Item from './item.js';
+
 class Api {
 
     /**
@@ -23,6 +25,19 @@ class Api {
             catch(err) {
                 throw err;
             }
+        }
+    }
+
+    /**
+     * Get the list of items store
+     */
+    static getItems = async () => {
+        let response = await fetch('/api/exams');
+        const itemsJson = await response.json();
+        if (response.ok) {
+            return itemsJson.map((it) => Item.from(it));
+        } else {
+            throw itemsJson;  // an object with the error coming from the server
         }
     }
 }

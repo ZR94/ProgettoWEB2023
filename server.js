@@ -68,6 +68,13 @@ app.post('/api/sessions', function(req, res, next) {
   })(req, res, next);
 });
 
+// GET /exams
+app.get('/api/items', isLoggedIn, (req,res)=>{
+  examDao.getAllItems(req.user.id)
+  .then( exams => res.json(exams))
+  .catch( error => res.status(500).json(error));
+});
+
 
 app.get('*', (req,res)=> {
 res.sendFile(path.resolve(__dirname,'myapp/index.html'));

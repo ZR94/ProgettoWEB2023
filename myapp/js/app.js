@@ -1,13 +1,14 @@
 import Api from './api.js';
 import {createLoginForm} from './templates/login-template.js';
 import {createHomeForm} from './templates/home-template.js';
+import { createStoreForm } from './templates/store-template.js';
 import page from "//unpkg.com/page/page.mjs";
 
 
 class App {
 
     constructor(appContainer) {
-        // reference to the the exam container (HTML element)
+        // reference to the the item container (HTML element)
         this.appContainer = appContainer;
         //this.logoutLink = document.querySelector('#logout');
         
@@ -17,21 +18,24 @@ class App {
             this.appContainer.innerHTML = createLoginForm();
             document.getElementById('login-form').addEventListener('submit', this.onLoginSubmitted);
         });
+
+        page('/', () => {
+            this.appContainer.innerHTML = "";
+            this.appContainer.innerHTML = createHomeForm();
+        });
+
+        page('/store', () => {
+            this.appContainer.innerHTML = "";
+            this.appContainer.innerHTML = this.showitems();
+        });
         
-        // very simple example of how to handle a 404 Page Not Found 
+        // very simple itemple of how to handle a 404 Page Not Found 
         // page('*', () => this.appContainer.innerHTML = 'Page not found!');
         //page('/', );
         page();
     }
 
-    showHome = async () => {
-        try {
-            //const home = 
 
-        } catch(error) {
-            page.redirect('/home');
-        }
-    }
 
     /**
      * Event listener for the submission of the login form. Handle the login.
@@ -78,6 +82,26 @@ class App {
         await Api.doLogout();
         this.logoutLink.classList.add('invisible');
         page.redirect('/login');
+    }
+
+    /**
+     * Create the HTML table for showing the items
+     * @param {*} items 
+     */
+    showitems = async () => { 
+        try {
+            const items = await Api.getItems();
+
+            this.appContainer.innerHTML = createStoreTable();
+            const storeTable = document.querySelector('#my-items');
+
+            for(let item of items) {
+                const itemRow = createItemCard(item);
+                storeTable.insertAdjacentHTML('beforeend', itemRow);
+            }
+        } catch(error) {
+            page.redirect('/');
+        }
     }
 
 }
