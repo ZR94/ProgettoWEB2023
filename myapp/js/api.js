@@ -32,7 +32,7 @@ class Api {
      * Get the list of items store
      */
     static getItems = async () => {
-        let response = await fetch('/api/exams');
+        let response = await fetch('/api/items');
         const itemsJson = await response.json();
         if (response.ok) {
             return itemsJson.map((it) => Item.from(it));

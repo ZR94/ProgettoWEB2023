@@ -5,6 +5,8 @@ const path = require('path');
 const passport = require('passport'); // auth middleware
 const LocalStrategy = require('passport-local').Strategy; // username and password for login
 const session = require('express-session');
+//const FileStore = require('session-file-store')(session); serve per non salvare i dati della sessione nella memoria del server ma altrove
+const dao = require('./dao.js');
 
 // init 
 const app = express();
@@ -23,7 +25,7 @@ app.use(express.json());
 // by setting a function to verify username and password
 passport.use(new LocalStrategy(
     function(username, password, done) {
-      userDao.getUser(username, password).then(({user, check}) => {
+      dao.getUser(username, password).then(({user, check}) => {
         if (!user) {
           return done(null, false, { message: 'Incorrect username.' });
         }
@@ -34,6 +36,36 @@ passport.use(new LocalStrategy(
       })
     }
   ));
+
+// serialize and de-serialize the user (user object <-> session)
+passport.serializeUser(function(user, done) {
+  done(null, user.id);
+});
+
+passport.deserializeUser(function(id, done) {
+  dao.getUserById(id).then(user => {
+    done(null, user);
+  });
+});
+
+// check if a given request is coming from an authenticated user
+const isLoggedIn = (req, res, next) => {
+  if(req.isAuthenticated()) {
+      return next();
+  }
+  return res.status(401).json({"statusCode" : 401, "message" : "not authenticated"});
+}
+
+// set up the session
+app.use(session({
+  //store: new FileStore(), // by default, Passport uses a MemoryStore to keep track of the sessions - if you want to use this, launch nodemon with the option: --ignore sessions/
+  secret: 'a secret sentence not to share with anybody and anywhere, used to sign the session ID cookie',
+  resave: false,
+  saveUninitialized: false,
+  // removing the following line will cause a browser's warning, since session cookie
+  // cross-site default policy is currently not recommended
+  cookie: { sameSite: 'lax' }
+}));
 
 // POST /users
 // Sign up
@@ -68,10 +100,10 @@ app.post('/api/sessions', function(req, res, next) {
   })(req, res, next);
 });
 
-// GET /exams
-app.get('/api/items', isLoggedIn, (req,res)=>{
-  examDao.getAllItems(req.user.id)
-  .then( exams => res.json(exams))
+// GET /items
+app.get('/api/items', (req,res)=>{
+  dao.getAllItems()
+  .then( items => res.json(items))
   .catch( error => res.status(500).json(error));
 });
 

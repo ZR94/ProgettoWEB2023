@@ -1,7 +1,7 @@
 import Api from './api.js';
 import {createLoginForm} from './templates/login-template.js';
 import {createHomeForm} from './templates/home-template.js';
-import { createStoreForm } from './templates/store-template.js';
+import {createStoreTable, createStoreCard} from './templates/store-template.js';
 import page from "//unpkg.com/page/page.mjs";
 
 
@@ -26,7 +26,7 @@ class App {
 
         page('/store', () => {
             this.appContainer.innerHTML = "";
-            this.appContainer.innerHTML = this.showitems();
+            this.appContainer.innerHTML = this.showItems();
         });
         
         // very simple itemple of how to handle a 404 Page Not Found 
@@ -88,7 +88,7 @@ class App {
      * Create the HTML table for showing the items
      * @param {*} items 
      */
-    showitems = async () => { 
+    showItems = async () => { 
         try {
             const items = await Api.getItems();
 
@@ -96,13 +96,26 @@ class App {
             const storeTable = document.querySelector('#my-items');
 
             for(let item of items) {
-                const itemRow = createItemCard(item);
+                const itemRow = createStoreCard(item);
                 storeTable.insertAdjacentHTML('beforeend', itemRow);
             }
         } catch(error) {
             page.redirect('/');
         }
     }
+
+        /**
+     * Create the HTML table for showing the items
+     * @param {*} items 
+     */
+        addCart = async () => { 
+            try {
+                const itemChart = [];
+                
+            } catch(error) {
+                page.redirect('/');
+            }
+        }
 
 }
 
