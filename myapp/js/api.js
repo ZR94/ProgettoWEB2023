@@ -35,7 +35,7 @@ class Api {
         let response = await fetch('/api/items');
         const itemsJson = await response.json();
         if (response.ok) {
-            return itemsJson.map((it) => Item.from(it));
+            return itemsJson;
         } else {
             throw itemsJson;  // an object with the error coming from the server
         }

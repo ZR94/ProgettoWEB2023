@@ -1,9 +1,12 @@
+"use strict";
+
 import Api from './api.js';
 import {createLoginForm} from './templates/login-template.js';
 import {createHomeForm} from './templates/home-template.js';
-import {createStoreTable, createStoreCard} from './templates/store-template.js';
+import {createStoreTable, createStoreCard, createCartCard} from './templates/store-template.js';
 import page from "//unpkg.com/page/page.mjs";
 
+const itemCart = [];
 
 class App {
 
@@ -99,23 +102,82 @@ class App {
                 const itemRow = createStoreCard(item);
                 storeTable.insertAdjacentHTML('beforeend', itemRow);
             }
+            
+            const buttons = document.querySelectorAll(".btn-add");
+            for (const btn of buttons) {
+                btn.addEventListener("click", this.addCart);
+            }
+
         } catch(error) {
             page.redirect('/');
         }
     }
 
-        /**
-     * Create the HTML table for showing the items
+    /**
+     * Add selected item at list cart
      * @param {*} items 
      */
-        addCart = async () => { 
-            try {
-                const itemChart = [];
-                
-            } catch(error) {
-                page.redirect('/');
+    addCart = async (event) => {
+        
+        event.preventDefault();
+        const itemId = event.target.value;
+        const items = await Api.getItems();
+        
+        try {
+            if(!itemCart[itemId]) {
+                itemCart[itemId] = items.filter(product => product.id == itemId)[0];
+                itemCart[itemId].quantity = 1;
+            } else {
+                itemCart[itemId].quantity++;
+            }
+            this.updateCartHtml();
+        } catch(error) {
+            page.redirect('/');
+        }
+    }
+
+    /**
+     * Update cart with item added at the cart in the HTML
+     */
+    updateCartHtml() {
+
+        const listCart = document.querySelector('.listCart');
+        listCart.innerHTML = '';
+        if(itemCart){
+            itemCart.forEach( x => { 
+                if(x) {
+                    const newItem = createCartCard(x, x.quantity);
+                    listCart.insertAdjacentHTML('beforeend', newItem);
+                }
+            });
+            const buttons = document.querySelectorAll(".btnQnt");
+            for (const btn of buttons) {
+                btn.addEventListener("click", this.changeQntCart);
+            }
+        }      
+    }
+
+    /**
+     * Change quantity of the item in the cart, if the quantity is less of 0, 
+     * the item is deleted
+     * @param {*} event 
+     */
+    changeQntCart = async (event) => {
+
+        event.preventDefault();
+        const itemId = event.target.value;
+        const btnType = event.target.name;
+
+        if(btnType == '+') {
+            itemCart[itemId].quantity++;
+        } else if(btnType == '-'){
+            itemCart[itemId].quantity--;
+            if(itemCart[itemId].quantity < 0) {
+                delete itemCart[itemId];
             }
         }
+        this.updateCartHtml();
+    }
 
 }
 

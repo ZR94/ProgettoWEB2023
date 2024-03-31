@@ -1,3 +1,5 @@
+"use strict";
+
 // imports
 const express = require('express');
 const morgan = require('morgan'); // logging middleware
