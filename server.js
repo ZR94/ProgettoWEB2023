@@ -26,25 +26,25 @@ app.use(express.json());
 // set up the "username and password" login strategy
 // by setting a function to verify username and password
 passport.use(new LocalStrategy(
-    function(username, password, done) {
-      dao.getUser(username, password).then(({user, check}) => {
-        if (!user) {
-          return done(null, false, { message: 'Incorrect username.' });
-        }
-        if (!check) {
-          return done(null, false, { message: 'Incorrect password.' });
-        }
-        return done(null, user);
-      })
-    }
-  ));
+  function (username, password, done) {
+    dao.getUser(username, password).then(({ user, check }) => {
+      if (!user) {
+        return done(null, false, { message: 'Incorrect username.' });
+      }
+      if (!check) {
+        return done(null, false, { message: 'Incorrect password.' });
+      }
+      return done(null, user);
+    })
+  }
+));
 
 // serialize and de-serialize the user (user object <-> session)
-passport.serializeUser(function(user, done) {
+passport.serializeUser(function (user, done) {
   done(null, user.id);
 });
 
-passport.deserializeUser(function(id, done) {
+passport.deserializeUser(function (id, done) {
   dao.getUserById(id).then(user => {
     done(null, user);
   });
@@ -52,10 +52,10 @@ passport.deserializeUser(function(id, done) {
 
 // check if a given request is coming from an authenticated user
 const isLoggedIn = (req, res, next) => {
-  if(req.isAuthenticated()) {
-      return next();
+  if (req.isAuthenticated()) {
+    return next();
   }
-  return res.status(401).json({"statusCode" : 401, "message" : "not authenticated"});
+  return res.status(401).json({ "statusCode": 401, "message": "not authenticated" });
 }
 
 // set up the session
@@ -71,7 +71,7 @@ app.use(session({
 
 // POST /users
 // Sign up
-app.post('/api/users', /* [add here some validity checks], */ (req, res) => {
+app.post('/api/user', /* [add here some validity checks], */(req, res) => {
   // create a user object from the signup form
   // additional fields may be useful (name, role, etc.)
   const user = {
@@ -80,38 +80,47 @@ app.post('/api/users', /* [add here some validity checks], */ (req, res) => {
   };
 
   dao.createUser(user)
-  .then((result) => res.status(201).header('Location', `/users/${result}`).end())
-  .catch((err) => res.status(503).json({ error: 'Database error during the signup'}));
+    .then((result) => res.status(201).header('Location', `/users/${result}`).end())
+    .catch((err) => res.status(503).json({ error: 'Database error during the signup' }));
 });
 
 // POST /sessions 
 // Login
-app.post('/api/sessions', function(req, res, next) {
-  passport.authenticate('local', function(err, user, info) {
-      if (err) { return next(err) }
-      if (!user) {
-          // display wrong login messages
-          return res.status(401).json(info);
-      }
-      // success, perform the login
-      req.login(user, function(err) {
-        if (err) { return next(err); }
-        // req.user contains the authenticated user
-        return res.json(req.user.username);
-      });
+app.post('/api/sessions', function (req, res, next) {
+  passport.authenticate('local', function (err, user, info) {
+    if (err) { return next(err) }
+    if (!user) {
+      // display wrong login messages
+      return res.status(401).json(info);
+    }
+    // success, perform the login
+    req.login(user, function (err) {
+      if (err) { return next(err); }
+      // req.user contains the authenticated user
+      return res.json(req.user.username);
+    });
   })(req, res, next);
 });
 
+// DELETE /sessions/current 
+// Logout
+app.delete('/api/sessions/current', function (req, res) {
+  req.logout(function (err) {
+    if (err) { return res.status(503).json(err); }
+  });
+  res.end();
+});
+
 // GET /items
-app.get('/api/items', (req,res)=>{
+app.get('/api/items', (req, res) => {
   dao.getAllItems()
-  .then( items => res.json(items))
-  .catch( error => res.status(500).json(error));
+    .then(items => res.json(items))
+    .catch(error => res.status(500).json(error));
 });
 
 
-app.get('*', (req,res)=> {
-res.sendFile(path.resolve(__dirname,'myapp/index.html'));
+app.get('*', (req, res) => {
+  res.sendFile(path.resolve(__dirname, 'myapp/index.html'));
 });
 
 app.listen(port, () => console.log(`server listening at http://localhost:${port}`));

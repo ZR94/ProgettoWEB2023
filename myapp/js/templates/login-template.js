@@ -34,7 +34,7 @@ function createLoginForm() {
         </div>
         
         <div>
-          <a class="bodySmall form-footer" href="/secure/812109/identity/forgot_password">Forgot Password</a>
+          <a class="bodySmall form-footer" href="">Forgot Password</a>
         </div>
   
       </div>
@@ -45,7 +45,8 @@ function createLoginForm() {
   
     </form>
   
-    <div class="col mx-auto text-center bodySmall">Need an account? <a href="">Sign Up</a></div>
+    <div class="col mx-auto text-center bodySmall">Need an account? <a href="/signUp">Sign Up</a></div>
+    
   </div>
   `;
 }

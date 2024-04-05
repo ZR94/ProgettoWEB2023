@@ -2,13 +2,11 @@
 
 class User {
 
-    constructor(id, name, username, email, password, type) {
-        this.id = id;
+    constructor(name, surname, email, password) {
         this.name = name;
-        this.username = username;
+        this.username = surname;
         this.email = email;
         this.password = password;
-        this.type = type;
     }
 
     /**

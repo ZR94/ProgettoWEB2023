@@ -1,9 +1,10 @@
 "use strict";
 
 import Api from './api.js';
-import {createLoginForm} from './templates/login-template.js';
-import {createHomeForm} from './templates/home-template.js';
-import {createStoreTable, createStoreCard, createCartCard} from './templates/store-template.js';
+import { createLoginForm } from './templates/login-template.js';
+import { createSignUpForm } from './templates/sign-template.js';
+import { createHomeForm } from './templates/home-template.js';
+import { createStoreTable, createStoreCard, createCartCard } from './templates/store-template.js';
 import page from "//unpkg.com/page/page.mjs";
 
 const itemCart = [];
@@ -14,13 +15,23 @@ class App {
         // reference to the the item container (HTML element)
         this.appContainer = appContainer;
         //this.logoutLink = document.querySelector('#logout');
-        
+        this.loginLink = document.querySelector('#login');
+        this.userLink = document.querySelector('#user');
+
         // client-side routing with Page.js
         page('/login', () => {
             this.appContainer.innerHTML = "";
             this.appContainer.innerHTML = createLoginForm();
             document.getElementById('login-form').addEventListener('submit', this.onLoginSubmitted);
         });
+
+        page('/signUp', () => {
+            this.appContainer.innerHTML = "";
+            this.appContainer.innerHTML = createSignUpForm();
+            document.getElementById('signUp-form').addEventListener('submit', this.onSignUpSubmitted);
+        });
+
+        page('/logout', this.logout);
 
         page('/', () => {
             this.appContainer.innerHTML = "";
@@ -29,16 +40,14 @@ class App {
 
         page('/store', () => {
             this.appContainer.innerHTML = "";
-            this.appContainer.innerHTML = this.showItems();
+            this.appContainer.innerHTML = this.showStore();
         });
-        
+
         // very simple itemple of how to handle a 404 Page Not Found 
         // page('*', () => this.appContainer.innerHTML = 'Page not found!');
         //page('/', );
         page();
     }
-
-
 
     /**
      * Event listener for the submission of the login form. Handle the login.
@@ -49,10 +58,13 @@ class App {
         const form = event.target;
         //const alertMessage = document.getElementById('alert-message');
 
-        if(form.checkValidity()) {
+        if (form.checkValidity()) {
             try {
                 const user = await Api.doLogin(form.email.value, form.password.value);
-                
+                this.loginLink.classList.add('invisible');
+                this.userLink.classList.remove('invisible');
+                const userName = document.querySelector('#user-name');
+                userName.insertAdjacentHTML('beforeend', user.name.value);
                 /*
                 this.logoutLink.classList.remove('invisible');
                 // welcome the user
@@ -63,8 +75,42 @@ class App {
                 }, 3000);
                 */
 
-                page.redirect('/');
-            } catch(error) {
+                page.redirect('/store');
+            } catch (error) {
+                if (error) {
+                    const errorMsg = error;
+                    // add an alert message in DOM
+                    alertMessage.innerHTML = createAlert('danger', errorMsg);
+                    // automatically remove the flash message after 3 sec
+                    setTimeout(() => {
+                        alertMessage.innerHTML = '';
+                    }, 3000);
+                }
+            }
+        }
+    }
+
+    onSignUpSubmitted = async (event) => {
+        event.preventDefault();
+        const form = event.target;
+        
+        //const alertMessage = document.getElementById('alert-message');
+
+        if (form.checkValidity()) {
+            try {
+                const user = await Api.doSignUp(form.validationCustomUsername.value, form.validationCustomPassword.value);
+                
+                /*
+                // welcome the user
+                alertMessage.innerHTML = createAlert('success', `Welcome ${user}!`);
+                // automatically remove the flash message after 3 sec
+                setTimeout(() => {
+                    alertMessage.innerHTML = '';
+                }, 3000);
+                */
+
+                page.redirect('/login');
+            } catch (error) {
                 if (error) {
                     const errorMsg = error;
                     // add an alert message in DOM
@@ -84,6 +130,8 @@ class App {
     logout = async () => {
         await Api.doLogout();
         this.logoutLink.classList.add('invisible');
+        this.userLink.classList.add('invisible');
+        this.loginLink.classList.remove('invisible');
         page.redirect('/login');
     }
 
@@ -91,24 +139,24 @@ class App {
      * Create the HTML table for showing the items
      * @param {*} items 
      */
-    showItems = async () => { 
+    showStore = async () => {
         try {
             const items = await Api.getItems();
 
             this.appContainer.innerHTML = createStoreTable();
             const storeTable = document.querySelector('#my-items');
 
-            for(let item of items) {
+            for (let item of items) {
                 const itemRow = createStoreCard(item);
                 storeTable.insertAdjacentHTML('beforeend', itemRow);
             }
-            
+
             const buttons = document.querySelectorAll(".btn-add");
             for (const btn of buttons) {
                 btn.addEventListener("click", this.addCart);
             }
 
-        } catch(error) {
+        } catch (error) {
             page.redirect('/');
         }
     }
@@ -118,20 +166,20 @@ class App {
      * @param {*} items 
      */
     addCart = async (event) => {
-        
+
         event.preventDefault();
         const itemId = event.target.value;
         const items = await Api.getItems();
-        
+
         try {
-            if(!itemCart[itemId]) {
+            if (!itemCart[itemId]) {
                 itemCart[itemId] = items.filter(product => product.id == itemId)[0];
                 itemCart[itemId].quantity = 1;
             } else {
                 itemCart[itemId].quantity++;
             }
             this.updateCartHtml();
-        } catch(error) {
+        } catch (error) {
             page.redirect('/');
         }
     }
@@ -143,9 +191,9 @@ class App {
 
         const listCart = document.querySelector('.listCart');
         listCart.innerHTML = '';
-        if(itemCart){
-            itemCart.forEach( x => { 
-                if(x) {
+        if (itemCart) {
+            itemCart.forEach(x => {
+                if (x) {
                     const newItem = createCartCard(x, x.quantity);
                     listCart.insertAdjacentHTML('beforeend', newItem);
                 }
@@ -154,7 +202,7 @@ class App {
             for (const btn of buttons) {
                 btn.addEventListener("click", this.changeQntCart);
             }
-        }      
+        }
     }
 
     /**
@@ -168,11 +216,11 @@ class App {
         const itemId = event.target.value;
         const btnType = event.target.name;
 
-        if(btnType == '+') {
+        if (btnType == '+') {
             itemCart[itemId].quantity++;
-        } else if(btnType == '-'){
+        } else if (btnType == '-') {
             itemCart[itemId].quantity--;
-            if(itemCart[itemId].quantity < 0) {
+            if (itemCart[itemId].quantity <= 0) {
                 delete itemCart[itemId];
             }
         }

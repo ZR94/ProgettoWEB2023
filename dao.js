@@ -1,55 +1,72 @@
 "use strict";
 
 const db = require('./db.js');
+const bcrypt = require('bcrypt');
 
 exports.getAllItems = function () {
     return new Promise((resolve, reject) => {
-        const sql = 'SELECT * FROM items';
-        db.all(sql, (err,rows) => {
+        const sql = 'SELECT * FROM item';
+        db.all(sql, (err, rows) => {
             if (err) {
                 reject(err);
                 return;
             }
 
-            const items = rows.map( (row)=> ({id:row.id, price:row.price, name:row.name, img:row.img}));
+            const items = rows.map((row) => ({ id: row.id, price: row.price, name: row.name, img: row.img }));
             resolve(items);
         });
     });
 };
 
-exports.getUserById = function(id) {
+exports.createUser = function (user) {
     return new Promise((resolve, reject) => {
-        const sql = 'SELECT * FROM users WHERE id = ?';
+        const sql = 'INSERT INTO user (email, password) VALUES (?, ?)';
+        // create the hash as an async call, given that the operation may be CPU-intensive (and we don't want to block the server)
+        bcrypt.hash(user.password, 10).then((hash => {
+            db.run(sql, [user.email, hash], (err) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve(user.id);
+                }
+            });
+        }));
+    });
+}
+
+exports.getUserById = function (id) {
+    return new Promise((resolve, reject) => {
+        const sql = 'SELECT * FROM user WHERE id = ?';
         db.get(sql, [id], (err, row) => {
-            if (err) 
+            if (err)
                 reject(err);
             else if (row === undefined)
-                resolve({error: 'User not found.'});
+                resolve({ error: 'User not found.' });
             else {
-                const user = {id: row.id, username: row.email}
+                const user = { id: row.id, username: row.email }
                 resolve(user);
             }
         });
     });
-  };
+};
 
-exports.getUser = function(email, password) {
+exports.getUser = function (email, password) {
     return new Promise((resolve, reject) => {
-        const sql = 'SELECT * FROM users WHERE email = ?';
+        const sql = 'SELECT * FROM user WHERE email = ?';
         db.get(sql, [email], (err, row) => {
-            if (err) 
+            if (err)
                 reject(err);
             else if (row === undefined)
-                resolve({error: 'User not found.'});
+                resolve({ error: 'User not found.' });
             else {
-              const user = {id: row.id, username: row.email};
-              let check = false;
-              
-              if(bcrypt.compareSync(password, row.password))
-                check = true;
-  
-              resolve({user, check});
+                const user = { id: row.id, username: row.email };
+                let check = false;
+
+                if (bcrypt.compareSync(password, row.password))
+                    check = true;
+
+                resolve({ user, check });
             }
         });
     });
-  };
+};

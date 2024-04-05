@@ -11,9 +11,9 @@ class Api {
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({username, password}),
+            body: JSON.stringify({ username, password }),
         });
-        if(response.ok) {
+        if (response.ok) {
             const username = await response.json();
             return username;
         }
@@ -22,7 +22,32 @@ class Api {
                 const errDetail = await response.json();
                 throw errDetail.message;
             }
-            catch(err) {
+            catch (err) {
+                throw err;
+            }
+        }
+    }
+
+    /**
+     * Perform the signUp
+     */
+    static doSignUp = async (email, password) => {
+        let response = await fetch('/api/user', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ email, password }),
+        });
+        if (response.ok) {
+            const userJson = await response.json();
+            return userJson;
+        } else {
+            try {
+                const errDetail = await response.json();
+                throw errDetail.message;
+            }
+            catch (err) {
                 throw err;
             }
         }
@@ -40,6 +65,14 @@ class Api {
             throw itemsJson;  // an object with the error coming from the server
         }
     }
+
+    /**
+     * Perform the logout
+     */
+    static doLogout = async () => {
+        await fetch('/api/sessions/current', { method: 'DELETE' });
+    }
+
 }
 
 export default Api;
