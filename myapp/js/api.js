@@ -1,4 +1,4 @@
-import Item from './item.js';
+"use strict";
 
 class Api {
 
@@ -31,13 +31,13 @@ class Api {
     /**
      * Perform the signUp
      */
-    static doSignUp = async (email, password) => {
+    static doSignUp = async (name, surname, email, password) => {
         let response = await fetch('/api/user', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ email, password }),
+            body: JSON.stringify({ name, surname, email, password }),
         });
         if (response.ok) {
             const userJson = await response.json();

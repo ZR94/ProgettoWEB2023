@@ -7,7 +7,7 @@ const path = require('path');
 const passport = require('passport'); // auth middleware
 const LocalStrategy = require('passport-local').Strategy; // username and password for login
 const session = require('express-session');
-//const FileStore = require('session-file-store')(session); serve per non salvare i dati della sessione nella memoria del server ma altrove
+const FileStore = require('session-file-store')(session);
 const dao = require('./dao.js');
 
 // init 
@@ -60,7 +60,7 @@ const isLoggedIn = (req, res, next) => {
 
 // set up the session
 app.use(session({
-  //store: new FileStore(), // by default, Passport uses a MemoryStore to keep track of the sessions - if you want to use this, launch nodemon with the option: --ignore sessions/
+  store: new FileStore(),
   secret: 'a secret sentence not to share with anybody and anywhere, used to sign the session ID cookie',
   resave: false,
   saveUninitialized: false,
@@ -69,12 +69,20 @@ app.use(session({
   cookie: { sameSite: 'lax' }
 }));
 
+// init passport
+app.use(passport.initialize());
+//app.use(passport.session());
+
+// === REST API (item, user, session) === //
+
 // POST /users
 // Sign up
 app.post('/api/user', /* [add here some validity checks], */(req, res) => {
   // create a user object from the signup form
   // additional fields may be useful (name, role, etc.)
   const user = {
+    name: req.body.name,
+    surname: req.body.surname,
     email: req.body.email,
     password: req.body.password,
   };
@@ -97,7 +105,7 @@ app.post('/api/sessions', function (req, res, next) {
     req.login(user, function (err) {
       if (err) { return next(err); }
       // req.user contains the authenticated user
-      return res.json(req.user.username);
+      return res.json(req.user.name);
     });
   })(req, res, next);
 });

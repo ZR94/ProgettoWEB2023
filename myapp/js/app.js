@@ -4,6 +4,7 @@ import Api from './api.js';
 import { createLoginForm } from './templates/login-template.js';
 import { createSignUpForm } from './templates/sign-template.js';
 import { createHomeForm } from './templates/home-template.js';
+import { createUserPage } from './templates/user-template.js';
 import { createStoreTable, createStoreCard, createCartCard } from './templates/store-template.js';
 import page from "//unpkg.com/page/page.mjs";
 
@@ -14,9 +15,9 @@ class App {
     constructor(appContainer) {
         // reference to the the item container (HTML element)
         this.appContainer = appContainer;
-        //this.logoutLink = document.querySelector('#logout');
+        this.logoutLink = document.querySelector('#logout');
         this.loginLink = document.querySelector('#login');
-        this.userLink = document.querySelector('#user');
+
 
         // client-side routing with Page.js
         page('/login', () => {
@@ -33,14 +34,19 @@ class App {
 
         page('/logout', this.logout);
 
-        page('/', () => {
+        page('/user', () => {
             this.appContainer.innerHTML = "";
-            this.appContainer.innerHTML = createHomeForm();
+            this.appContainer.innerHTML = createUserPage();
         });
 
         page('/store', () => {
             this.appContainer.innerHTML = "";
             this.appContainer.innerHTML = this.showStore();
+        });
+
+        page('/', () => {
+            this.appContainer.innerHTML = "";
+            this.appContainer.innerHTML = createHomeForm();
         });
 
         // very simple itemple of how to handle a 404 Page Not Found 
@@ -56,35 +62,18 @@ class App {
     onLoginSubmitted = async (event) => {
         event.preventDefault();
         const form = event.target;
-        //const alertMessage = document.getElementById('alert-message');
 
         if (form.checkValidity()) {
             try {
                 const user = await Api.doLogin(form.email.value, form.password.value);
-                this.loginLink.classList.add('invisible');
-                this.userLink.classList.remove('invisible');
-                const userName = document.querySelector('#user-name');
-                userName.insertAdjacentHTML('beforeend', user.name.value);
-                /*
+                this.loginLink.innerHTML = "";
+                this.loginLink.innerHTML = '<a class="nav-link" href="/user">' + `${user}` + '</a>';
                 this.logoutLink.classList.remove('invisible');
-                // welcome the user
-                alertMessage.innerHTML = createAlert('success', `Welcome ${user}!`);
-                // automatically remove the flash message after 3 sec
-                setTimeout(() => {
-                    alertMessage.innerHTML = '';
-                }, 3000);
-                */
 
                 page.redirect('/store');
             } catch (error) {
                 if (error) {
-                    const errorMsg = error;
-                    // add an alert message in DOM
-                    alertMessage.innerHTML = createAlert('danger', errorMsg);
-                    // automatically remove the flash message after 3 sec
-                    setTimeout(() => {
-                        alertMessage.innerHTML = '';
-                    }, 3000);
+
                 }
             }
         }
@@ -93,21 +82,10 @@ class App {
     onSignUpSubmitted = async (event) => {
         event.preventDefault();
         const form = event.target;
-        
-        //const alertMessage = document.getElementById('alert-message');
 
         if (form.checkValidity()) {
             try {
-                const user = await Api.doSignUp(form.validationCustomUsername.value, form.validationCustomPassword.value);
-                
-                /*
-                // welcome the user
-                alertMessage.innerHTML = createAlert('success', `Welcome ${user}!`);
-                // automatically remove the flash message after 3 sec
-                setTimeout(() => {
-                    alertMessage.innerHTML = '';
-                }, 3000);
-                */
+                const user = await Api.doSignUp(form.validationCustom01.value, form.validationCustom02.value, form.validationCustomUsername.value, form.validationCustomPassword.value);
 
                 page.redirect('/login');
             } catch (error) {
@@ -130,9 +108,13 @@ class App {
     logout = async () => {
         await Api.doLogout();
         this.logoutLink.classList.add('invisible');
-        this.userLink.classList.add('invisible');
-        this.loginLink.classList.remove('invisible');
+        this.loginLink.innerHTML = "";
+        this.loginLink.innerHTML = '<a class="nav-link" href="/login">Login | Register</a>';
         page.redirect('/login');
+    }
+
+    onUserPage = async () => {
+        
     }
 
     /**
