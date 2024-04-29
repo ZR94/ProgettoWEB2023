@@ -34,16 +34,29 @@ exports.createUser = function (user) {
     });
 }
 
+exports.deleteUser = function (user) {
+    return new Promise((resolve, reject) => {
+        const sql = 'DELETE FROM user WHERE idUser = ?';
+        db.run(sql, [user.id], (err)=> {
+            if (err) {
+                reject(err);
+                return;
+            }
+            resolve();
+        });
+    });
+};
+
 exports.getUserById = function (id) {
     return new Promise((resolve, reject) => {
-        const sql = 'SELECT * FROM user WHERE id = ?';
+        const sql = 'SELECT * FROM user WHERE idUser = ?';
         db.get(sql, [id], (err, row) => {
             if (err)
                 reject(err);
             else if (row === undefined)
                 resolve({ error: 'User not found.' });
             else {
-                const user = { id: row.idUser, name:row.name, email: row.email }
+                const user = { id: row.idUser, name:row.name, surname:row.surname, email: row.email }
                 resolve(user);
             }
         });
@@ -67,6 +80,32 @@ exports.getUser = function (email, password) {
 
                 resolve({ user, check });
             }
+        });
+    });
+};
+
+exports.createItem = function (item) {
+    return new Promise((resolve, reject) => {
+        const sql = 'INSERT INTO item(price, name, img) VALUES (?, ?, ?)';
+        db.run(sql, [item.price, item.name, item.img], (err)=> {
+            if (err) {
+                reject(err);
+                return;
+            }
+            resolve(item.code);
+        });
+    });
+};
+
+exports.deleteItem = function (item) {
+    return new Promise((resolve, reject) => {
+        const sql = 'DELETE FROM item WHERE idItem = ?';
+        db.run(sql, [item.id], (err)=> {
+            if (err) {
+                reject(err);
+                return;
+            }
+            resolve();
         });
     });
 };

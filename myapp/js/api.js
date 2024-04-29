@@ -73,6 +73,16 @@ class Api {
         await fetch('/api/sessions/current', { method: 'DELETE' });
     }
 
+    static getLoggedUser = async (userId) => {
+        let response = await fetch(`/api/user/${userId}`);   
+        if (response.ok) {
+            const userJson = await response.json();
+            return userJson;
+        } else {
+            throw userJson;  // an object with the error coming from the server
+        }
+    }
+
 }
 
 export default Api;

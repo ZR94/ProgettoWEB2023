@@ -17,13 +17,14 @@ class App {
         this.appContainer = appContainer;
         this.logoutLink = document.querySelector('#logout');
         this.loginLink = document.querySelector('#login');
-
+        this.loggedUser = null;
 
         // client-side routing with Page.js
         page('/login', () => {
             this.appContainer.innerHTML = "";
             this.appContainer.innerHTML = createLoginForm();
             document.getElementById('login-form').addEventListener('submit', this.onLoginSubmitted);
+            
         });
 
         page('/signUp', () => {
@@ -34,9 +35,24 @@ class App {
 
         page('/logout', this.logout);
 
-        page('/user', () => {
+        page('/userPage', () => {
             this.appContainer.innerHTML = "";
-            this.appContainer.innerHTML = createUserPage();
+            this.appContainer.innerHTML = this.onUserPage();
+        });
+
+        page('/profile', () => {
+            this.appContainer.innerHTML = "";
+            //this.appContainer.innerHTML = ;
+        });
+
+        page('/history', () => {
+            this.appContainer.innerHTML = "";
+            //this.appContainer.innerHTML = ;
+        });
+
+        page('/delete', () => {
+            this.appContainer.innerHTML = "";
+            //this.appContainer.innerHTML = ;
         });
 
         page('/store', () => {
@@ -51,7 +67,7 @@ class App {
 
         // very simple itemple of how to handle a 404 Page Not Found 
         // page('*', () => this.appContainer.innerHTML = 'Page not found!');
-        //page('/', );
+        // page('/', );
         page();
     }
 
@@ -65,9 +81,9 @@ class App {
 
         if (form.checkValidity()) {
             try {
-                const user = await Api.doLogin(form.email.value, form.password.value);
+                this.loggedUser = await Api.doLogin(form.email.value, form.password.value);
                 this.loginLink.innerHTML = "";
-                this.loginLink.innerHTML = '<a class="nav-link" href="/user">' + `${user}` + '</a>';
+                this.loginLink.innerHTML = '<a class="nav-link" href="/userPage">' + `${this.loggedUser.name}` + '</a>';
                 this.logoutLink.classList.remove('invisible');
 
                 page.redirect('/store');
@@ -110,11 +126,20 @@ class App {
         this.logoutLink.classList.add('invisible');
         this.loginLink.innerHTML = "";
         this.loginLink.innerHTML = '<a class="nav-link" href="/login">Login | Register</a>';
+        this.loggedUser = null;
         page.redirect('/login');
     }
 
     onUserPage = async () => {
-        
+
+        try {
+            const user  = await Api.getLoggedUser(this.loggedUser.id);
+            this.appContainer.innerHTML = createUserPage(user);
+
+        } catch (error) {
+            page.redirect('/');
+        }
+ 
     }
 
     /**

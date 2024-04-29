@@ -105,14 +105,13 @@ td {
 
 .footer-wrapper {
     background-color: #2e2e2e;
-    padding-top: 2%;
+    padding-top: 1%;
 }
 
 .footerInfo {
     table-layout: fixed; width: auto;
     text-align: center;
     color: whitesmoke;
-    
 }
 
 .containerLogin {

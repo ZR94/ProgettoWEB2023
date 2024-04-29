@@ -66,12 +66,12 @@ app.use(session({
   saveUninitialized: false,
   // removing the following line will cause a browser's warning, since session cookie
   // cross-site default policy is currently not recommended
-  cookie: { sameSite: 'lax' }
+  //cookie: { sameSite: 'lax' }
 }));
 
 // init passport
 app.use(passport.initialize());
-//app.use(passport.session());
+app.use(passport.session());
 
 // === REST API (item, user, session) === //
 
@@ -105,7 +105,7 @@ app.post('/api/sessions', function (req, res, next) {
     req.login(user, function (err) {
       if (err) { return next(err); }
       // req.user contains the authenticated user
-      return res.json(req.user.name);
+      return res.json(req.user);
     });
   })(req, res, next);
 });
@@ -126,6 +126,12 @@ app.get('/api/items', (req, res) => {
     .catch(error => res.status(500).json(error));
 });
 
+app.get('/api/user/:id', isLoggedIn, (req, res) => {
+  const userId = req.params.id;
+  dao.getUserById(userId)
+    .then(user => res.json(user))
+    .catch(error => res.status(500).json(error));
+});
 
 app.get('*', (req, res) => {
   res.sendFile(path.resolve(__dirname, 'myapp/index.html'));
