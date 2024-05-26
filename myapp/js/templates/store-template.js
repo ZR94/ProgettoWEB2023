@@ -3,9 +3,13 @@
 function createStoreTable() {
     return `
     <div class="row row-cols-1 row-cols-md-3 g-4" id="my-items">
+
+    <div class="col align-items-center">
+        <button class="btn btn-primary" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasScrolling" 
+        data-bs-target="#offcanvasRight" aria-controls="offcanvasScrolling">Cart</button>
+    </div>
         <div class="listProduct">
-            <button class="btn btn-primary" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasScrolling" 
-                data-bs-target="#offcanvasRight" aria-controls="offcanvasScrolling">Cart</button>
+            
 
             <div class="offcanvas offcanvas-end" data-bs-scroll="true" data-bs-backdrop="false" 
                 tabindex="-1" id="offcanvasScrolling" aria-labelledby="offcanvasScrollingLabel">
@@ -15,6 +19,9 @@ function createStoreTable() {
                     
                 </div>
                 <div class="offcanvas-body listCart">
+                </div>
+                <div class="" id="checkoutBox">
+                    <button class="btn btn-primary btn-add" type="button" value="">Checkout</button>
                 </div>
             </div>
         </div>

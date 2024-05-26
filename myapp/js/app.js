@@ -1,14 +1,18 @@
 "use strict";
 
 import Api from './api.js';
+import User from './user.js';
+import Comment from './comment.js';
 import { createLoginForm } from './templates/login-template.js';
 import { createSignUpForm } from './templates/sign-template.js';
 import { createHomeForm } from './templates/home-template.js';
 import { createUserPage } from './templates/user-template.js';
 import { createStoreTable, createStoreCard, createCartCard } from './templates/store-template.js';
+import { createContactForm } from './templates/contact-template.js';
+import { createPricingForm } from './templates/pricing-template.js';
 import page from "//unpkg.com/page/page.mjs";
 
-const itemCart = [];
+
 
 class App {
 
@@ -17,27 +21,35 @@ class App {
         this.appContainer = appContainer;
         this.logoutLink = document.querySelector('#logout');
         this.loginLink = document.querySelector('#login');
-        this.loggedUser = null;
+        this.loggedUser = this.getUser();
+        this.itemCart = [];
 
         // client-side routing with Page.js
         page('/login', () => {
-            this.appContainer.innerHTML = "";
-            this.appContainer.innerHTML = createLoginForm();
-            document.getElementById('login-form').addEventListener('submit', this.onLoginSubmitted);
-            
+            if(this.loggedUser == null) {
+                this.appContainer.innerHTML = "";
+                this.appContainer.innerHTML = createLoginForm();
+                document.getElementById('login-form').addEventListener('submit', this.onLoginSubmitted);
+            }           
         });
 
         page('/signUp', () => {
-            this.appContainer.innerHTML = "";
-            this.appContainer.innerHTML = createSignUpForm();
-            document.getElementById('signUp-form').addEventListener('submit', this.onSignUpSubmitted);
+            if(this.loggedUser == null) {
+                this.appContainer.innerHTML = "";
+                this.appContainer.innerHTML = createSignUpForm();
+                document.getElementById('signUp-form').addEventListener('submit', this.onSignUpSubmitted);
+            }
         });
 
         page('/logout', this.logout);
 
         page('/userPage', () => {
-            this.appContainer.innerHTML = "";
-            this.appContainer.innerHTML = this.onUserPage();
+            if(this.loggedUser != null) {
+                this.appContainer.innerHTML = "";
+                this.appContainer.innerHTML = this.onUserPage();
+                this.renderNavBar(this.loggedUser.name);
+            }
+
         });
 
         page('/profile', () => {
@@ -56,11 +68,27 @@ class App {
         });
 
         page('/store', () => {
+            if(this.loggedUser != null) {
+                this.renderNavBar(this.loggedUser.name);
+            }
             this.appContainer.innerHTML = "";
             this.appContainer.innerHTML = this.showStore();
         });
 
+        page('/contact', () => {
+            this.appContainer.innerHTML = "";
+            this.appContainer.innerHTML = createContactForm();
+        });
+
+        page('/pricing', () => {
+            this.appContainer.innerHTML = "";
+            this.appContainer.innerHTML = createPricingForm();
+        });
+
         page('/', () => {
+            if(this.loggedUser != null) {
+                this.renderNavBar(this.loggedUser.name);
+            }
             this.appContainer.innerHTML = "";
             this.appContainer.innerHTML = createHomeForm();
         });
@@ -82,9 +110,8 @@ class App {
         if (form.checkValidity()) {
             try {
                 this.loggedUser = await Api.doLogin(form.email.value, form.password.value);
-                this.loginLink.innerHTML = "";
-                this.loginLink.innerHTML = '<a class="nav-link" href="/userPage">' + `${this.loggedUser.name}` + '</a>';
-                this.logoutLink.classList.remove('invisible');
+
+                this.renderNavBar(this.loggedUser.name);
 
                 page.redirect('/store');
             } catch (error) {
@@ -119,6 +146,15 @@ class App {
     }
 
     /**
+     * Render the navbar and show the logout link
+     */
+    renderNavBar = (active) => {
+        this.loginLink.innerHTML = "";
+        this.loginLink.innerHTML = '<a class="nav-link" href="/userPage">' + `${active}` + '</a>';
+        this.logoutLink.classList.remove('invisible');
+    };
+
+    /**
     * Perform the logout
     */
     logout = async () => {
@@ -133,14 +169,19 @@ class App {
     onUserPage = async () => {
 
         try {
-            const user  = await Api.getLoggedUser(this.loggedUser.id);
-            this.appContainer.innerHTML = createUserPage(user);
+            const user  = this.getUser();
+            if(user != null) this.appContainer.innerHTML = createUserPage(user);
 
         } catch (error) {
             page.redirect('/');
         }
- 
+
     }
+
+    getUser = async (event) => {
+        const user = JSON.parse(localStorage.getItem('user'));
+        return user;
+    };
 
     /**
      * Create the HTML table for showing the items
@@ -164,7 +205,7 @@ class App {
             }
 
         } catch (error) {
-            page.redirect('/');
+            page.redirect('/login');
         }
     }
 
@@ -179,11 +220,11 @@ class App {
         const items = await Api.getItems();
 
         try {
-            if (!itemCart[itemId]) {
-                itemCart[itemId] = items.filter(product => product.id == itemId)[0];
-                itemCart[itemId].quantity = 1;
+            if (!this.itemCart[itemId]) {
+                this.itemCart[itemId] = items.filter(product => product.id == itemId)[0];
+                this.itemCart[itemId].quantity = 1;
             } else {
-                itemCart[itemId].quantity++;
+                this.itemCart[itemId].quantity++;
             }
             this.updateCartHtml();
         } catch (error) {
@@ -198,8 +239,8 @@ class App {
 
         const listCart = document.querySelector('.listCart');
         listCart.innerHTML = '';
-        if (itemCart) {
-            itemCart.forEach(x => {
+        if (this.itemCart) {
+            this.itemCart.forEach(x => {
                 if (x) {
                     const newItem = createCartCard(x, x.quantity);
                     listCart.insertAdjacentHTML('beforeend', newItem);
@@ -224,11 +265,11 @@ class App {
         const btnType = event.target.name;
 
         if (btnType == '+') {
-            itemCart[itemId].quantity++;
+            this.itemCart[itemId].quantity++;
         } else if (btnType == '-') {
-            itemCart[itemId].quantity--;
-            if (itemCart[itemId].quantity <= 0) {
-                delete itemCart[itemId];
+            this.itemCart[itemId].quantity--;
+            if (this.itemCart[itemId].quantity <= 0) {
+                delete this.itemCart[itemId];
             }
         }
         this.updateCartHtml();

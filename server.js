@@ -7,7 +7,8 @@ const path = require('path');
 const passport = require('passport'); // auth middleware
 const LocalStrategy = require('passport-local').Strategy; // username and password for login
 const session = require('express-session');
-const FileStore = require('session-file-store')(session);
+//const FileStore = require('session-file-store')(session);
+const bcrypt = require('bcrypt');
 const dao = require('./dao.js');
 
 // init 
@@ -29,7 +30,7 @@ passport.use(new LocalStrategy(
   function (username, password, done) {
     dao.getUser(username, password).then(({ user, check }) => {
       if (!user) {
-        return done(null, false, { message: 'Incorrect username.' });
+        return done(null, false, { message: 'Incorrect email.' });
       }
       if (!check) {
         return done(null, false, { message: 'Incorrect password.' });
@@ -60,13 +61,13 @@ const isLoggedIn = (req, res, next) => {
 
 // set up the session
 app.use(session({
-  store: new FileStore(),
+  //store: new FileStore(),
   secret: 'a secret sentence not to share with anybody and anywhere, used to sign the session ID cookie',
   resave: false,
   saveUninitialized: false,
   // removing the following line will cause a browser's warning, since session cookie
   // cross-site default policy is currently not recommended
-  //cookie: { sameSite: 'lax' }
+  cookie: { sameSite: 'lax' }
 }));
 
 // init passport
@@ -120,7 +121,7 @@ app.delete('/api/sessions/current', function (req, res) {
 });
 
 // GET /items
-app.get('/api/items', (req, res) => {
+app.get('/api/items', isLoggedIn, (req, res) => {
   dao.getAllItems()
     .then(items => res.json(items))
     .catch(error => res.status(500).json(error));
