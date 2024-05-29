@@ -7,7 +7,7 @@ const path = require('path');
 const passport = require('passport'); // auth middleware
 const LocalStrategy = require('passport-local').Strategy; // username and password for login
 const session = require('express-session');
-//const FileStore = require('session-file-store')(session);
+const FileStore = require('session-file-store')(session);
 const bcrypt = require('bcrypt');
 const dao = require('./dao.js');
 
@@ -61,7 +61,7 @@ const isLoggedIn = (req, res, next) => {
 
 // set up the session
 app.use(session({
-  //store: new FileStore(),
+  store: new FileStore({ path: path.resolve(__dirname, 'sessions') }),
   secret: 'a secret sentence not to share with anybody and anywhere, used to sign the session ID cookie',
   resave: false,
   saveUninitialized: false,
@@ -113,7 +113,7 @@ app.post('/api/sessions', function (req, res, next) {
 
 // DELETE /sessions/current 
 // Logout
-app.delete('/api/sessions/current', function (req, res) {
+app.delete('/api/sessions/current', isLoggedIn, function (req, res) {
   req.logout(function (err) {
     if (err) { return res.status(503).json(err); }
   });

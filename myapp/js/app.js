@@ -21,19 +21,21 @@ class App {
         this.appContainer = appContainer;
         this.logoutLink = document.querySelector('#logout');
         this.loginLink = document.querySelector('#login');
-        this.loggedUser = this.getUser();
+        this.loggedUser = null;
         this.itemCart = [];
 
         // client-side routing with Page.js
         page('/login', () => {
+            this.loggedUser = JSON.parse(localStorage.getItem('user'));
             if(this.loggedUser == null) {
                 this.appContainer.innerHTML = "";
                 this.appContainer.innerHTML = createLoginForm();
                 document.getElementById('login-form').addEventListener('submit', this.onLoginSubmitted);
-            }           
+            }       
         });
 
         page('/signUp', () => {
+            this.loggedUser = JSON.parse(localStorage.getItem('user'));
             if(this.loggedUser == null) {
                 this.appContainer.innerHTML = "";
                 this.appContainer.innerHTML = createSignUpForm();
@@ -44,30 +46,44 @@ class App {
         page('/logout', this.logout);
 
         page('/userPage', () => {
+            this.loggedUser = JSON.parse(localStorage.getItem('user'));
             if(this.loggedUser != null) {
-                this.appContainer.innerHTML = "";
-                this.appContainer.innerHTML = this.onUserPage();
                 this.renderNavBar(this.loggedUser.name);
+                this.appContainer.innerHTML = "";
+                this.appContainer.innerHTML = this.personalUserPage();
             }
 
         });
 
         page('/profile', () => {
+            this.loggedUser = JSON.parse(localStorage.getItem('user'));
+            if(this.loggedUser != null) {
+                this.renderNavBar(this.loggedUser.name);
+            }
             this.appContainer.innerHTML = "";
             //this.appContainer.innerHTML = ;
         });
 
         page('/history', () => {
+            this.loggedUser = JSON.parse(localStorage.getItem('user'));
+            if(this.loggedUser != null) {
+                this.renderNavBar(this.loggedUser.name);
+            }
             this.appContainer.innerHTML = "";
             //this.appContainer.innerHTML = ;
         });
 
         page('/delete', () => {
+            this.loggedUser = JSON.parse(localStorage.getItem('user'));
+            if(this.loggedUser != null) {
+                this.renderNavBar(this.loggedUser.name);
+            }
             this.appContainer.innerHTML = "";
             //this.appContainer.innerHTML = ;
         });
 
         page('/store', () => {
+            this.loggedUser = JSON.parse(localStorage.getItem('user'));
             if(this.loggedUser != null) {
                 this.renderNavBar(this.loggedUser.name);
             }
@@ -76,21 +92,31 @@ class App {
         });
 
         page('/contact', () => {
+            this.loggedUser = JSON.parse(localStorage.getItem('user'));
+            if(this.loggedUser != null) {
+                this.renderNavBar(this.loggedUser.name);
+            }
             this.appContainer.innerHTML = "";
             this.appContainer.innerHTML = createContactForm();
         });
 
         page('/pricing', () => {
+            this.loggedUser = JSON.parse(localStorage.getItem('user'));
+            if(this.loggedUser != null) {
+                this.renderNavBar(this.loggedUser.name);
+            }
             this.appContainer.innerHTML = "";
             this.appContainer.innerHTML = createPricingForm();
         });
 
         page('/', () => {
+            this.loggedUser = JSON.parse(localStorage.getItem('user'));
             if(this.loggedUser != null) {
                 this.renderNavBar(this.loggedUser.name);
             }
             this.appContainer.innerHTML = "";
             this.appContainer.innerHTML = createHomeForm();
+
         });
 
         // very simple itemple of how to handle a 404 Page Not Found 
@@ -109,10 +135,9 @@ class App {
 
         if (form.checkValidity()) {
             try {
-                this.loggedUser = await Api.doLogin(form.email.value, form.password.value);
-
-                this.renderNavBar(this.loggedUser.name);
-
+                const user = await Api.doLogin(form.email.value, form.password.value);
+                localStorage.setItem('user', JSON.stringify(user));
+                
                 page.redirect('/store');
             } catch (error) {
                 if (error) {
@@ -163,25 +188,33 @@ class App {
         this.loginLink.innerHTML = "";
         this.loginLink.innerHTML = '<a class="nav-link" href="/login">Login | Register</a>';
         this.loggedUser = null;
+        localStorage.removeItem('user');
         page.redirect('/login');
     }
 
-    onUserPage = async () => {
+    
+    personalUserPage = async () => {
 
         try {
-            const user  = this.getUser();
-            if(user != null) this.appContainer.innerHTML = createUserPage(user);
+            const user  = JSON.parse(localStorage.getItem('user'));
+            const userLog = await Api.getLoggedUser(user.id);
+            if(user != null) this.appContainer.innerHTML = createUserPage(userLog);
 
         } catch (error) {
             page.redirect('/');
         }
 
     }
+    /*
+    getUser = async () => {
+        try {
+            const user  = JSON.parse(localStorage.getItem('user'));
+            return user;
 
-    getUser = async (event) => {
-        const user = JSON.parse(localStorage.getItem('user'));
-        return user;
-    };
+        } catch (error) {
+            page.redirect('/');
+        }
+    };*/
 
     /**
      * Create the HTML table for showing the items
@@ -193,6 +226,7 @@ class App {
 
             this.appContainer.innerHTML = createStoreTable();
             const storeTable = document.querySelector('#my-items');
+            this.updateCartHtml();
 
             for (let item of items) {
                 const itemRow = createStoreCard(item);
@@ -203,7 +237,7 @@ class App {
             for (const btn of buttons) {
                 btn.addEventListener("click", this.addCart);
             }
-
+            
         } catch (error) {
             page.redirect('/login');
         }
@@ -226,6 +260,7 @@ class App {
             } else {
                 this.itemCart[itemId].quantity++;
             }
+            localStorage.setItem('cart', JSON.stringify(this.itemCart));
             this.updateCartHtml();
         } catch (error) {
             page.redirect('/');
@@ -237,6 +272,7 @@ class App {
      */
     updateCartHtml() {
 
+        this.itemCart = JSON.parse(localStorage.getItem('cart')) || [];
         const listCart = document.querySelector('.listCart');
         listCart.innerHTML = '';
         if (this.itemCart) {
@@ -272,6 +308,7 @@ class App {
                 delete this.itemCart[itemId];
             }
         }
+        localStorage.setItem('cart', JSON.stringify(this.itemCart));
         this.updateCartHtml();
     }
 

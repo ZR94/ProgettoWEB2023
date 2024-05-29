@@ -10,7 +10,6 @@ function createStoreTable() {
     </div>
         <div class="listProduct">
             
-
             <div class="offcanvas offcanvas-end" data-bs-scroll="true" data-bs-backdrop="false" 
                 tabindex="-1" id="offcanvasScrolling" aria-labelledby="offcanvasScrollingLabel">
                 <div class="offcanvas-header">
