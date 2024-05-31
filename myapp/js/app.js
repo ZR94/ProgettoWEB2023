@@ -2,6 +2,7 @@
 
 import Api from './api.js';
 import User from './user.js';
+import Item from './item.js';
 import Comment from './comment.js';
 import { createLoginForm } from './templates/login-template.js';
 import { createSignUpForm } from './templates/sign-template.js';
@@ -10,6 +11,7 @@ import { createUserPage } from './templates/user-template.js';
 import { createStoreTable, createStoreCard, createCartCard } from './templates/store-template.js';
 import { createContactForm } from './templates/contact-template.js';
 import { createPricingForm } from './templates/pricing-template.js';
+import { createWishlistPage } from './templates/wishlist-template.js';
 import page from "//unpkg.com/page/page.mjs";
 
 
@@ -21,22 +23,25 @@ class App {
         this.appContainer = appContainer;
         this.logoutLink = document.querySelector('#logout');
         this.loginLink = document.querySelector('#login');
+        this.followBtn = document.querySelector('#follow');
+        this.unfollowBtn = document.querySelector('#unfollow');
         this.loggedUser = null;
         this.itemCart = [];
+        this.wishlist = [];
 
         // client-side routing with Page.js
         page('/login', () => {
             this.loggedUser = JSON.parse(localStorage.getItem('user'));
-            if(this.loggedUser == null) {
+            if (this.loggedUser == null) {
                 this.appContainer.innerHTML = "";
                 this.appContainer.innerHTML = createLoginForm();
                 document.getElementById('login-form').addEventListener('submit', this.onLoginSubmitted);
-            }       
+            }
         });
 
         page('/signUp', () => {
             this.loggedUser = JSON.parse(localStorage.getItem('user'));
-            if(this.loggedUser == null) {
+            if (this.loggedUser == null) {
                 this.appContainer.innerHTML = "";
                 this.appContainer.innerHTML = createSignUpForm();
                 document.getElementById('signUp-form').addEventListener('submit', this.onSignUpSubmitted);
@@ -47,26 +52,26 @@ class App {
 
         page('/userPage', () => {
             this.loggedUser = JSON.parse(localStorage.getItem('user'));
-            if(this.loggedUser != null) {
+            if (this.loggedUser != null) {
                 this.renderNavBar(this.loggedUser.name);
                 this.appContainer.innerHTML = "";
                 this.appContainer.innerHTML = this.personalUserPage();
             }
 
         });
-
-        page('/profile', () => {
+       
+        page('/wishlist', () => {
             this.loggedUser = JSON.parse(localStorage.getItem('user'));
-            if(this.loggedUser != null) {
+            if (this.loggedUser != null) {
                 this.renderNavBar(this.loggedUser.name);
             }
             this.appContainer.innerHTML = "";
-            //this.appContainer.innerHTML = ;
+            this.appContainer.innerHTML = this.createUserWishList();
         });
 
         page('/history', () => {
             this.loggedUser = JSON.parse(localStorage.getItem('user'));
-            if(this.loggedUser != null) {
+            if (this.loggedUser != null) {
                 this.renderNavBar(this.loggedUser.name);
             }
             this.appContainer.innerHTML = "";
@@ -75,7 +80,7 @@ class App {
 
         page('/delete', () => {
             this.loggedUser = JSON.parse(localStorage.getItem('user'));
-            if(this.loggedUser != null) {
+            if (this.loggedUser != null) {
                 this.renderNavBar(this.loggedUser.name);
             }
             this.appContainer.innerHTML = "";
@@ -84,7 +89,7 @@ class App {
 
         page('/store', () => {
             this.loggedUser = JSON.parse(localStorage.getItem('user'));
-            if(this.loggedUser != null) {
+            if (this.loggedUser != null) {
                 this.renderNavBar(this.loggedUser.name);
             }
             this.appContainer.innerHTML = "";
@@ -93,7 +98,7 @@ class App {
 
         page('/contact', () => {
             this.loggedUser = JSON.parse(localStorage.getItem('user'));
-            if(this.loggedUser != null) {
+            if (this.loggedUser != null) {
                 this.renderNavBar(this.loggedUser.name);
             }
             this.appContainer.innerHTML = "";
@@ -102,7 +107,7 @@ class App {
 
         page('/pricing', () => {
             this.loggedUser = JSON.parse(localStorage.getItem('user'));
-            if(this.loggedUser != null) {
+            if (this.loggedUser != null) {
                 this.renderNavBar(this.loggedUser.name);
             }
             this.appContainer.innerHTML = "";
@@ -111,7 +116,7 @@ class App {
 
         page('/', () => {
             this.loggedUser = JSON.parse(localStorage.getItem('user'));
-            if(this.loggedUser != null) {
+            if (this.loggedUser != null) {
                 this.renderNavBar(this.loggedUser.name);
             }
             this.appContainer.innerHTML = "";
@@ -137,7 +142,7 @@ class App {
             try {
                 const user = await Api.doLogin(form.email.value, form.password.value);
                 localStorage.setItem('user', JSON.stringify(user));
-                
+
                 page.redirect('/store');
             } catch (error) {
                 if (error) {
@@ -192,19 +197,50 @@ class App {
         page.redirect('/login');
     }
 
-    
+
     personalUserPage = async () => {
 
         try {
-            const user  = JSON.parse(localStorage.getItem('user'));
+            const user = JSON.parse(localStorage.getItem('user'));
             const userLog = await Api.getLoggedUser(user.id);
-            if(user != null) this.appContainer.innerHTML = createUserPage(userLog);
+            if (user != null) this.appContainer.innerHTML = createUserPage(userLog);
 
         } catch (error) {
             page.redirect('/');
         }
 
     }
+
+    createUserWishList = async () => {
+        
+        const user = JSON.parse(localStorage.getItem('user'));
+        this.wishlist = Api.createWishlist(user.id);
+    }
+
+    addItemWishList = async (event) => {
+
+        event.preventDefault();
+        const itemId = event.target.value;
+        const user = JSON.parse(localStorage.getItem('user'));
+        
+        try {
+            const item = await Api.getItemById(itemId);
+    
+            await Api.addItemWishlist(user.id, item);
+            
+        }  catch (error) {
+            page.redirect('/');
+        }
+
+    }
+
+    /*
+        const followBtn = document.querySelector('#follow');
+        const unfollowBtn = document.querySelector('#unfollow');
+        followBtn.classList.add('invisible');
+        unfollowBtn.classList.remove('invisible');
+    */
+
     /*
     getUser = async () => {
         try {
@@ -237,7 +273,12 @@ class App {
             for (const btn of buttons) {
                 btn.addEventListener("click", this.addCart);
             }
-            
+
+            const buttonsWish = document.querySelectorAll(".btn-favourite-add");
+            for (const btn of buttonsWish) {
+                btn.addEventListener("click", this.addItemWishList);
+            }
+
         } catch (error) {
             page.redirect('/login');
         }

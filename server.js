@@ -4,6 +4,7 @@
 const express = require('express');
 const morgan = require('morgan'); // logging middleware
 const path = require('path');
+const {check, validationResult} = require('express-validator'); // validation middleware
 const passport = require('passport'); // auth middleware
 const LocalStrategy = require('passport-local').Strategy; // username and password for login
 const session = require('express-session');
@@ -127,11 +128,49 @@ app.get('/api/items', isLoggedIn, (req, res) => {
     .catch(error => res.status(500).json(error));
 });
 
+app.get('/api/items/:id', (req, res) => {
+  const itemId = req.params.id;
+  dao.getItemById(itemId)
+    .then(item => res.json(item))
+    .catch(error => res.status(500).json(error));
+});
+
 app.get('/api/user/:id', isLoggedIn, (req, res) => {
   const userId = req.params.id;
   dao.getUserById(userId)
     .then(user => res.json(user))
     .catch(error => res.status(500).json(error));
+});
+
+// GET /api/wishlist/:id
+app.get('/api/wishlist/:id',(req, res)=>{
+  dao.getWishlistByUserId(req.params.id)
+  .then((wishlist)=> res.json(wishlist))
+  .catch((error)=> res.status(404).json(error));
+});
+
+// Aggiunge un item alla wishlist dell'utente, dato il suo id.
+app.post('/user/:userId/wishlist', [
+  //check('id').notEmpty(),
+], (req, res) => {
+  const errors = validationResult(req);
+  if(!errors.isEmpty()) {
+      return res.status(422).json({errors: errors.array()});
+  }
+  const itemId = req.body.id;
+  const userId = req.params.userId;
+  dao.addItemInWishList(userId,itemId)
+    .then(() => res.end())
+    .catch((err) => res.status(err.status).json(err.msg));
+});
+
+// Rimuove un item dalla wishlist dell’utente, dato il suo id.
+app.delete('/user/:userId/wishlist/:itemId', (req, res) => {
+  const userId = req.params.userId;
+  const itemId = req.params.itemId;
+  dao.deleteItemInWishList(userId,itemId)
+    .then(() => res.end())
+    .catch((err) => res.status(err.status).json(err.msg));
 });
 
 app.get('*', (req, res) => {

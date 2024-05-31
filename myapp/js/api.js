@@ -66,6 +66,16 @@ class Api {
         }
     }
 
+    static getItemById = async (itemId) => {
+        let response = await fetch(`/api/items/${itemId}`);
+        if (response.ok) {
+            const itemsJson = await response.json();
+            return itemsJson;
+        } else {
+            throw itemsJson;  // an object with the error coming from the server
+        }
+    }
+
     /**
      * Perform the logout
      */
@@ -80,6 +90,52 @@ class Api {
             return userJson;
         } else {
             throw userJson;  // an object with the error coming from the server
+        }
+    }
+
+    static createWishlist = async(userId) => {
+        let response = await fetch(`/wishlist/${userId}`);
+        const whishlistJson = await response.json();
+        if (response.ok) {
+            return whishlistJson;
+        } else {
+            throw whishlistJson;  // an object with the error coming from the server
+        }
+    }
+
+    static addItemWishlist = async (userId, item) => {
+        const response = await fetch(`/user/${userId}/wishlist`, {
+            method: 'post',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(item),
+        });
+        if(response.ok) {
+            resolve(null);
+        } else {
+            response.json()
+            .then( (obj) => {reject(obj);} ) 
+            .catch( (err) => {reject({ errors: [{ param: "Application", msg: "Cannot parse server response" }] }) }); 
+              }
+    }
+
+    async dltItemFromWishList(userId, item) {
+        const response = await fetch(`/user/${userId}/item/${item.id}`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ userId, item }),
+        });
+        if (!response.ok) {
+            try {
+                const errDetail = await response.json();
+                throw errDetail.message;
+            }
+            catch (err) {
+                throw err;
+            }
         }
     }
 

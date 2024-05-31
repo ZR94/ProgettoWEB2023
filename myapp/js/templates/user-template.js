@@ -3,7 +3,10 @@ function createUserPage(user) {
     <div class="container col-md-auto containerUser">
       <ul class="nav nav-tabs">
         <li class="nav-item">
-          <a class="nav-link active" aria-current="page" href="/profile">Profilo</a>
+          <a class="nav-link active" aria-current="page" href="/userPage">Profilo</a>
+        </li>
+        <li class="nav-item" id="user-wishlist">
+          <a class="nav-link" href="/wishlist">WishList</a>
         </li>
         <li class="nav-item">
           <a class="nav-link" href="/history">Cronologia acquisti</a>
