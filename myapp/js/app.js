@@ -234,6 +234,29 @@ class App {
 
     }
 
+    /**
+     * Update wishlist view
+     */
+    updateWishlistHtml() {
+
+        const user = JSON.parse(localStorage.getItem('user'));
+        this.itemCart = JSON.parse(localStorage.getItem('cart')) || [];
+        const listCart = document.querySelector('.listCart');
+        listCart.innerHTML = '';
+        if (this.itemCart) {
+            this.itemCart.forEach(x => {
+                if (x) {
+                    const newItem = createCartCard(x, x.quantity);
+                    listCart.insertAdjacentHTML('beforeend', newItem);
+                }
+            });
+            const buttons = document.querySelectorAll(".btnQnt");
+            for (const btn of buttons) {
+                btn.addEventListener("click", this.changeQntCart);
+            }
+        }
+    }
+
     /*
         const followBtn = document.querySelector('#follow');
         const unfollowBtn = document.querySelector('#unfollow');
@@ -258,7 +281,9 @@ class App {
      */
     showStore = async () => {
         try {
+            const user = JSON.parse(localStorage.getItem('user'));
             const items = await Api.getItems();
+            const wishlist = await Api.createWishlist(user.id);
 
             this.appContainer.innerHTML = createStoreTable();
             const storeTable = document.querySelector('#my-items');
@@ -267,6 +292,14 @@ class App {
             for (let item of items) {
                 const itemRow = createStoreCard(item);
                 storeTable.insertAdjacentHTML('beforeend', itemRow);
+                for (let itemWish of wishlist) {
+                    if (item.id == itemWish.id) {
+                        const followBtn = document.querySelector('#follow');
+                        const unfollowBtn = document.querySelector('#unfollow');
+                        followBtn.classList.add('invisible');
+                        unfollowBtn.classList.remove('invisible'); 
+                    }
+                }
             }
 
             const buttons = document.querySelectorAll(".btn-add");
