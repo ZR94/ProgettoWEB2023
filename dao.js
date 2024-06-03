@@ -53,7 +53,7 @@ exports.getItemById = function (id) {
             else if (row === undefined)
                 resolve({ error: 'Item not found.' });
             else {
-                const item = { id: row.idItem, name: row.name, price: row.price }
+                const item = { id: row.idItem, price: row.price, name: row.name, img: row.img }
                 resolve(item);
             }
         });
@@ -130,13 +130,13 @@ exports.getUser = function (email, password) {
 exports.getWishlistByUserId = function (userId) {
     return new Promise((resolve, reject) => {
         const sql = 'SELECT * FROM wishlist WHERE idWishUser = ?';
-        db.get(sql, [userId], (err, row) => {
+        db.all(sql, [userId], (err, row) => {
             if (err)
                 reject(err);
-            else if (row === undefined)
+            else if (row.length === 0)
                 resolve({ error: 'Wishlist not found.' });
             else {
-                const item = row.map((row) => ({ id: row.idItem, price: row.price, name: row.name, img: row.img }));
+                const item = row.map((row) => ({ idWishUser: row.idWishUser, idWishItem: row.idWishItem }));
                 resolve(item);
             }
         });
@@ -156,13 +156,11 @@ exports.addItemInWishList = function (userId,itemId) {
                 }
                 else { 
                     const ins = "INSERT INTO wishlist (idWishItem, idWishUser) VALUES (?,?)";
-                    db.run(ins,[itemId,userId], 
-                        (err) => {
+                    db.run(ins,[itemId,userId], (err) => {
                         if (err) {
                             reject({status: 500, msg: err.message});
-                        } else {
-                            resolve();
-                        }
+                        } 
+                        resolve(this.id);
                     });
                 }
             } 

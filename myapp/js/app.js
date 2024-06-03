@@ -7,11 +7,10 @@ import Comment from './comment.js';
 import { createLoginForm } from './templates/login-template.js';
 import { createSignUpForm } from './templates/sign-template.js';
 import { createHomeForm } from './templates/home-template.js';
-import { createUserPage } from './templates/user-template.js';
-import { createStoreTable, createStoreCard, createCartCard } from './templates/store-template.js';
+import { navbarUserPage, createUserPage, createWishlistPage, createCard } from './templates/user-template.js';
+import { createStoreTable, createStoreCard, createCartCard, addFollowButton, removeFollowButton } from './templates/store-template.js';
 import { createContactForm } from './templates/contact-template.js';
 import { createPricingForm } from './templates/pricing-template.js';
-import { createWishlistPage } from './templates/wishlist-template.js';
 import page from "//unpkg.com/page/page.mjs";
 
 
@@ -54,7 +53,6 @@ class App {
             this.loggedUser = JSON.parse(localStorage.getItem('user'));
             if (this.loggedUser != null) {
                 this.renderNavBar(this.loggedUser.name);
-                this.appContainer.innerHTML = "";
                 this.appContainer.innerHTML = this.personalUserPage();
             }
 
@@ -63,10 +61,9 @@ class App {
         page('/wishlist', () => {
             this.loggedUser = JSON.parse(localStorage.getItem('user'));
             if (this.loggedUser != null) {
-                this.renderNavBar(this.loggedUser.name);
+                this.appContainer.innerHTML = this.createUserWishList();
+
             }
-            this.appContainer.innerHTML = "";
-            this.appContainer.innerHTML = this.createUserWishList();
         });
 
         page('/history', () => {
@@ -75,7 +72,6 @@ class App {
                 this.renderNavBar(this.loggedUser.name);
             }
             this.appContainer.innerHTML = "";
-            //this.appContainer.innerHTML = ;
         });
 
         page('/delete', () => {
@@ -84,7 +80,6 @@ class App {
                 this.renderNavBar(this.loggedUser.name);
             }
             this.appContainer.innerHTML = "";
-            //this.appContainer.innerHTML = ;
         });
 
         page('/store', () => {
@@ -203,8 +198,12 @@ class App {
         try {
             const user = JSON.parse(localStorage.getItem('user'));
             const userLog = await Api.getLoggedUser(user.id);
-            if (user != null) this.appContainer.innerHTML = createUserPage(userLog);
-
+            if (user != null) {
+                this.appContainer.innerHTML = "";
+                this.appContainer.innerHTML = navbarUserPage('userPage');
+                const bodyPage = document.querySelector('.bodyPage');
+                bodyPage.innerHTML = createUserPage(userLog);
+            }
         } catch (error) {
             page.redirect('/');
         }
@@ -213,8 +212,27 @@ class App {
 
     createUserWishList = async () => {
         
-        const user = JSON.parse(localStorage.getItem('user'));
-        this.wishlist = Api.createWishlist(user.id);
+        try {
+            const user = JSON.parse(localStorage.getItem('user'));
+            const wishlist = await Api.getWishlist(user.id);
+            
+            this.appContainer.innerHTML = "";
+            this.appContainer.innerHTML = navbarUserPage('wishlist');
+            const bodyPage = document.querySelector('.bodyPage');
+            bodyPage.innerHTML = createWishlistPage();
+            const wishlistContainer = document.querySelector('#list');
+            
+            if(wishlist.length > 0) {
+                for (let item of wishlist) {
+                    const getItem = await Api.getItemById(item.idWishItem);
+                    const itemRow = createCard(getItem);
+                    wishlistContainer.insertAdjacentHTML('beforeend', itemRow);
+                }
+            }
+        } catch (error) {
+            page.redirect('/');
+        }
+
     }
 
     addItemWishList = async (event) => {
@@ -226,7 +244,8 @@ class App {
         try {
             const item = await Api.getItemById(itemId);
     
-            await Api.addItemWishlist(user.id, item);
+            const response = await Api.addItemWishlist(user.id, item);
+            this.showStore();
             
         }  catch (error) {
             page.redirect('/');
@@ -234,46 +253,23 @@ class App {
 
     }
 
-    /**
-     * Update wishlist view
-     */
-    updateWishlistHtml() {
+    removeItemWishList = async (event) => {
 
+        event.preventDefault();
+        const itemId = event.target.value;
         const user = JSON.parse(localStorage.getItem('user'));
-        this.itemCart = JSON.parse(localStorage.getItem('cart')) || [];
-        const listCart = document.querySelector('.listCart');
-        listCart.innerHTML = '';
-        if (this.itemCart) {
-            this.itemCart.forEach(x => {
-                if (x) {
-                    const newItem = createCartCard(x, x.quantity);
-                    listCart.insertAdjacentHTML('beforeend', newItem);
-                }
-            });
-            const buttons = document.querySelectorAll(".btnQnt");
-            for (const btn of buttons) {
-                btn.addEventListener("click", this.changeQntCart);
-            }
-        }
-    }
-
-    /*
-        const followBtn = document.querySelector('#follow');
-        const unfollowBtn = document.querySelector('#unfollow');
-        followBtn.classList.add('invisible');
-        unfollowBtn.classList.remove('invisible');
-    */
-
-    /*
-    getUser = async () => {
+        
         try {
-            const user  = JSON.parse(localStorage.getItem('user'));
-            return user;
-
-        } catch (error) {
+            const item = await Api.getItemById(itemId);
+    
+            const response = await Api.removeItemFromWishlist(user.id, item);
+            this.showStore();
+            
+        }  catch (error) {
             page.redirect('/');
         }
-    };*/
+
+    }
 
     /**
      * Create the HTML table for showing the items
@@ -283,8 +279,9 @@ class App {
         try {
             const user = JSON.parse(localStorage.getItem('user'));
             const items = await Api.getItems();
-            const wishlist = await Api.createWishlist(user.id);
-
+            const wishlist = await Api.getWishlist(user.id);
+            
+            //this.appContainer.innerHTML = "";
             this.appContainer.innerHTML = createStoreTable();
             const storeTable = document.querySelector('#my-items');
             this.updateCartHtml();
@@ -292,24 +289,34 @@ class App {
             for (let item of items) {
                 const itemRow = createStoreCard(item);
                 storeTable.insertAdjacentHTML('beforeend', itemRow);
-                for (let itemWish of wishlist) {
-                    if (item.id == itemWish.id) {
-                        const followBtn = document.querySelector('#follow');
-                        const unfollowBtn = document.querySelector('#unfollow');
-                        followBtn.classList.add('invisible');
-                        unfollowBtn.classList.remove('invisible'); 
+                // Seleziona il productCard corrispondente all'item corrente
+                const productCard = document.querySelector(`#product-card-${item.id}`);
+                
+                if(wishlist.error) {
+                    productCard.insertAdjacentHTML('beforeend', addFollowButton(item.id));
+                } else {
+                    const itemFound = wishlist.filter(itemWish => itemWish.idWishItem == item.id);
+                    if(itemFound.length > 0) {
+                        productCard.insertAdjacentHTML('beforeend', removeFollowButton(item.id));
+                    } else {
+                        productCard.insertAdjacentHTML('beforeend', addFollowButton(item.id));
                     }
                 }
             }
-
+            
             const buttons = document.querySelectorAll(".btn-add");
             for (const btn of buttons) {
                 btn.addEventListener("click", this.addCart);
             }
 
-            const buttonsWish = document.querySelectorAll(".btn-favourite-add");
-            for (const btn of buttonsWish) {
+            const buttonsAddsWish = document.querySelectorAll(".btn-favourite-add");
+            for (const btn of buttonsAddsWish) {
                 btn.addEventListener("click", this.addItemWishList);
+            }
+
+            const buttonsRemoveWish = document.querySelectorAll(".btn-favourite-remove");
+            for (const btn of buttonsRemoveWish) {
+                btn.addEventListener("click", this.removeItemWishList);
             }
 
         } catch (error) {

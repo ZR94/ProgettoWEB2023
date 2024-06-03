@@ -84,7 +84,7 @@ class Api {
     }
 
     static getLoggedUser = async (userId) => {
-        let response = await fetch(`/api/user/${userId}`);   
+        let response = await fetch(`/api/user/${userId}`);
         if (response.ok) {
             const userJson = await response.json();
             return userJson;
@@ -93,35 +93,46 @@ class Api {
         }
     }
 
-    static createWishlist = async(userId) => {
-        let response = await fetch(`/wishlist/${userId}`);
-        const whishlistJson = await response.json();
-        if (response.ok) {
-            return whishlistJson;
-        } else {
-            throw whishlistJson;  // an object with the error coming from the server
+    static getWishlist = async (userId) => {
+        try {
+            let response = await fetch(`/api/wishlist/${userId}`);
+            const wishlistJson = await response.json();
+
+            if (response.ok) {
+                return wishlistJson;
+            } else {
+                throw wishlistJson;  // Un oggetto con l'errore proveniente dal server
+            }
+        } catch (error) {
+            console.error('Error fetching wishlist:', error);
+            throw error;  // Rilancia l'errore per essere gestito dal chiamante
         }
     }
 
     static addItemWishlist = async (userId, item) => {
-        const response = await fetch(`/user/${userId}/wishlist`, {
-            method: 'post',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(item),
-        });
-        if(response.ok) {
-            resolve(null);
-        } else {
-            response.json()
-            .then( (obj) => {reject(obj);} ) 
-            .catch( (err) => {reject({ errors: [{ param: "Application", msg: "Cannot parse server response" }] }) }); 
-              }
+        try {
+            const response = await fetch(`/api/user/${userId}/wishlist`, {
+                method: 'post',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify( item ),
+            });
+            
+            if (response.ok) {
+                const responseData = await response.json();
+                return responseData;
+            } else {
+                const errDetail = await response.json();
+                throw new Error(errDetail.message || 'An error occurred while adding the item to the wishlist.');
+            }
+        } catch (err) {
+            throw new Error(err.message || 'Network error');
+        }
     }
 
-    async dltItemFromWishList(userId, item) {
-        const response = await fetch(`/user/${userId}/item/${item.id}`, {
+    static removeItemFromWishlist = async (userId, item) => {
+        const response = await fetch(`/api/user/${userId}/wishlist/${item.id}`, {
             method: 'DELETE',
             headers: {
                 'Content-Type': 'application/json',
