@@ -2,11 +2,12 @@
 
 class Item {
 
-    constructor(id, price, name, img) {
+    constructor(id, price, name, img, category) {
         this.id = id;
         this.price = price;
         this.name = name;
         this.img = img;
+        this.category = category;
     }
 
     /**

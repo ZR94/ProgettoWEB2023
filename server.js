@@ -4,7 +4,7 @@
 const express = require('express');
 const morgan = require('morgan'); // logging middleware
 const path = require('path');
-const {check, validationResult} = require('express-validator'); // validation middleware
+const { check, validationResult } = require('express-validator'); // validation middleware
 const passport = require('passport'); // auth middleware
 const LocalStrategy = require('passport-local').Strategy; // username and password for login
 const session = require('express-session');
@@ -14,7 +14,7 @@ const dao = require('./dao.js');
 
 // init 
 const app = express();
-const port = 3000;
+const port = 3003;
 
 // set up the middleware
 app.use(morgan('tiny'));
@@ -112,6 +112,23 @@ app.post('/api/sessions', function (req, res, next) {
   })(req, res, next);
 });
 
+app.post('/api/checkout', /* [add here some validity checks], */(req, res) => {
+  // create a user object from the signup form
+  // additional fields may be useful (name, role, etc.)
+  const listPurchase = req.body.listPurchase;
+
+  const insertAllPurchases = async () => {
+    for (const purchase of listPurchase) {
+      // Inserisci ogni oggetto nel database
+      await dao.createPurchase(purchase);
+    }
+  };
+  
+  insertAllPurchases
+    .then(() => res.status(200).json({ message: 'Item added to purchase successfully' }))
+    .catch((err) => res.status(err.status || 500).json({ error: err.msg || 'An error occurred' }));
+});
+
 // DELETE /sessions/current 
 // Logout
 app.delete('/api/sessions/current', isLoggedIn, function (req, res) {
@@ -125,6 +142,12 @@ app.delete('/api/sessions/current', isLoggedIn, function (req, res) {
 app.get('/api/items', isLoggedIn, (req, res) => {
   dao.getAllItems()
     .then(items => res.json(items))
+    .catch(error => res.status(500).json(error));
+});
+
+app.get('/api/categories', (req, res) => {
+  dao.getAllCategories()
+    .then(categories => res.json(categories))
     .catch(error => res.status(500).json(error));
 });
 
@@ -143,11 +166,11 @@ app.get('/api/user/:id', isLoggedIn, (req, res) => {
 });
 
 // GET /api/wishlist/:id
-app.get('/api/wishlist/:id',(req, res)=>{
+app.get('/api/wishlist/:id', (req, res) => {
   const itemId = req.params.id;
   dao.getWishlistByUserId(itemId)
-  .then((wishlist)=> res.json(wishlist))
-  .catch((error)=> res.status(404).json(error));
+    .then((wishlist) => res.json(wishlist))
+    .catch((error) => res.status(404).json(error));
 });
 
 // Aggiunge un item alla wishlist dell'utente, dato il suo id.
@@ -155,12 +178,12 @@ app.post('/api/user/:userId/wishlist', [
   check('id').notEmpty(),
 ], (req, res) => {
   const errors = validationResult(req);
-  if(!errors.isEmpty()) {
-      return res.status(422).json({errors: errors.array()});
+  if (!errors.isEmpty()) {
+    return res.status(422).json({ errors: errors.array() });
   }
   const itemId = req.body.id;
   const userId = req.params.userId;
-  dao.addItemInWishList(userId,itemId)
+  dao.addItemInWishList(userId, itemId)
     .then(() => res.status(200).json({ message: 'Item added to wishlist successfully' }))
     .catch((err) => res.status(err.status || 500).json({ error: err.msg || 'An error occurred' }));
 });
@@ -169,9 +192,22 @@ app.post('/api/user/:userId/wishlist', [
 app.delete('/api/user/:userId/wishlist/:itemId', (req, res) => {
   const userId = req.params.userId;
   const itemId = req.params.itemId;
-  dao.deleteItemInWishList(userId,itemId)
+  dao.deleteItemInWishList(userId, itemId)
     .then(() => res.end())
     .catch((err) => res.status(err.status).json(err.msg));
+});
+
+app.get('/api/items/categories/:categoryName', (req, res) => {
+  const categoryName = req.params.categoryName;
+  let result;
+  if (categoryName === 'all-categories') {
+    result = dao.getAllItems();
+  } else {
+    result = dao.getItemsByCategory(categoryName)
+  }
+  result
+    .then((categories) => res.json(categories))
+    .catch((error) => res.status(404).json(error));
 });
 
 app.get('*', (req, res) => {

@@ -3,6 +3,7 @@
 import Api from './api.js';
 import User from './user.js';
 import Item from './item.js';
+import Purchase from './purchase.js';
 import Comment from './comment.js';
 import { createLoginForm } from './templates/login-template.js';
 import { createSignUpForm } from './templates/sign-template.js';
@@ -27,6 +28,7 @@ class App {
         this.loggedUser = null;
         this.itemCart = [];
         this.wishlist = [];
+        this.item = [];
 
         // client-side routing with Page.js
         page('/login', () => {
@@ -57,7 +59,7 @@ class App {
             }
 
         });
-       
+
         page('/wishlist', () => {
             this.loggedUser = JSON.parse(localStorage.getItem('user'));
             if (this.loggedUser != null) {
@@ -171,15 +173,6 @@ class App {
     }
 
     /**
-     * Render the navbar and show the logout link
-     */
-    renderNavBar = (active) => {
-        this.loginLink.innerHTML = "";
-        this.loginLink.innerHTML = '<a class="nav-link" href="/userPage">' + `${active}` + '</a>';
-        this.logoutLink.classList.remove('invisible');
-    };
-
-    /**
     * Perform the logout
     */
     logout = async () => {
@@ -192,6 +185,14 @@ class App {
         page.redirect('/login');
     }
 
+    /**
+     * Render the navbar and show the logout link
+     */
+    renderNavBar = (active) => {
+        this.loginLink.innerHTML = "";
+        this.loginLink.innerHTML = '<a class="nav-link" href="/userPage">' + `${active}` + '</a>';
+        this.logoutLink.classList.remove('invisible');
+    };
 
     personalUserPage = async () => {
 
@@ -211,24 +212,29 @@ class App {
     }
 
     createUserWishList = async () => {
-        
+
         try {
             const user = JSON.parse(localStorage.getItem('user'));
             const wishlist = await Api.getWishlist(user.id);
-            
+
             this.appContainer.innerHTML = "";
             this.appContainer.innerHTML = navbarUserPage('wishlist');
             const bodyPage = document.querySelector('.bodyPage');
             bodyPage.innerHTML = createWishlistPage();
-            const wishlistContainer = document.querySelector('#list');
-            
-            if(wishlist.length > 0) {
+            //const wishlistContainer = document.querySelector('#list');
+            let wishlistTable = document.querySelector("table > tbody");
+            let tr = document.createElement("tr");
+
+            if (wishlist.length > 0) {
                 for (let item of wishlist) {
+                    let td = document.createElement("td");
                     const getItem = await Api.getItemById(item.idWishItem);
-                    const itemRow = createCard(getItem);
-                    wishlistContainer.insertAdjacentHTML('beforeend', itemRow);
+                    td.innerHTML = createCard(getItem);
+                    //wishlistContainer.insertAdjacentHTML('beforeend', itemRow);
+                    tr.appendChild(td);
                 }
             }
+            wishlistTable.appendChild(tr);
         } catch (error) {
             page.redirect('/');
         }
@@ -238,16 +244,16 @@ class App {
     addItemWishList = async (event) => {
 
         event.preventDefault();
-        const itemId = event.target.value;
+        const itemId = event.target.closest('.btn-favourite-add');
         const user = JSON.parse(localStorage.getItem('user'));
-        
+
         try {
-            const item = await Api.getItemById(itemId);
-    
+            const item = await Api.getItemById(itemId.value);
+
             const response = await Api.addItemWishlist(user.id, item);
             this.showStore();
-            
-        }  catch (error) {
+
+        } catch (error) {
             page.redirect('/');
         }
 
@@ -256,16 +262,16 @@ class App {
     removeItemWishList = async (event) => {
 
         event.preventDefault();
-        const itemId = event.target.value;
+        const itemId = event.target.closest('.btn-favourite-remove');
         const user = JSON.parse(localStorage.getItem('user'));
-        
+
         try {
-            const item = await Api.getItemById(itemId);
-    
+            const item = await Api.getItemById(itemId.value);
+
             const response = await Api.removeItemFromWishlist(user.id, item);
             this.showStore();
-            
-        }  catch (error) {
+
+        } catch (error) {
             page.redirect('/');
         }
 
@@ -277,51 +283,93 @@ class App {
      */
     showStore = async () => {
         try {
-            const user = JSON.parse(localStorage.getItem('user'));
             const items = await Api.getItems();
-            const wishlist = await Api.getWishlist(user.id);
-            
-            //this.appContainer.innerHTML = "";
+
             this.appContainer.innerHTML = createStoreTable();
             const storeTable = document.querySelector('#my-items');
+            const btnCheckout = document.getElementById('checkoutBox');
+            btnCheckout.addEventListener('submit', this.onClickCheckout);
             this.updateCartHtml();
-
-            for (let item of items) {
-                const itemRow = createStoreCard(item);
-                storeTable.insertAdjacentHTML('beforeend', itemRow);
-                // Seleziona il productCard corrispondente all'item corrente
-                const productCard = document.querySelector(`#product-card-${item.id}`);
-                
-                if(wishlist.error) {
-                    productCard.insertAdjacentHTML('beforeend', addFollowButton(item.id));
-                } else {
-                    const itemFound = wishlist.filter(itemWish => itemWish.idWishItem == item.id);
-                    if(itemFound.length > 0) {
-                        productCard.insertAdjacentHTML('beforeend', removeFollowButton(item.id));
-                    } else {
-                        productCard.insertAdjacentHTML('beforeend', addFollowButton(item.id));
-                    }
-                }
-            }
-            
-            const buttons = document.querySelectorAll(".btn-add");
-            for (const btn of buttons) {
-                btn.addEventListener("click", this.addCart);
-            }
-
-            const buttonsAddsWish = document.querySelectorAll(".btn-favourite-add");
-            for (const btn of buttonsAddsWish) {
-                btn.addEventListener("click", this.addItemWishList);
-            }
-
-            const buttonsRemoveWish = document.querySelectorAll(".btn-favourite-remove");
-            for (const btn of buttonsRemoveWish) {
-                btn.addEventListener("click", this.removeItemWishList);
-            }
+            this.updateStoreHTML(items, storeTable);
+            this.createCategoriesList();
 
         } catch (error) {
             page.redirect('/login');
         }
+    }
+
+    /**
+     * Displays the items in the items container.
+     * @param  {Array} items - The array of items objects to display.
+     */
+    showItem = async (items) => {
+        const storeTable = document.querySelector('#my-items');
+        storeTable.innerHTML = "";
+
+        this.updateCartHtml();
+        this.updateStoreHTML(items, storeTable);
+    }
+
+    onClickCheckout = async (event) => {
+
+        event.preventDefault();
+        const form = event.target;
+        const user = JSON.parse(localStorage.getItem('user'));
+        const listPurchase = [];
+
+        const listCart = form.querySelectorAll('.cartCard');
+
+        listCart.forEach(item => {
+
+            const itemId = item.id;
+            const itemQuantity = item.quantity;
+            const itemPrice = item.price;
+            
+            let addPurchase = new Purchase(user.id, itemId, itemQuantity, itemPrice);
+            listPurchase.push(addPurchase);
+        });
+
+        const response = await Api.doCheckout(listPurchase);
+    }
+
+    updateStoreHTML = async (items, storeTable) => {
+
+        const user = JSON.parse(localStorage.getItem('user'));
+        const wishlist = await Api.getWishlist(user.id);
+
+        for (let item of items) {
+            const itemRow = createStoreCard(item);
+            storeTable.insertAdjacentHTML('beforeend', itemRow);
+            // Seleziona il productCard corrispondente all'item corrente
+            const productCard = document.querySelector(`#product-card-${item.id}`);
+
+            if (wishlist.error) {
+                productCard.insertAdjacentHTML('beforeend', addFollowButton(item.id));
+            } else {
+                const itemFound = wishlist.filter(itemWish => itemWish.idWishItem == item.id);
+                if (itemFound.length > 0) {
+                    productCard.insertAdjacentHTML('beforeend', removeFollowButton(item.id));
+                } else {
+                    productCard.insertAdjacentHTML('beforeend', addFollowButton(item.id));
+                }
+            }
+        }
+
+        const buttons = document.querySelectorAll(".btn-add");
+        for (const btn of buttons) {
+            btn.addEventListener("click", this.addCart);
+        }
+
+        const buttonsAddsWish = document.querySelectorAll(".btn-favourite-add");
+        for (const btn of buttonsAddsWish) {
+            btn.addEventListener("click", this.addItemWishList);
+        }
+
+        const buttonsRemoveWish = document.querySelectorAll(".btn-favourite-remove");
+        for (const btn of buttonsRemoveWish) {
+            btn.addEventListener("click", this.removeItemWishList);
+        }
+
     }
 
     /**
@@ -391,6 +439,66 @@ class App {
         }
         localStorage.setItem('cart', JSON.stringify(this.itemCart));
         this.updateCartHtml();
+    }
+
+    getTypes = async () => {
+        let categories = [];
+        const items = await Api.getCategories();
+        // Itera su ogni item per estrarre le categorie
+        items.forEach(m => {
+            categories = categories.concat(m.obj);
+        });
+        // Filtra le categorie rimuovendo i duplicati
+        categories = categories.filter((item, index) => categories.indexOf(item) === index);
+        // Ordina le categorie in ordine alfabetico
+        return categories.sort();
+    }
+
+    createCategoriesList = async () => {
+        const leftSidebar = document.querySelector("#left-sidebar");
+        let dd_menu = leftSidebar.querySelector(".dropdown-menu");
+        dd_menu.innerHTML = `<li><a class="dropdown-item active" data-id="all-categories" href="#">Tutte</a></li>`;
+        let categories = await this.getTypes();
+        categories.forEach(category => {
+            dd_menu.insertAdjacentHTML('beforeend',
+                `<li><a class="dropdown-item" data-id="${category}" href="#">${category}</a></li>`);
+        });
+        // Add event listeners to handle category clicks in the dropdown menu
+        this.createFiltersByCategory();
+    }
+
+    createFiltersByCategory() {
+        const leftSidebar = document.querySelector("#left-sidebar");
+        const categoryLinks = leftSidebar.querySelectorAll('.dropdown-menu a');
+
+        categoryLinks.forEach(cat => { cat.addEventListener('click', this.categoryClick) });
+    }
+
+    categoryClick = async (event) => {
+        event.preventDefault();
+        const el = event.target;
+        // Get the category from the element's data-id property
+        const category = el.dataset.id;
+        // Remove the 'active' class from the currently active main menu link
+        const leftSidebar = document.querySelector("#left-sidebar");
+        leftSidebar.querySelectorAll('.active').forEach(
+            el => el.classList.remove('active')
+        );
+        // Add the 'active' class to the "Categories" main menu link and the clicked category
+        document.getElementById("category").classList.add('active');
+        el.classList.add('active');
+        // Apply the category filter and get the filtered items
+        let itemsFilter = await Api.getFilterItems(category);
+        // Display the filtered items
+        this.showItem(itemsFilter);
+        // Update the active category state in the sidebar
+        this.updateActiveCategory(category);
+    };
+
+    updateActiveCategory(filterCat) {
+        let dd_menu = document.querySelector(".dropdown-menu");
+        dd_menu.querySelector('a.active').classList.remove('active');
+        dd_menu.querySelector(`a[data-id="${filterCat}"`).classList.add('active');
     }
 
 }

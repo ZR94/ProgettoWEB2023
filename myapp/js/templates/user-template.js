@@ -46,8 +46,16 @@ function createUserPage(user) {
 function createWishlistPage() {
   return `
     <div class="container col-md-auto">
+      <h5 class="offcanvas-title" id="offcanvasScrollingLabel">Wishlist</h5>
       <div class="row row-cols-1 row-cols-md-3 g-4" id="list">
-        <h5 class="offcanvas-title" id="offcanvasScrollingLabel">Wishlist</h5>
+        
+        <div class="table-responsive rounded-3 item-wishlist" id="item-wishlist">
+          <table class="table table-striped m-0">
+            <tbody>
+              <!-- Le righe sono inserite da JS -->
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   `;

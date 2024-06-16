@@ -109,6 +109,22 @@ class Api {
         }
     }
 
+    static getFilterItems = async (categoryName) => {
+        try {
+            let response = await fetch(`/api/items/categories/${categoryName}`);
+            const itemsJson = await response.json();
+
+            if (response.ok) {
+                return itemsJson;
+            } else {
+                throw itemsJson;  // Un oggetto con l'errore proveniente dal server
+            }
+        } catch (error) {
+            console.error('Error fetching Items:', error);
+            throw error;  // Rilancia l'errore per essere gestito dal chiamante
+        }
+    }
+
     static addItemWishlist = async (userId, item) => {
         try {
             const response = await fetch(`/api/user/${userId}/wishlist`, {
@@ -140,6 +156,43 @@ class Api {
             body: JSON.stringify({ userId, item }),
         });
         if (!response.ok) {
+            try {
+                const errDetail = await response.json();
+                throw errDetail.message;
+            }
+            catch (err) {
+                throw err;
+            }
+        }
+    }
+
+
+    /**
+     * Get the list of categories
+    */
+    static getCategories = async () => {
+        let response = await fetch('/api/categories');
+        const categoriesJson = await response.json();
+        if (response.ok) {
+            return categoriesJson;
+        } else {
+            throw categoriesJson;  // an object with the error coming from the server
+        }
+    }
+
+    static doCheckout = async (listPurchase) => {
+        let response = await fetch('/api/checkout', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ listPurchase }),
+        });
+        if (response.ok) {
+            const res = await response.json();
+            return res;
+        }
+        else {
             try {
                 const errDetail = await response.json();
                 throw errDetail.message;
