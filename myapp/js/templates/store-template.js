@@ -50,16 +50,16 @@ function createStoreTable() {
                             <h5 class="offcanvas-title" id="offcanvasScrollingLabel">List cart</h5>
                             <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
                         </div>
-                        <form class="" method="POST" action="" id="checkout-form" > 
+                        <div class="" id="checkout-form" > 
 
                             <div class="offcanvas-body listCart">
                             </div>
                             
                             <div class="d-flex justify-content-center mb-3" id="checkoutBox">
-                                <button class="btn btn-primary btn-checkout" type="submit" value="">Checkout</button>
+                                <button class="btn btn-primary btn-checkout" type="button" value="">Checkout</button>
                             </div>
                             
-                        </form>
+                        </div>
                     </div>
                 </div>
             </div>

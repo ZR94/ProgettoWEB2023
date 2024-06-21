@@ -288,7 +288,7 @@ class App {
             this.appContainer.innerHTML = createStoreTable();
             const storeTable = document.querySelector('#my-items');
             const btnCheckout = document.getElementById('checkoutBox');
-            btnCheckout.addEventListener('submit', this.onClickCheckout);
+            btnCheckout.addEventListener('click', this.onClickCheckout);
             this.updateCartHtml();
             this.updateStoreHTML(items, storeTable);
             this.createCategoriesList();
@@ -310,26 +310,27 @@ class App {
         this.updateStoreHTML(items, storeTable);
     }
 
-    onClickCheckout = async (event) => {
+    onClickCheckout = async () => {
 
-        event.preventDefault();
-        const form = event.target;
         const user = JSON.parse(localStorage.getItem('user'));
         const listPurchase = [];
 
-        const listCart = form.querySelectorAll('.cartCard');
 
-        listCart.forEach(item => {
+        this.itemCart.forEach(item => {
 
-            const itemId = item.id;
-            const itemQuantity = item.quantity;
-            const itemPrice = item.price;
-            
-            let addPurchase = new Purchase(user.id, itemId, itemQuantity, itemPrice);
-            listPurchase.push(addPurchase);
+            if(item) {
+                const itemId = item.id;
+                const itemQuantity = item.quantity;
+                const itemPrice = item.price;
+                
+                let addPurchase = new Purchase(user.id, itemId, itemQuantity, itemPrice);
+                listPurchase.push(addPurchase);
+            }
+
         });
 
         const response = await Api.doCheckout(listPurchase);
+
     }
 
     updateStoreHTML = async (items, storeTable) => {

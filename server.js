@@ -118,15 +118,14 @@ app.post('/api/checkout', /* [add here some validity checks], */(req, res) => {
   const listPurchase = req.body.listPurchase;
 
   const insertAllPurchases = async () => {
-    for (const purchase of listPurchase) {
-      // Inserisci ogni oggetto nel database
-      await dao.createPurchase(purchase);
-    }
+    const promises = listPurchase.map(purchase => dao.createPurchase(purchase));
+    await Promise.all(promises);
   };
   
-  insertAllPurchases
+  insertAllPurchases()
     .then(() => res.status(200).json({ message: 'Item added to purchase successfully' }))
     .catch((err) => res.status(err.status || 500).json({ error: err.msg || 'An error occurred' }));
+  
 });
 
 // DELETE /sessions/current 
