@@ -223,18 +223,19 @@ class App {
             bodyPage.innerHTML = createWishlistPage();
             //const wishlistContainer = document.querySelector('#list');
             let wishlistTable = document.querySelector("table > tbody");
-            let tr = document.createElement("tr");
 
             if (wishlist.length > 0) {
                 for (let item of wishlist) {
+                    let tr = document.createElement("tr");
                     let td = document.createElement("td");
                     const getItem = await Api.getItemById(item.idWishItem);
                     td.innerHTML = createCard(getItem);
                     //wishlistContainer.insertAdjacentHTML('beforeend', itemRow);
                     tr.appendChild(td);
+                    wishlistTable.appendChild(tr);
                 }
             }
-            wishlistTable.appendChild(tr);
+            
         } catch (error) {
             page.redirect('/');
         }
@@ -330,6 +331,10 @@ class App {
         });
 
         const response = await Api.doCheckout(listPurchase);
+        if(response){
+            localStorage.removeItem('cart');
+            this.updateCartHtml();
+        }
 
     }
 

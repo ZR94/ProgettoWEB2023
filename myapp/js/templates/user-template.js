@@ -56,6 +56,7 @@ function createWishlistPage() {
             </tbody>
           </table>
         </div>
+        
       </div>
     </div>
   `;

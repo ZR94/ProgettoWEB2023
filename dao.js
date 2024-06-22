@@ -167,7 +167,7 @@ exports.getWishlistByUserId = function (userId) {
                 resolve({ error: 'Wishlist not found.' });
             else {
                 const item = row.map((row) => ({ idWishUser: row.idWishUser, idWishItem: row.idWishItem }));
-                resolve(item);
+                resolve(item.sort());
             }
         });
     });
