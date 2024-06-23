@@ -9,7 +9,7 @@ import { createLoginForm } from './templates/login-template.js';
 import { createSignUpForm } from './templates/sign-template.js';
 import { createHomeForm } from './templates/home-template.js';
 import { navbarUserPage, createUserPage, createWishlistPage, createCard } from './templates/user-template.js';
-import { createStoreTable, createStoreCard, createCartCard, addFollowButton, removeFollowButton } from './templates/store-template.js';
+import { createStoreTable, createStoreCard, createCartCard, addFollowButton, removeFollowButton, addPubIcon, addPrvIcon } from './templates/store-template.js';
 import { createContactForm } from './templates/contact-template.js';
 import { createPricingForm } from './templates/pricing-template.js';
 import page from "//unpkg.com/page/page.mjs";
@@ -221,7 +221,7 @@ class App {
             this.appContainer.innerHTML = navbarUserPage('wishlist');
             const bodyPage = document.querySelector('.bodyPage');
             bodyPage.innerHTML = createWishlistPage();
-            //const wishlistContainer = document.querySelector('#list');
+
             let wishlistTable = document.querySelector("table > tbody");
 
             if (wishlist.length > 0) {
@@ -230,7 +230,7 @@ class App {
                     let td = document.createElement("td");
                     const getItem = await Api.getItemById(item.idWishItem);
                     td.innerHTML = createCard(getItem);
-                    //wishlistContainer.insertAdjacentHTML('beforeend', itemRow);
+
                     tr.appendChild(td);
                     wishlistTable.appendChild(tr);
                 }
@@ -338,6 +338,10 @@ class App {
 
     }
 
+    onClickFavourities = async (event) => {
+
+    }
+
     updateStoreHTML = async (items, storeTable) => {
 
         const user = JSON.parse(localStorage.getItem('user'));
@@ -355,6 +359,11 @@ class App {
                 const itemFound = wishlist.filter(itemWish => itemWish.idWishItem == item.id);
                 if (itemFound.length > 0) {
                     productCard.insertAdjacentHTML('beforeend', removeFollowButton(item.id));
+                    if(itemFound[0].visibility > 0) {
+                        productCard.insertAdjacentHTML('beforeend', addPubIcon());
+                    } else {
+                        productCard.insertAdjacentHTML('beforeend', addPrvIcon());
+                    }
                 } else {
                     productCard.insertAdjacentHTML('beforeend', addFollowButton(item.id));
                 }
@@ -376,6 +385,10 @@ class App {
             btn.addEventListener("click", this.removeItemWishList);
         }
 
+    }
+
+    static pubIcon () {
+        return `<img src='./svg/eye.svg' alt='visibilità pubblica'>`
     }
 
     /**
@@ -475,6 +488,7 @@ class App {
 
     createFiltersByCategory() {
         const leftSidebar = document.querySelector("#left-sidebar");
+        //const 
         const categoryLinks = leftSidebar.querySelectorAll('.dropdown-menu a');
 
         categoryLinks.forEach(cat => { cat.addEventListener('click', this.categoryClick) });

@@ -160,14 +160,14 @@ exports.getUser = function (email, password) {
 exports.getWishlistByUserId = function (userId) {
     return new Promise((resolve, reject) => {
         const sql = 'SELECT * FROM wishlist WHERE idWishUser = ?';
-        db.all(sql, [userId], (err, row) => {
+        db.all(sql, [userId], (err, rows) => {
             if (err)
                 reject(err);
-            else if (row.length === 0)
+            else if (rows.length === 0)
                 resolve({ error: 'Wishlist not found.' });
             else {
-                const item = row.map((row) => ({ idWishUser: row.idWishUser, idWishItem: row.idWishItem }));
-                resolve(item.sort());
+                const item = rows.map((row) => ({ idWishUser: row.idWishUser, idWishItem: row.idWishItem, visibility: row.visibility }));
+                resolve(item.sort((a, b) => a.idWishItem - b.idWishItem));
             }
         });
     });

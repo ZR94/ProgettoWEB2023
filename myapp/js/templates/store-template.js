@@ -9,8 +9,8 @@ function createStoreTable() {
                 <div class="list-group list-group-flush border" >
                     <a href="#" data-id="all" class="list-group-item list-group-item-action active" aria-current="true">
                         <img src="./svg/list.svg" alt="tutti gli items nella wishlist"> Tutti</a>
-                    <a href="#" data-id="unmissable" class="list-group-item list-group-item-action">
-                        <img src="./svg/exclamation-circle.svg" alt="scontati"> In sconto</a>
+                    <a href="#" data-id="favourities" class="list-group-item list-group-item-action">
+                        <img src="./svg/exclamation-circle.svg" alt="Favourities"> Favourities</a>
                     <a href="#" data-id="today" class="list-group-item list-group-item-action">
                         <img src="./svg/calendar-event.svg" alt="scadenza a breve"> Scade oggi</a>
                     <a href="#" data-id="week" class="list-group-item list-group-item-action">
@@ -134,4 +134,16 @@ function removeFollowButton(itemId) {
     `;
 }
 
-export { createStoreTable, createStoreCard, createCartCard, addFollowButton, removeFollowButton};
+function addPubIcon() {
+    return `
+    <img src='./svg/eye.svg' alt='visibilità pubblica'>
+    `;
+}
+
+function addPrvIcon() {
+    return `
+    <img src='./svg/eye-slash.svg' alt='visibilità pubblica'>
+    `;
+}
+
+export { createStoreTable, createStoreCard, createCartCard, addFollowButton, removeFollowButton, addPubIcon, addPrvIcon};
