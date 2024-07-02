@@ -125,6 +125,22 @@ class Api {
         }
     }
 
+    static getFilterTitle = async (categoryName) => {
+        try {
+            let response = await fetch(`/api/items/titles/${categoryName}`);
+            const itemsJson = await response.json();
+
+            if (response.ok) {
+                return itemsJson;
+            } else {
+                throw itemsJson;  // Un oggetto con l'errore proveniente dal server
+            }
+        } catch (error) {
+            console.error('Error fetching Items:', error);
+            throw error;  // Rilancia l'errore per essere gestito dal chiamante
+        }
+    }
+
     static addItemWishlist = async (userId, item) => {
         try {
             const response = await fetch(`/api/user/${userId}/wishlist`, {

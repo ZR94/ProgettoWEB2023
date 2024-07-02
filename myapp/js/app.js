@@ -235,7 +235,7 @@ class App {
                     wishlistTable.appendChild(tr);
                 }
             }
-            
+
         } catch (error) {
             page.redirect('/');
         }
@@ -319,11 +319,11 @@ class App {
 
         this.itemCart.forEach(item => {
 
-            if(item) {
+            if (item) {
                 const itemId = item.id;
                 const itemQuantity = item.quantity;
                 const itemPrice = item.price;
-                
+
                 let addPurchase = new Purchase(user.id, itemId, itemQuantity, itemPrice);
                 listPurchase.push(addPurchase);
             }
@@ -331,15 +331,22 @@ class App {
         });
 
         const response = await Api.doCheckout(listPurchase);
-        if(response){
+        if (response) {
             localStorage.removeItem('cart');
             this.updateCartHtml();
         }
 
     }
 
-    onClickFavourities = async (event) => {
+    onClickFavourities = async () => {
 
+        const user = JSON.parse(localStorage.getItem('user'));
+        const wishlist = await Api.getWishlist(user.id);
+        const storeTable = document.querySelector('#my-items');
+        storeTable.innerHTML = "";
+
+        this.updateCartHtml();
+        this.updateStoreHTML(wishlist, storeTable);
     }
 
     updateStoreHTML = async (items, storeTable) => {
@@ -359,7 +366,7 @@ class App {
                 const itemFound = wishlist.filter(itemWish => itemWish.idWishItem == item.id);
                 if (itemFound.length > 0) {
                     productCard.insertAdjacentHTML('beforeend', removeFollowButton(item.id));
-                    if(itemFound[0].visibility > 0) {
+                    if (itemFound[0].visibility > 0) {
                         productCard.insertAdjacentHTML('beforeend', addPubIcon());
                     } else {
                         productCard.insertAdjacentHTML('beforeend', addPrvIcon());
@@ -387,7 +394,7 @@ class App {
 
     }
 
-    static pubIcon () {
+    static pubIcon() {
         return `<img src='./svg/eye.svg' alt='visibilità pubblica'>`
     }
 
@@ -460,6 +467,17 @@ class App {
         this.updateCartHtml();
     }
 
+    /**
+     * Adds click event listeners to filter elements.
+     */
+    manageFilters() {
+        this.leftSidebar.querySelectorAll("li").forEach(li_el => {
+            li_el.addEventListener("click", event => {
+                this.onClickFilter(event);
+            });
+        });
+    }
+
     getTypes = async () => {
         let categories = [];
         const items = await Api.getCategories();
@@ -484,6 +502,7 @@ class App {
         });
         // Add event listeners to handle category clicks in the dropdown menu
         this.createFiltersByCategory();
+        this.createFiltersByTitle();
     }
 
     createFiltersByCategory() {
@@ -513,6 +532,39 @@ class App {
         this.showItem(itemsFilter);
         // Update the active category state in the sidebar
         this.updateActiveCategory(category);
+    };
+
+    createFiltersByTitle() {
+        const leftSidebar = document.querySelector("#left-sidebar");
+        //const 
+        const categoryLinks = leftSidebar.querySelectorAll('.list-group a');
+
+        categoryLinks.forEach(cat => { cat.addEventListener('click', this.titleClick) });
+    }
+
+    titleClick = async (event) => {
+        event.preventDefault();
+        const el = event.target;
+        // Get the category from the element's data-id property
+        const category = el.dataset.id;
+        // Remove the 'active' class from the currently active main menu link
+        const leftSidebar = document.querySelector("#left-sidebar");
+        leftSidebar.querySelectorAll('.active').forEach(
+            el => el.classList.remove('active')
+        );
+        // Add the 'active' class to the "Categories" main menu link and the clicked category
+        document.getElementById("category").classList.add('active');
+        el.classList.add('active');
+        // Apply the category filter and get the filtered items
+        if (category === 'favourities') {
+            this.onClickFavourities();
+        } else {
+                    // Display the filtered items
+        this.showItem(itemsFilter);
+        // Update the active category state in the sidebar
+        this.updateActiveCategory(category);
+        }
+        
     };
 
     updateActiveCategory(filterCat) {
