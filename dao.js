@@ -226,3 +226,21 @@ exports.getItemsByCategory = function (categoryName) {
         });
     });
 };
+
+/*
+exports.getItemsByVisibility = function (userId, visibility) {
+    return new Promise((resolve, reject) => {
+        const sql = "SELECT * FROM item JOIN wishlist ON wishlist.idWishItem = item.id WHERE wishlist.idWishUser = ? AND wishlist.visibility = ?";
+        db.all(sql, [userId, visibility], (err, row) => {
+            if (err)
+                reject(err);
+            else if (row.length === 0)
+                resolve({ error: 'Items not found.' });
+            else {
+                const item = row.map((row) => ({ id: row.idItem, price: row.price, name: row.name, img: row.img }));
+                resolve(item);
+            }
+        });
+    });
+};
+*/

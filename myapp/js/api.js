@@ -109,6 +109,24 @@ class Api {
         }
     }
 
+    /*
+    static getItemVisibility = async (userId, visibility) => {
+        try {
+            let response = await fetch(`/api/user/${userId}/wishlist/${visibility}`);
+            const wishlistJson = await response.json();
+
+            if (response.ok) {
+                return wishlistJson;
+            } else {
+                throw wishlistJson;  // Un oggetto con l'errore proveniente dal server
+            }
+        } catch (error) {
+            console.error('Error fetching wishlist:', error);
+            throw error;  // Rilancia l'errore per essere gestito dal chiamante
+        }
+    }
+    */
+
     static getFilterItems = async (categoryName) => {
         try {
             let response = await fetch(`/api/items/categories/${categoryName}`);

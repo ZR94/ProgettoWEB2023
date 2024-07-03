@@ -209,6 +209,16 @@ app.get('/api/items/categories/:categoryName', (req, res) => {
     .catch((error) => res.status(404).json(error));
 });
 
+/*
+app.get('/api/user/:userId/wishlist/:visibility', (req, res) => {
+  const userId = req.params.userId;
+  const visibility = req.params.visibility;
+  dao.getItemsByVisibility(userId, visibility)
+    .then(() => res.end())
+    .catch((err) => res.status(err.status).json(err.msg));
+});
+*/
+
 app.get('*', (req, res) => {
   res.sendFile(path.resolve(__dirname, 'myapp/index.html'));
 });

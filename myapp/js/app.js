@@ -344,9 +344,53 @@ class App {
         const wishlist = await Api.getWishlist(user.id);
         const storeTable = document.querySelector('#my-items');
         storeTable.innerHTML = "";
+        const itemWishlist = [];
+        
+        for (let item of wishlist) {
+            const itemWish = await Api.getItemById(item.idWishItem);
+            itemWishlist.push(itemWish);
+        }
 
         this.updateCartHtml();
-        this.updateStoreHTML(wishlist, storeTable);
+        this.updateStoreHTML(itemWishlist, storeTable);
+    }
+
+    onClickPrivate = async () => {
+
+        const user = JSON.parse(localStorage.getItem('user'));
+        const wishlist = await Api.getWishlist(user.id);
+        const storeTable = document.querySelector('#my-items');
+        storeTable.innerHTML = "";
+        const itemWishlist = [];
+        
+        for (let item of wishlist) {
+            if (item.visibility === 0) {
+                const itemWish = await Api.getItemById(item.idWishItem);
+                itemWishlist.push(itemWish); 
+            }
+        }
+
+        this.updateCartHtml();
+        this.updateStoreHTML(itemWishlist, storeTable);
+    }
+
+    onClickPublic = async () => {
+
+        const user = JSON.parse(localStorage.getItem('user'));
+        const wishlist = await Api.getWishlist(user.id);
+        const storeTable = document.querySelector('#my-items');
+        storeTable.innerHTML = "";
+        const itemWishlist = [];
+        
+        for (let item of wishlist) {
+            if (item.visibility === 1) {
+                const itemWish = await Api.getItemById(item.idWishItem);
+                itemWishlist.push(itemWish); 
+            }
+        }
+
+        this.updateCartHtml();
+        this.updateStoreHTML(itemWishlist, storeTable);
     }
 
     updateStoreHTML = async (items, storeTable) => {
@@ -469,12 +513,25 @@ class App {
 
     /**
      * Adds click event listeners to filter elements.
+     *
+     * This function iterates over all the `li` elements in the `leftSidebar` element.
+     * For each of them, it adds a click event listener that calls the `onClickFilter` method
+     * with the click event as argument. It also checks if `leftSidebar` is not null before
+     * iterating over its elements.
+     *
+     * @throws {Error} If `leftSidebar` is null.
      */
     manageFilters() {
+        if (!this.leftSidebar) {
+            throw new Error('leftSidebar is null');
+        }
+
         this.leftSidebar.querySelectorAll("li").forEach(li_el => {
-            li_el.addEventListener("click", event => {
-                this.onClickFilter(event);
-            });
+            if (li_el) {
+                li_el.addEventListener("click", event => {
+                    this.onClickFilter(event);
+                });
+            }
         });
     }
 
@@ -513,9 +570,38 @@ class App {
         categoryLinks.forEach(cat => { cat.addEventListener('click', this.categoryClick) });
     }
 
+    createFiltersByTitle() {
+        const leftSidebar = document.querySelector("#left-sidebar");
+
+        const categoryLinks = leftSidebar.querySelectorAll('.list-group a');
+
+        categoryLinks.forEach(cat => { cat.addEventListener('click', this.titleClick) });
+    }
+
+    getCardIds() {
+        // Seleziona il div con id "my-items"
+        const myItemsDiv = document.getElementById('my-items');
+        
+        // Seleziona tutti gli elementi con la classe "card h-100" all'interno di "my-items"
+        const cards = myItemsDiv.getElementsByClassName('card h-100');
+        
+        // Crea un array per memorizzare gli ID
+        const ids = [];
+        
+        // Itera attraverso gli elementi e aggiungi i loro ID all'array
+        for (let card of cards) {
+            ids.push(card.id);
+        }
+
+        const intIds = ids.map(id => parseInt(id, 10));
+        
+        return intIds;
+    }
+
     categoryClick = async (event) => {
         event.preventDefault();
         const el = event.target;
+        const itemStore = [];
         // Get the category from the element's data-id property
         const category = el.dataset.id;
         // Remove the 'active' class from the currently active main menu link
@@ -526,21 +612,24 @@ class App {
         // Add the 'active' class to the "Categories" main menu link and the clicked category
         document.getElementById("category").classList.add('active');
         el.classList.add('active');
-        // Apply the category filter and get the filtered items
-        let itemsFilter = await Api.getFilterItems(category);
-        // Display the filtered items
-        this.showItem(itemsFilter);
+
+        const idItemsStore = this.getCardIds();
+        const [categories, itemsFilter] = await Promise.all([
+            Api.getCategories(),
+            Api.getFilterItems(category)
+        ]);
+        const idCategory = categories.find(c => c.obj === category);
+        
+        // Display the filtered items\
+        itemsFilter.forEach(item => {
+            if (item.category === idCategory.id && idItemsStore.includes(item.id)) {
+                itemStore.push(item);
+            }
+        });
+        this.showItem(itemStore);
         // Update the active category state in the sidebar
         this.updateActiveCategory(category);
     };
-
-    createFiltersByTitle() {
-        const leftSidebar = document.querySelector("#left-sidebar");
-        //const 
-        const categoryLinks = leftSidebar.querySelectorAll('.list-group a');
-
-        categoryLinks.forEach(cat => { cat.addEventListener('click', this.titleClick) });
-    }
 
     titleClick = async (event) => {
         event.preventDefault();
@@ -552,19 +641,18 @@ class App {
         leftSidebar.querySelectorAll('.active').forEach(
             el => el.classList.remove('active')
         );
-        // Add the 'active' class to the "Categories" main menu link and the clicked category
-        document.getElementById("category").classList.add('active');
+        // Add the 'active' class to the clicked category
         el.classList.add('active');
         // Apply the category filter and get the filtered items
-        if (category === 'favourities') {
+        if (category === 'all') {
+            this.showStore();
+        } else if (category === 'favourities') {
             this.onClickFavourities();
-        } else {
-                    // Display the filtered items
-        this.showItem(itemsFilter);
-        // Update the active category state in the sidebar
-        this.updateActiveCategory(category);
+        } else if(category === 'private') {
+            this.onClickPrivate();
+        } else if(category === 'public') {
+            this.onClickPublic();
         }
-        
     };
 
     updateActiveCategory(filterCat) {

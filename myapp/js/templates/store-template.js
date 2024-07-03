@@ -71,7 +71,7 @@ function createStoreTable() {
 function createStoreCard(item) {
     return `
     <div class="col">
-        <div class="card h-100">
+        <div class="card h-100" id="${item.id}">
                 <img src="${item.img}" class="card-img-top" alt="...">
             <div class="card-body">
                 <h5 class="card-title">${item.name}</h5>
