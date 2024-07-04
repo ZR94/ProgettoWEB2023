@@ -2,10 +2,9 @@ class Comment {
 
     static counter = 0;
 
-    constructor(user, documento, text) {
+    constructor(user, text) {
         this.id = Comment.counter++;
         this.user = user;
-        this.documento = documento;
         this.text = text;
     }
 

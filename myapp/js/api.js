@@ -237,6 +237,28 @@ class Api {
         }
     }
 
+    static addComment = async (userId, item) => {
+        try {
+            const response = await fetch(`/api/user/${userId}/comment`, {
+                method: 'post',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify( item ),
+            });
+            
+            if (response.ok) {
+                const responseData = await response.json();
+                return responseData;
+            } else {
+                const errDetail = await response.json();
+                throw new Error(errDetail.message || 'An error occurred while adding the item to the wishlist.');
+            }
+        } catch (err) {
+            throw new Error(err.message || 'Network error');
+        }
+    }
+
 }
 
 export default Api;

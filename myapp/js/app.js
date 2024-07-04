@@ -661,6 +661,24 @@ class App {
         dd_menu.querySelector(`a[data-id="${filterCat}"`).classList.add('active');
     }
 
+    addComment = async (event) => {
+
+        event.preventDefault();
+        const itemId = event.target.closest('.btn-comment-add');
+        const user = JSON.parse(localStorage.getItem('user'));
+
+        try {
+            const item = await Api.getItemById(itemId.value);
+
+            const response = await Api.addItemWishlist(user.id, item);
+            this.showStore();
+
+        } catch (error) {
+            page.redirect('/');
+        }
+
+    }
+
 }
 
 export default App;
