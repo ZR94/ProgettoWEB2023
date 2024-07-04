@@ -54,6 +54,13 @@ class Api {
     }
 
     /**
+     * Perform the logout
+     */
+    static doLogout = async () => {
+        await fetch('/api/sessions/current', { method: 'DELETE' });
+    }
+
+    /**
      * Get the list of items store
      */
     static getItems = async () => {
@@ -74,13 +81,6 @@ class Api {
         } else {
             throw itemsJson;  // an object with the error coming from the server
         }
-    }
-
-    /**
-     * Perform the logout
-     */
-    static doLogout = async () => {
-        await fetch('/api/sessions/current', { method: 'DELETE' });
     }
 
     static getLoggedUser = async (userId) => {
@@ -108,24 +108,6 @@ class Api {
             throw error;  // Rilancia l'errore per essere gestito dal chiamante
         }
     }
-
-    /*
-    static getItemVisibility = async (userId, visibility) => {
-        try {
-            let response = await fetch(`/api/user/${userId}/wishlist/${visibility}`);
-            const wishlistJson = await response.json();
-
-            if (response.ok) {
-                return wishlistJson;
-            } else {
-                throw wishlistJson;  // Un oggetto con l'errore proveniente dal server
-            }
-        } catch (error) {
-            console.error('Error fetching wishlist:', error);
-            throw error;  // Rilancia l'errore per essere gestito dal chiamante
-        }
-    }
-    */
 
     static getFilterItems = async (categoryName) => {
         try {
@@ -159,14 +141,14 @@ class Api {
         }
     }
 
-    static addItemWishlist = async (userId, item) => {
+    static addItemWishlist = async (userId, item, visibility) => {
         try {
             const response = await fetch(`/api/user/${userId}/wishlist`, {
                 method: 'post',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify( item ),
+                body: JSON.stringify( {item, visibility }),
             });
             
             if (response.ok) {
@@ -199,7 +181,6 @@ class Api {
             }
         }
     }
-
 
     /**
      * Get the list of categories
@@ -236,15 +217,15 @@ class Api {
             }
         }
     }
-
-    static addComment = async (userId, item) => {
+17
+    static addComment = async (comment) => {
         try {
-            const response = await fetch(`/api/user/${userId}/comment`, {
+            const response = await fetch(`/api/comment`, {
                 method: 'post',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify( item ),
+                body: JSON.stringify({ comment }),
             });
             
             if (response.ok) {
@@ -252,7 +233,7 @@ class Api {
                 return responseData;
             } else {
                 const errDetail = await response.json();
-                throw new Error(errDetail.message || 'An error occurred while adding the item to the wishlist.');
+                throw new Error(errDetail.message || 'An error occurred while adding the comment.');
             }
         } catch (err) {
             throw new Error(err.message || 'Network error');

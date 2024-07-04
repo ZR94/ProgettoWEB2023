@@ -173,7 +173,7 @@ exports.getWishlistByUserId = function (userId) {
     });
 };
 
-exports.addItemInWishList = function (userId, itemId) {
+exports.addItemInWishList = function (userId, itemId, visibility) {
     return new Promise((resolve, reject) => {
         // controlla se l'item non sia già nella wishlist dell'utente
         const sql = "SELECT * FROM wishlist WHERE idWishUser = ? AND idWishItem = ?";
@@ -185,8 +185,8 @@ exports.addItemInWishList = function (userId, itemId) {
                     reject({ status: 422, msg: `errore: item con id ${itemId} già presente nella wishlist dell'utente ${userId}.` });
                 }
                 else {
-                    const ins = "INSERT INTO wishlist (idWishItem, idWishUser) VALUES (?,?)";
-                    db.run(ins, [itemId, userId], (err) => {
+                    const ins = "INSERT INTO wishlist (idWishItem, idWishUser, visibility) VALUES (?,?,?)";
+                    db.run(ins, [itemId, userId, visibility], (err) => {
                         if (err) {
                             reject({ status: 500, msg: err.message });
                         }
@@ -227,20 +227,15 @@ exports.getItemsByCategory = function (categoryName) {
     });
 };
 
-/*
-exports.getItemsByVisibility = function (userId, visibility) {
+exports.addComment = function (userId, itemId, text) {
     return new Promise((resolve, reject) => {
-        const sql = "SELECT * FROM item JOIN wishlist ON wishlist.idWishItem = item.id WHERE wishlist.idWishUser = ? AND wishlist.visibility = ?";
-        db.all(sql, [userId, visibility], (err, row) => {
-            if (err)
-                reject(err);
-            else if (row.length === 0)
-                resolve({ error: 'Items not found.' });
-            else {
-                const item = row.map((row) => ({ id: row.idItem, price: row.price, name: row.name, img: row.img }));
-                resolve(item);
-            }
+        const sql = "INSERT INTO comment (idCommentUser, idCommentItem, text) VALUES (?,?,?)";
+        db.run(sql, [userId, itemId, text], (err) => {
+            if (err) {
+                reject({ status: 500, msg: err.message });
+            } else {
+                resolve(this.id);
+            };
         });
     });
 };
-*/
