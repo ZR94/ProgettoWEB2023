@@ -247,18 +247,33 @@ class App {
         event.preventDefault();
         const itemId = event.target.closest('.btn-favourite-add');
         const user = JSON.parse(localStorage.getItem('user'));
-
+        
         try {
+            const visibility = await this.showModalAndGetVisibility();
             const item = await Api.getItemById(itemId.value);
-
-            const response = await Api.addItemWishlist(user.id, item);
-            this.showStore();
+            const response = await Api.addItemWishlist(user.id, item, visibility);
+            if(response) {
+                this.showStore();
+            }
 
         } catch (error) {
             page.redirect('/');
         }
 
     }
+
+    showModalAndGetVisibility = () => {
+        return new Promise((resolve) => {
+
+            const saveButton = document.getElementById('saveChoice');
+            const handleSaveText = () => {
+                const visibility = parseInt(document.querySelector('input[name="visibilityOptions"]:checked').value, 10);
+                resolve(visibility);
+            };
+
+            saveButton.addEventListener('click', handleSaveText, { once: true });
+        });
+    };
 
     removeItemWishList = async (event) => {
 
@@ -338,20 +353,35 @@ class App {
 
     }
 
+    /**
+     * Handles the click event when the "Favourites" button is clicked.
+     * Retrieves the wishlist items for the logged-in user and updates the store table in the UI.
+     *
+     * @return {Promise<void>} - A promise that resolves when the store table is updated.
+     */
     onClickFavourities = async () => {
-
+        // Retrieve the logged-in user from local storage
         const user = JSON.parse(localStorage.getItem('user'));
+        // Retrieve the wishlist items for the user
         const wishlist = await Api.getWishlist(user.id);
+        // Get the store table element from the UI
         const storeTable = document.querySelector('#my-items');
+        // Clear the store table before updating it
         storeTable.innerHTML = "";
+        // Create an empty array to store the wishlist items
         const itemWishlist = [];
-        
+
+        // Iterate over each wishlist item
         for (let item of wishlist) {
+            // Retrieve the item details by its ID
             const itemWish = await Api.getItemById(item.idWishItem);
+            // Add the item to the wishlist array
             itemWishlist.push(itemWish);
         }
 
+        // Update the cart HTML to reflect any changes in the cart
         this.updateCartHtml();
+        // Update the store table HTML with the wishlist items
         this.updateStoreHTML(itemWishlist, storeTable);
     }
 
@@ -362,11 +392,11 @@ class App {
         const storeTable = document.querySelector('#my-items');
         storeTable.innerHTML = "";
         const itemWishlist = [];
-        
+
         for (let item of wishlist) {
             if (item.visibility === 0) {
                 const itemWish = await Api.getItemById(item.idWishItem);
-                itemWishlist.push(itemWish); 
+                itemWishlist.push(itemWish);
             }
         }
 
@@ -381,16 +411,39 @@ class App {
         const storeTable = document.querySelector('#my-items');
         storeTable.innerHTML = "";
         const itemWishlist = [];
-        
+
         for (let item of wishlist) {
             if (item.visibility === 1) {
                 const itemWish = await Api.getItemById(item.idWishItem);
-                itemWishlist.push(itemWish); 
+                itemWishlist.push(itemWish);
             }
         }
 
         this.updateCartHtml();
         this.updateStoreHTML(itemWishlist, storeTable);
+    }
+
+    onClickComment = async (event) => {
+
+        const user = JSON.parse(localStorage.getItem('user'));
+        const exampleModal = document.getElementById('commentModal')
+        if (exampleModal) {
+            exampleModal.addEventListener('show.bs.modal', event => {
+                // Button that triggered the modal
+                const button = event.relatedTarget
+                // Extract info from data-bs-* attributes
+                const recipient = button.getAttribute('data-bs-whatever')
+                // If necessary, you could initiate an Ajax request here
+                // and then do the updating in a callback.
+
+                // Update the modal's content.
+                const modalTitle = exampleModal.querySelector('.modal-title')
+                const modalBodyInput = exampleModal.querySelector('.modal-body input')
+
+                modalTitle.textContent = `New comment to ${recipient}`
+                modalBodyInput.value = recipient
+            })
+        }
     }
 
     updateStoreHTML = async (items, storeTable) => {
@@ -428,12 +481,17 @@ class App {
 
         const buttonsAddsWish = document.querySelectorAll(".btn-favourite-add");
         for (const btn of buttonsAddsWish) {
-            btn.addEventListener("click", this.addItemWishList);
+            btn.addEventListener("click", this.addItemWishList.bind(this));
         }
 
         const buttonsRemoveWish = document.querySelectorAll(".btn-favourite-remove");
         for (const btn of buttonsRemoveWish) {
             btn.addEventListener("click", this.removeItemWishList);
+        }
+
+        const buttonsAddsComment = document.querySelectorAll(".btn-comment-add");
+        for (const btn of buttonsAddsComment) {
+            btn.addEventListener("click", this.addComment.bind(this));
         }
 
     }
@@ -581,20 +639,20 @@ class App {
     getCardIds() {
         // Seleziona il div con id "my-items"
         const myItemsDiv = document.getElementById('my-items');
-        
+
         // Seleziona tutti gli elementi con la classe "card h-100" all'interno di "my-items"
         const cards = myItemsDiv.getElementsByClassName('card h-100');
-        
+
         // Crea un array per memorizzare gli ID
         const ids = [];
-        
+
         // Itera attraverso gli elementi e aggiungi i loro ID all'array
         for (let card of cards) {
             ids.push(card.id);
         }
 
         const intIds = ids.map(id => parseInt(id, 10));
-        
+
         return intIds;
     }
 
@@ -619,7 +677,7 @@ class App {
             Api.getFilterItems(category)
         ]);
         const idCategory = categories.find(c => c.obj === category);
-        
+
         // Display the filtered items\
         itemsFilter.forEach(item => {
             if (item.category === idCategory.id && idItemsStore.includes(item.id)) {
@@ -648,9 +706,9 @@ class App {
             this.showStore();
         } else if (category === 'favourities') {
             this.onClickFavourities();
-        } else if(category === 'private') {
+        } else if (category === 'private') {
             this.onClickPrivate();
-        } else if(category === 'public') {
+        } else if (category === 'public') {
             this.onClickPublic();
         }
     };
@@ -664,13 +722,15 @@ class App {
     addComment = async (event) => {
 
         event.preventDefault();
-        const itemId = event.target.closest('.btn-comment-add');
+        const button = event.target.closest('.btn-comment-add');
+        const itemId = parseInt(button.value, 10);
         const user = JSON.parse(localStorage.getItem('user'));
 
         try {
-            const item = await Api.getItemById(itemId.value);
+            const text = await this.showModalAndGetText();
+            const comment = new Comment(user.id, itemId, text);
+            const response = await Api.addComment(comment);
 
-            const response = await Api.addItemWishlist(user.id, item);
             this.showStore();
 
         } catch (error) {
@@ -678,6 +738,19 @@ class App {
         }
 
     }
+
+    showModalAndGetText = () => {
+        return new Promise((resolve) => {
+
+            const saveButton = document.getElementById('saveComment');
+            const handleSaveText = () => {
+                const text = document.getElementById('message-text').value;
+                resolve(text);
+            };
+
+            saveButton.addEventListener('click', handleSaveText, { once: true });
+        });
+    };
 
 }
 

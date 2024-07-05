@@ -128,6 +128,33 @@ app.post('/api/checkout', /* [add here some validity checks], */(req, res) => {
   
 });
 
+app.post('/api/comment', /* [add here some validity checks], */(req, res) => {
+  // create a user object from the signup form
+  // additional fields may be useful (name, role, etc.)
+  const idUser = req.body.idUser;
+  const idItem = req.body.idItem;
+  const text = req.body.text;
+  dao.addComment(idUser, idItem, text)
+    .then(() => res.status(200).json({ message: 'Comment added successfully' }))
+    .catch((err) => res.status(err.status || 500).json({ error: err.msg || 'An error occurred' }));
+});
+
+// Aggiunge un item alla wishlist dell'utente, dato il suo id.
+app.post('/api/user/:userId/wishlist', [
+  check('item.id').notEmpty(),
+], (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(422).json({ errors: errors.array() });
+  }
+  const itemId = req.body.item.id;
+  const userId = req.params.userId;
+  const visibility = req.body.visibility;
+  dao.addItemInWishList(userId, itemId, visibility)
+    .then(() => res.status(200).json({ message: 'Item added to wishlist successfully' }))
+    .catch((err) => res.status(err.status || 500).json({ error: err.msg || 'An error occurred' }));
+});
+
 // DELETE /sessions/current 
 // Logout
 app.delete('/api/sessions/current', isLoggedIn, function (req, res) {
@@ -172,21 +199,6 @@ app.get('/api/wishlist/:id', (req, res) => {
     .catch((error) => res.status(404).json(error));
 });
 
-// Aggiunge un item alla wishlist dell'utente, dato il suo id.
-app.post('/api/user/:userId/wishlist', [
-  check('id').notEmpty(),
-], (req, res) => {
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) {
-    return res.status(422).json({ errors: errors.array() });
-  }
-  const itemId = req.body.id;
-  const userId = req.params.userId;
-  dao.addItemInWishList(userId, itemId)
-    .then(() => res.status(200).json({ message: 'Item added to wishlist successfully' }))
-    .catch((err) => res.status(err.status || 500).json({ error: err.msg || 'An error occurred' }));
-});
-
 // Rimuove un item dalla wishlist dell’utente, dato il suo id.
 app.delete('/api/user/:userId/wishlist/:itemId', (req, res) => {
   const userId = req.params.userId;
@@ -209,15 +221,7 @@ app.get('/api/items/categories/:categoryName', (req, res) => {
     .catch((error) => res.status(404).json(error));
 });
 
-/*
-app.get('/api/user/:userId/wishlist/:visibility', (req, res) => {
-  const userId = req.params.userId;
-  const visibility = req.params.visibility;
-  dao.getItemsByVisibility(userId, visibility)
-    .then(() => res.end())
-    .catch((err) => res.status(err.status).json(err.msg));
-});
-*/
+
 
 app.get('*', (req, res) => {
   res.sendFile(path.resolve(__dirname, 'myapp/index.html'));
