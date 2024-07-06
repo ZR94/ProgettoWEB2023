@@ -220,12 +220,12 @@ class Api {
 17
     static addComment = async (comment) => {
         try {
-            const response = await fetch(`/api/comment`, {
-                method: 'post',
+            let response = await fetch('/api/comments', {
+                method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ comment }),
+                body: JSON.stringify( {comment} ),
             });
             
             if (response.ok) {
@@ -237,6 +237,55 @@ class Api {
             }
         } catch (err) {
             throw new Error(err.message || 'Network error');
+        }
+    }
+
+    static removeComment = async (userId, item) => {
+        const response = await fetch(`/api/user/${userId}/comments/${item.id}`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ userId, item }),
+        });
+        if (!response.ok) {
+            try {
+                const errDetail = await response.json();
+                throw errDetail.message;
+            }
+            catch (err) {
+                throw err;
+            }
+        }
+    }
+
+    static getCommentsbyUserId = async (userId) => {
+        let response = await fetch(`/api/user/${userId}/comments`);
+        const commentsJson = await response.json();
+        if (response.ok) {
+            return commentsJson;
+        } else {
+            throw commentsJson;  // an object with the error coming from the server
+        }
+    }
+
+    static getCommentsbyItemId = async (itemId) => {
+        let response = await fetch(`/api/items/${itemId}/comments`);
+        const commentsJson = await response.json();
+        if (response.ok) {
+            return commentsJson;
+        } else {
+            throw commentsJson;  // an object with the error coming from the server
+        }
+    }
+
+    static getHistoryPurchase = async (userId) => {
+        let response = await fetch(`/api/user/${userId}/history`);
+        const historyJson = await response.json();
+        if (response.ok) {
+            return historyJson;
+        } else {
+            throw historyJson;  // an object with the error coming from the server
         }
     }
 

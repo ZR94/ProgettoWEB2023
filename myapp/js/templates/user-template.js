@@ -5,16 +5,16 @@ function navbarUserPage(active) {
     <div class="container col-md-auto navbarUser">
       <ul class="nav nav-tabs">
         <li class="nav-item">
-          <a class="nav-link ${active === 'userPage' ? 'active' : ''}" ${active === 'userPage' ? 'aria-current="page"' : ''} href="/userPage">Profilo</a>
+          <a class="nav-link text-dark ${active === 'userPage' ? 'active' : ''}" ${active === 'userPage' ? 'aria-current="page"' : ''} href="/userPage">Profilo</a>
         </li>
         <li class="nav-item" id="user-wishlist">
-          <a class="nav-link ${active === 'wishlist' ? 'active' : ''}" ${active === 'wishlist' ? 'aria-current="page"' : ''} href="/wishlist">WishList</a>
+          <a class="nav-link text-dark ${active === 'wishlist' ? 'active' : ''}" ${active === 'wishlist' ? 'aria-current="page"' : ''} href="/wishlist">WishList</a>
         </li>
         <li class="nav-item">
-          <a class="nav-link ${active === 'history' ? 'active' : ''}" ${active === 'history' ? 'aria-current="page"' : ''} href="/history">Cronologia acquisti</a>
+          <a class="nav-link text-dark ${active === 'history' ? 'active' : ''}" ${active === 'history' ? 'aria-current="page"' : ''} href="/history">Cronologia acquisti</a>
         </li>
         <li class="nav-item">
-          <a class="nav-link ${active === 'delete' ? 'active' : ''}" ${active === 'delete' ? 'aria-current="page"' : ''} href="/delete">Delete account</a>
+          <a class="nav-link text-dark ${active === 'delete' ? 'active' : ''}" ${active === 'delete' ? 'aria-current="page"' : ''} href="/delete">Delete account</a>
         </li>
       </ul>
       <div class="container col-md-auto bodyPage">
@@ -75,5 +75,44 @@ function createCard(item) {
   `;
 }
 
-export { navbarUserPage, createUserPage, createWishlistPage, createCard };
+function createHistoryPurchasePage() {
+  return `
+    <div class="container col-md-auto">
+      <h5 class="offcanvas-title" id="offcanvasScrollingLabel">History Purchase</h5>
+
+    </div>
+  `;
+}
+
+function createTablePurchase() {
+  return `
+    <div class="row row-cols-1 row-cols-md-3 g-4" id="list">
+          
+    <div class="table-responsive rounded-3 item-purchase" id="item-purchase">
+      <table class="table table-striped m-0">
+      <p class="card-text dateTime"></p>
+        <tbody>
+          <!-- Le righe sono inserite da JS -->
+        </tbody>
+      </table>
+    </div>
+    
+    </div>
+  `;
+}
+
+function createCardPurchase(item, qta) {
+  return `
+  <div class="card mb-3" style="width: 12rem; height: 12rem;">
+    <div class="">
+      <h5 class="card-title fw-bold">${item.name}</h5>
+      <p class="card-text">Price: $${item.price.toFixed(2)}</p>
+      <p class="card-text">Quantity: ${qta}</p>
+      <button type="button" class="btn btn-primary btn-comment-add" data-bs-toggle="modal" data-bs-target="#commentModal" value="${item.id}">Add Comment</button>
+    </div>
+  </div>
+  `;
+}
+
+export { navbarUserPage, createUserPage, createWishlistPage, createCard, createHistoryPurchasePage, createCardPurchase, createTablePurchase };
 

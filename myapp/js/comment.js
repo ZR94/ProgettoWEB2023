@@ -1,4 +1,7 @@
+"use strict";
+
 class Comment {
+    
     constructor(idUser, idItem, text) {
         this.idUser = idUser;
         this.idItem = idItem;

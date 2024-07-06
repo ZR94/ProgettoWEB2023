@@ -128,12 +128,16 @@ app.post('/api/checkout', /* [add here some validity checks], */(req, res) => {
   
 });
 
-app.post('/api/comment', /* [add here some validity checks], */(req, res) => {
+app.post('/api/comments', [  
+  check('comment.idUser').notEmpty().withMessage('User ID is required'),
+  check('comment.idItem').notEmpty().withMessage('Item ID is required'),
+  check('comment.text').notEmpty().withMessage('Comment text is required'),
+], (req, res) => {
   // create a user object from the signup form
   // additional fields may be useful (name, role, etc.)
-  const idUser = req.body.idUser;
-  const idItem = req.body.idItem;
-  const text = req.body.text;
+  const idUser = req.body.comment.idUser;
+  const idItem = req.body.comment.idItem;
+  const text = req.body.comment.text;
   dao.addComment(idUser, idItem, text)
     .then(() => res.status(200).json({ message: 'Comment added successfully' }))
     .catch((err) => res.status(err.status || 500).json({ error: err.msg || 'An error occurred' }));
@@ -162,6 +166,24 @@ app.delete('/api/sessions/current', isLoggedIn, function (req, res) {
     if (err) { return res.status(503).json(err); }
   });
   res.end();
+});
+
+// Rimuove un item dalla wishlist dell’utente, dato il suo id.
+app.delete('/api/user/:userId/wishlist/:itemId', (req, res) => {
+  const userId = req.params.userId;
+  const itemId = req.params.itemId;
+  dao.deleteItemInWishList(userId, itemId)
+    .then(() => res.end())
+    .catch((err) => res.status(err.status).json(err.msg));
+});
+
+// Rimuove un commento dell’utente, dato il suo id.
+app.delete('/api/user/:userId/comments/:itemId', (req, res) => {
+  const userId = req.params.userId;
+  const itemId = req.params.itemId;
+  dao.deleteComment(userId, itemId)
+    .then(() => res.end())
+    .catch((err) => res.status(err.status).json(err.msg));
 });
 
 // GET /items
@@ -199,15 +221,6 @@ app.get('/api/wishlist/:id', (req, res) => {
     .catch((error) => res.status(404).json(error));
 });
 
-// Rimuove un item dalla wishlist dell’utente, dato il suo id.
-app.delete('/api/user/:userId/wishlist/:itemId', (req, res) => {
-  const userId = req.params.userId;
-  const itemId = req.params.itemId;
-  dao.deleteItemInWishList(userId, itemId)
-    .then(() => res.end())
-    .catch((err) => res.status(err.status).json(err.msg));
-});
-
 app.get('/api/items/categories/:categoryName', (req, res) => {
   const categoryName = req.params.categoryName;
   let result;
@@ -221,7 +234,26 @@ app.get('/api/items/categories/:categoryName', (req, res) => {
     .catch((error) => res.status(404).json(error));
 });
 
+app.get('/api/user/:userId/comments', (req, res) => {
+  const userId = req.params.userId;
+  dao.getCommentByUserId(userId)
+    .then((comments) => res.json(comments))
+    .catch((error) => res.status(404).json(error));
+});
 
+app.get('/api/items/:itemId/comments', (req, res) => {
+  const itemId = req.params.itemId;
+  dao.getCommentByItemId(itemId)
+    .then((comments) => res.json(comments))
+    .catch((error) => res.status(404).json(error));
+});
+
+app.get('/api/user/:userId/history', (req, res) => {
+  const userId = req.params.userId;
+  dao.getHistoryByUserId(userId)
+    .then((history) => res.json(history))
+    .catch((error) => res.status(404).json(error)); 
+});
 
 app.get('*', (req, res) => {
   res.sendFile(path.resolve(__dirname, 'myapp/index.html'));

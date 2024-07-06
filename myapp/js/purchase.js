@@ -2,11 +2,12 @@
 
 class Purchase {
 
-    constructor(idUser, idItem, qta, price) {
+    constructor(idUser, idItem, qta, price, dateTime) {
         this.idUser = idUser;
         this.idItem = idItem;
         this.qta = qta;
         this.price = price;
+        this.dateTime = dateTime;
     }
 
     /**

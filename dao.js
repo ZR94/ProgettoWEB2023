@@ -59,6 +59,21 @@ exports.getAllCategories = function () {
     });
 };
 
+exports.getAllUsers = function () {
+    return new Promise((resolve, reject) => {
+        const sql = 'SELECT * FROM user';
+        db.all(sql, (err, rows) => {
+            if (err) {
+                reject(err);
+                return;
+            }
+
+            const users = rows.map((row) => ({ id: row.idUser, name: row.name, surname: row.surname, email: row.email }));
+            resolve(users);
+        });
+    });
+};
+
 exports.getItemById = function (id) {
     return new Promise((resolve, reject) => {
         const sql = 'SELECT * FROM item WHERE idItem = ?';
@@ -96,8 +111,8 @@ exports.createUser = function (user) {
 
 exports.createPurchase = function (purchase) {
     return new Promise((resolve, reject) => {
-        const sql = 'INSERT INTO purchase(idPurchaseUser, idPurchaseItem, qta, price) VALUES (?, ?, ?, ?)';
-        db.run(sql, [purchase.idUser, purchase.idItem, purchase.qta, purchase.price], (err) => {
+        const sql = 'INSERT INTO purchase(idPurchaseUser, idPurchaseItem, qta, price, dateTime) VALUES (?, ?, ?, ?, ?)';
+        db.run(sql, [purchase.idUser, purchase.idItem, purchase.qta, purchase.price, purchase.dateTime], (err) => {
             if (err) {
                 reject(err);
                 return;
@@ -111,6 +126,19 @@ exports.deleteUser = function (user) {
     return new Promise((resolve, reject) => {
         const sql = 'DELETE FROM user WHERE idUser = ?';
         db.run(sql, [user.id], (err) => {
+            if (err) {
+                reject(err);
+                return;
+            }
+            resolve();
+        });
+    });
+};
+
+exports.deleteItem = function (item) {
+    return new Promise((resolve, reject) => {
+        const sql = 'DELETE FROM item WHERE idItem = ?';
+        db.run(sql, [item.id], (err) => {
             if (err) {
                 reject(err);
                 return;
@@ -173,6 +201,20 @@ exports.getWishlistByUserId = function (userId) {
     });
 };
 
+exports.addItem = function (item) {
+    return new Promise((resolve, reject) => {
+        const sql = "INSERT INTO item (idItem, price, name, img, category) VALUES(?,?,?,?,?)";
+        db.run(sql, [item.id, item.price, item.img, item.category], function (err) {
+            if (err) {
+                reject(err);
+            } else {
+                resolve(this.lastID);
+            }
+        });
+    });
+};
+
+
 exports.addItemInWishList = function (userId, itemId, visibility) {
     return new Promise((resolve, reject) => {
         // controlla se l'item non sia già nella wishlist dell'utente
@@ -234,8 +276,69 @@ exports.addComment = function (userId, itemId, text) {
             if (err) {
                 reject({ status: 500, msg: err.message });
             } else {
-                resolve(this.id);
+                resolve(this.idComment);
             };
         });
     });
 };
+
+exports.deleteComment = function (userId, itemId) {
+    return new Promise((resolve, reject) => {
+        const del = "DELETE FROM comment WHERE idCommentUser = ? AND idCommentItem = ?";
+        db.run(del, [userId, itemId], (err) => {
+            if (err) {
+                reject({ status: 500, msg: err.message });
+            } else {
+                resolve();
+            };
+        });
+    });
+};
+
+exports.getCommentByUserId = function (userId) {
+    return new Promise((resolve, reject) => {
+        const sql = 'SELECT * FROM comment WHERE idCommentUser = ?';
+        db.all(sql, [userId], (err, rows) => {
+            if (err)
+                reject(err);
+            else if (rows.length === 0)
+                resolve({ error: 'Comments not found.' });
+            else {
+                const comment = rows.map((row) => ({ idCommentUser: row.idCommentUser, idCommentItem: row.idCommentItem, text: row.text }));
+                resolve(comment.sort((a, b) => a.idCommentItem - b.idCommentItem));
+            }
+        });
+    });
+};
+
+exports.getCommentByItemId = function (userId) {
+    return new Promise((resolve, reject) => {
+        const sql = 'SELECT * FROM comment WHERE idCommentItem = ?';
+        db.all(sql, [userId], (err, rows) => {
+            if (err)
+                reject(err);
+            else if (rows.length === 0)
+                resolve({ error: 'Comments not found.' });
+            else {
+                const comment = rows.map((row) => ({ idCommentUser: row.idCommentUser, idCommentItem: row.idCommentItem, text: row.text }));
+                resolve(comment.sort((a, b) => a.idCommentItem - b.idCommentItem));
+            }
+        });
+    });
+};
+
+exports.getHistoryByUserId = function (userId) {
+    return new Promise((resolve, reject) => {
+        const sql = 'SELECT * FROM purchase WHERE idPurchaseUser = ?';
+        db.all(sql, [userId], (err, rows) => {
+            if (err)
+                reject(err);
+            else if (rows.length === 0)
+                resolve({ error: 'History not found.' });
+            else {
+                const history = rows.map((row) => ({ idPurchase: row.idPurchase, idPurchaseUser: row.idPurchaseUser, idPurchaseItem: row.idPurchaseItem, qta: row.qta, price: row.price, dateTime: row.dateTime }));
+                resolve(history.sort((a, b) => a.idPurchaseUser - b.idPurchaseUser));
+            }
+        });
+    });
+}

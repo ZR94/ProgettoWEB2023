@@ -8,7 +8,7 @@ import Comment from './comment.js';
 import { createLoginForm } from './templates/login-template.js';
 import { createSignUpForm } from './templates/sign-template.js';
 import { createHomeForm } from './templates/home-template.js';
-import { navbarUserPage, createUserPage, createWishlistPage, createCard } from './templates/user-template.js';
+import { navbarUserPage, createUserPage, createWishlistPage, createCard, createHistoryPurchasePage, createCardPurchase, createTablePurchase } from './templates/user-template.js';
 import { createStoreTable, createStoreCard, createCartCard, addFollowButton, removeFollowButton, addPubIcon, addPrvIcon } from './templates/store-template.js';
 import { createContactForm } from './templates/contact-template.js';
 import { createPricingForm } from './templates/pricing-template.js';
@@ -71,9 +71,9 @@ class App {
         page('/history', () => {
             this.loggedUser = JSON.parse(localStorage.getItem('user'));
             if (this.loggedUser != null) {
-                this.renderNavBar(this.loggedUser.name);
+                //this.renderNavBar(this.loggedUser.name);
+                this.appContainer.innerHTML = this.createHistoryPurchase();
             }
-            this.appContainer.innerHTML = "";
         });
 
         page('/delete', () => {
@@ -242,17 +242,52 @@ class App {
 
     }
 
+    createHistoryPurchase = async () => {
+
+        try {
+            const user = JSON.parse(localStorage.getItem('user'));
+            const history = await Api.getHistoryPurchase(user.id);
+            this.appContainer.innerHTML = "";
+            this.appContainer.innerHTML = navbarUserPage('history');
+
+            const bodyPage = document.querySelector('.bodyPage');
+            bodyPage.innerHTML = createHistoryPurchasePage();
+
+            if (history.length > 0) {
+                let previousDateTime = null;
+                for (let item of history) {
+                    if (item.dateTime !== previousDateTime) {
+                        bodyPage.insertAdjacentHTML('beforeend', createTablePurchase());
+                    }
+                    let historyTable = document.querySelector("table > tbody");
+                    let tr = document.createElement("tr");
+                    let td = document.createElement("td");
+                    const getItem = await Api.getItemById(item.idPurchaseItem);
+                    td.innerHTML = createCardPurchase(getItem, item.qta);
+                    let dateTime = document.querySelector('.dateTime');
+                    const [date, time] = item.dateTime.split(' ');
+                    dateTime.innerHTML = `Acquisto effettuato il giorno: ${date} alle ore: ${time}`
+                    tr.appendChild(td);
+                    historyTable.appendChild(tr);
+                    previousDateTime = item.dateTime;
+                }
+            }
+        } catch (error) {
+            page.redirect('/');
+        }
+    }
+
     addItemWishList = async (event) => {
 
         event.preventDefault();
         const itemId = event.target.closest('.btn-favourite-add');
         const user = JSON.parse(localStorage.getItem('user'));
-        
+
         try {
             const visibility = await this.showModalAndGetVisibility();
             const item = await Api.getItemById(itemId.value);
             const response = await Api.addItemWishlist(user.id, item, visibility);
-            if(response) {
+            if (response) {
                 this.showStore();
             }
 
@@ -330,7 +365,7 @@ class App {
 
         const user = JSON.parse(localStorage.getItem('user'));
         const listPurchase = [];
-
+        const dateTime = moment().format("DD/MM/YYYY HH:mm:ss");
 
         this.itemCart.forEach(item => {
 
@@ -339,7 +374,7 @@ class App {
                 const itemQuantity = item.quantity;
                 const itemPrice = item.price;
 
-                let addPurchase = new Purchase(user.id, itemId, itemQuantity, itemPrice);
+                let addPurchase = new Purchase(user.id, itemId, itemQuantity, itemPrice, dateTime);
                 listPurchase.push(addPurchase);
             }
 
@@ -751,6 +786,16 @@ class App {
             saveButton.addEventListener('click', handleSaveText, { once: true });
         });
     };
+
+    showComments = async (event) => {
+        event.preventDefault();
+        const button = event.target.closest('.btn-comment');
+        const itemId = parseInt(button.value, 10);
+        const comments = await Api.getComments(itemId);
+        this.showCommentsModal(comments);
+    };
+
+
 
 }
 
