@@ -13,9 +13,6 @@ function navbarUserPage(active) {
         <li class="nav-item">
           <a class="nav-link text-dark ${active === 'history' ? 'active' : ''}" ${active === 'history' ? 'aria-current="page"' : ''} href="/history">Cronologia acquisti</a>
         </li>
-        <li class="nav-item">
-          <a class="nav-link text-dark ${active === 'delete' ? 'active' : ''}" ${active === 'delete' ? 'aria-current="page"' : ''} href="/delete">Delete account</a>
-        </li>
       </ul>
       <div class="container col-md-auto bodyPage">
       </div> 
@@ -28,14 +25,54 @@ function createUserPage(user) {
     <div class="container col-md-auto containerUser">
 
       <div class="row g-3">
-        <div class="col">
-          <input type="text" class="form-control" placeholder="${user.name}" aria-label="${user.name}">
+        <div class="col-md-4">
+          <label for="user-name" class="form-label">Nome</label>
+          <input type="text" class="form-control" id="user-name" placeholder="${user.name}" aria-label="${user.name}">
         </div>
-        <div class="col">
-          <input type="text" class="form-control" placeholder="${user.surname}" aria-label="${user.surname}">
+        <div class="col-md-4">
+          <label for="user-surname" class="form-label">Cognome</label>
+          <input type="text" class="form-control" id="user-surname" placeholder="${user.surname}" aria-label="${user.surname}">
         </div>
-        <div class="col">
-          <input type="text" class="form-control" placeholder="${user.email}" aria-label="${user.email}">
+        <div class="col-md-4">
+          <label for="user-email" class="form-label">Email</label>
+          <input type="email" class="form-control" id="user-email" placeholder="${user.email}" aria-label="${user.email}">
+        </div>
+        <div class="col-md-4">
+          <label for="birthdate" class="form-label">Data di nascita</label>
+          <input type="date" class="form-control" id="birthdate" aria-label="Data di nascita">
+        </div>
+        <div class="col-md-4">
+          <label for="address" class="form-label">Indirizzo</label>
+          <input type="text" class="form-control" id="address" placeholder="Indirizzo" aria-label="Indirizzo">
+        </div>
+        <div class="col-md-4">
+          <label for="city" class="form-label">Città</label>
+          <input type="text" class="form-control" id="city" placeholder="Città" aria-label="Città">
+        </div>
+        <div class="col-12 text-end">
+          <button type="button" class="btn btn-primary" id="saveButton">Salva</button>
+          <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteAccountModal">
+            Elimina Account
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal for confirming account deletion -->
+    <div class="modal fade" id="deleteAccountModal" tabindex="-1" aria-labelledby="deleteAccountModalLabel" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="deleteAccountModalLabel">Conferma eliminazione account</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            Sei sicuro di voler eliminare il tuo account? Questa azione non può essere annullata.
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">No</button>
+            <button type="button" class="btn btn-danger" id="confirmDeleteButton" data-bs-dismiss="modal">Sì, elimina il mio account</button>
+          </div>
         </div>
       </div>
 
@@ -122,4 +159,3 @@ function createTotalRow(total) {
 }
 
 export { navbarUserPage, createUserPage, createWishlistPage, createCard, createHistoryPurchasePage, createCardPurchase, createTablePurchase, createTotalRow };
-

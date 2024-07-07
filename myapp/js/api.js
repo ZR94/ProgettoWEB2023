@@ -60,6 +60,37 @@ class Api {
         await fetch('/api/sessions/current', { method: 'DELETE' });
     }
 
+    static deleteUser = async (userId) => {
+        try {
+        let response = await fetch(`/api/user/${userId}/delete`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        });
+        if (response.ok) {
+            const result = await response.json();
+            alert('Dati salvati con successo!');
+          } else {
+            const errorData = await response.json();
+            alert(`Errore: ${errorData.message}`);
+          }
+        } catch (error) {
+          //console.error('Errore durante l\'invio dei dati:', error);
+          alert('Errore durante l\'invio dei dati. Si prega di riprovare.');
+        }
+    }
+
+    static getUsers = async () => {
+        let response = await fetch('/api/users');
+        const usersJson = await response.json();
+        if (response.ok) {
+            return usersJson;
+        } else {
+            throw usersJson;  // an object with the error coming from the server
+        }
+    }
+
     /**
      * Get the list of items store
      */

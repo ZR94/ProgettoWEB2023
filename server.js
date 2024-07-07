@@ -87,6 +87,7 @@ app.post('/api/user', /* [add here some validity checks], */(req, res) => {
     surname: req.body.surname,
     email: req.body.email,
     password: req.body.password,
+    admin: req.body.admin,
   };
 
   dao.createUser(user)
@@ -168,6 +169,14 @@ app.delete('/api/sessions/current', isLoggedIn, function (req, res) {
   res.end();
 });
 
+app.delete('/api/user/:userId/delete', (req, res) => {
+  const userId = req.params.userId;
+
+  dao.deleteUser(userId)
+  .then((result) => res.json(result))
+  .catch((err) => res.status(err.status || 500).json({ success: false, message: err.msg || 'Errore durante l\'eliminazione dell\'account' }));
+});
+
 // Rimuove un item dalla wishlist dell’utente, dato il suo id.
 app.delete('/api/user/:userId/wishlist/:itemId', (req, res) => {
   const userId = req.params.userId;
@@ -190,6 +199,12 @@ app.delete('/api/user/:userId/comments/:itemId', (req, res) => {
 app.get('/api/items', isLoggedIn, (req, res) => {
   dao.getAllItems()
     .then(items => res.json(items))
+    .catch(error => res.status(500).json(error));
+});
+
+app.get('/api/users', isLoggedIn, (req, res) => {
+  dao.getAllUsers()
+    .then(users => res.json(users))
     .catch(error => res.status(500).json(error));
 });
 

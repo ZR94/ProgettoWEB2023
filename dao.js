@@ -95,10 +95,10 @@ exports.getItemById = function (id) {
 
 exports.createUser = function (user) {
     return new Promise((resolve, reject) => {
-        const sql = 'INSERT INTO user (name, surname, email, password) VALUES (?, ?, ?, ?)';
+        const sql = 'INSERT INTO user (name, surname, email, password, admin) VALUES (?, ?, ?, ?, ?)';
         // create the hash as an async call, given that the operation may be CPU-intensive (and we don't want to block the server)
         bcrypt.hash(user.password, 10).then((hash => {
-            db.run(sql, [user.name, user.surname, user.email, hash], (err) => {
+            db.run(sql, [user.name, user.surname, user.email, hash, user.admin], (err) => {
                 if (err) {
                     reject(err);
                 } else {
@@ -108,6 +108,7 @@ exports.createUser = function (user) {
         }));
     });
 };
+
 
 exports.createPurchase = function (purchase) {
     return new Promise((resolve, reject) => {
@@ -122,15 +123,20 @@ exports.createPurchase = function (purchase) {
     });
 };
 
-exports.deleteUser = function (user) {
+exports.deleteUser = function (userId) {
     return new Promise((resolve, reject) => {
         const sql = 'DELETE FROM user WHERE idUser = ?';
-        db.run(sql, [user.id], (err) => {
+        db.run(sql, [userId], (err) => {
             if (err) {
                 reject(err);
                 return;
             }
-            resolve();
+            // Verifica se una riga è stata eliminata
+            if (this.changes > 0) {
+                resolve({ success: true, message: 'Account eliminato con successo' });
+            } else {
+                reject({ status: 404, msg: 'User not found' });
+            }
         });
     });
 };

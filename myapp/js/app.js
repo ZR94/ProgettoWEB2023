@@ -71,17 +71,8 @@ class App {
         page('/history', () => {
             this.loggedUser = JSON.parse(localStorage.getItem('user'));
             if (this.loggedUser != null) {
-                //this.renderNavBar(this.loggedUser.name);
                 this.appContainer.innerHTML = this.createHistoryPurchase();
             }
-        });
-
-        page('/delete', () => {
-            this.loggedUser = JSON.parse(localStorage.getItem('user'));
-            if (this.loggedUser != null) {
-                this.renderNavBar(this.loggedUser.name);
-            }
-            this.appContainer.innerHTML = "";
         });
 
         page('/store', () => {
@@ -122,8 +113,8 @@ class App {
         });
 
         // very simple itemple of how to handle a 404 Page Not Found 
-        // page('*', () => this.appContainer.innerHTML = 'Page not found!');
-        // page('/', );
+        page('*', () => this.appContainer.innerHTML = 'Page not found!');
+
         page();
     }
 
@@ -192,23 +183,77 @@ class App {
         this.loginLink.innerHTML = "";
         this.loginLink.innerHTML = '<a class="nav-link" href="/userPage">' + `${active}` + '</a>';
         this.logoutLink.classList.remove('invisible');
-    };
+    }
 
     personalUserPage = async () => {
 
         try {
             const user = JSON.parse(localStorage.getItem('user'));
             const userLog = await Api.getLoggedUser(user.id);
-            if (user != null) {
+            if (user != null && userLog.admin === 1) {
+                this.appContainer.innerHTML = "";
+                this.appContainer.innerHTML = navbarAdiminPage('userPage');
+                const bodyPage = document.querySelector('.bodyPage');
+                bodyPage.innerHTML = createAdminTabs(userLog);
+            } else {
                 this.appContainer.innerHTML = "";
                 this.appContainer.innerHTML = navbarUserPage('userPage');
                 const bodyPage = document.querySelector('.bodyPage');
                 bodyPage.innerHTML = createUserPage(userLog);
+                document.getElementById('confirmDeleteButton').addEventListener('click', this.onClickDeleteAccount(user.id));
             }
+
         } catch (error) {
             page.redirect('/');
         }
 
+    }
+
+    showTab(tabId) {
+        document.querySelectorAll('.tab-pane').forEach(tab => {
+            tab.classList.remove('show', 'active');
+        });
+        document.getElementById(tabId).classList.add('show', 'active');
+    }
+
+    loadUsers = async () => {
+        try {
+            const users = Api.getUsers();
+            document.getElementById('userList').innerHTML = users.map(user => `
+            <div class="card mb-3">
+              <div class="card-body">
+                <h5 class="card-title">${user.name} ${user.surname}</h5>
+                <p class="card-text">${user.email}</p>
+                <button class="btn btn-primary btn-sm" onclick="viewWishlist(${user.id})">Vedi Wishlist</button>
+                <button class="btn btn-primary btn-sm" onclick="viewComments(${user.id})">Vedi Commenti</button>
+                <button class="btn btn-danger btn-sm" onclick="deleteUser(${user.id})">Elimina</button>
+              </div>
+            </div>
+          `).join('');
+        } catch (error) {
+            console.error('Errore durante il caricamento degli utenti', error);
+            alert('Errore durante il caricamento degli utenti');
+        }
+    }
+
+    loadItems = async () => {
+        try {
+            const items = Api.getItems();
+            document.getElementById('itemList').innerHTML = items.map(item => `
+            <div class="card mb-3">
+              <div class="card-body">
+                <h5 class="card-title">${item.name}</h5>
+                <p class="card-text">Prezzo: $${item.price}</p>
+                <p class="card-text">Quantità: ${item.quantity}</p>
+                <button class="btn btn-primary btn-sm" onclick="viewItemComments(${item.id})">Vedi Commenti</button>
+                <button class="btn btn-danger btn-sm" onclick="deleteItem(${item.id})">Elimina</button>
+              </div>
+            </div>
+          `).join('');
+        } catch (error) {
+            console.error('Errore durante il caricamento degli items', error);
+            alert('Errore durante il caricamento degli items');
+        }
     }
 
     createUserWishList = async () => {
@@ -259,7 +304,7 @@ class App {
             if (history.length > 0) {
                 let previousDateTime = null;
                 let currentTotal = 0;
-            
+
                 for (let item of history) {
                     if (item.dateTime !== previousDateTime) {
                         // Aggiungi la riga del totale alla tabella precedente se esiste
@@ -268,7 +313,7 @@ class App {
                             let historyTable = historyTables[historyTables.length - 1];
                             historyTable.insertAdjacentHTML('beforeend', createTotalRow(currentTotal));
                         }
-            
+
                         // Creazione di una nuova tabella quando l'orario cambia
                         purchaseHistoryRow.insertAdjacentHTML('beforeend', createTablePurchase());
                         // Seleziona la nuova tabella appena inserita
@@ -281,11 +326,11 @@ class App {
                         tdDateTime.innerHTML = `<p class="card-text dateTime">Acquisto effettuato il giorno: ${date} alle ore: ${time}</p>`;
                         trDateTime.appendChild(tdDateTime);
                         historyTable.appendChild(trDateTime);
-            
+
                         // Resetta il totale corrente per la nuova tabella
                         currentTotal = 0;
                     }
-            
+
                     // Aggiungi la card all'interno della tabella corrente
                     let historyTables = purchaseHistoryRow.querySelectorAll(".table > tbody");
                     let historyTable = historyTables[historyTables.length - 1]; // Ultima tabella aggiunta
@@ -295,20 +340,20 @@ class App {
                     td.innerHTML = createCardPurchase(getItem, item.qta);
                     tr.appendChild(td);
                     historyTable.appendChild(tr);
-            
+
                     // Aggiorna il totale corrente
                     currentTotal += getItem.price * item.qta;
-            
+
                     // Aggiorna il previousDateTime all'item corrente
                     previousDateTime = item.dateTime;
                 }
-            
+
                 // Aggiungi la riga del totale all'ultima tabella
                 let historyTables = purchaseHistoryRow.querySelectorAll(".table > tbody");
                 let historyTable = historyTables[historyTables.length - 1];
                 historyTable.insertAdjacentHTML('beforeend', createTotalRow(currentTotal));
             }
-                
+
         } catch (error) {
             page.redirect('/');
         }
@@ -345,7 +390,7 @@ class App {
 
             saveButton.addEventListener('click', handleSaveText, { once: true });
         });
-    };
+    }
 
     removeItemWishList = async (event) => {
 
@@ -495,7 +540,7 @@ class App {
         this.updateStoreHTML(itemWishlist, storeTable);
     }
 
-    onClickComment = async (event) => {
+    onClickComment = async () => {
 
         const user = JSON.parse(localStorage.getItem('user'));
         const exampleModal = document.getElementById('commentModal')
@@ -516,6 +561,22 @@ class App {
                 modalBodyInput.value = recipient
             })
         }
+    }
+
+    onClickDeleteAccount = async () => {
+
+        document.getElementById('confirmDeleteButton').addEventListener('click', async () => {
+            const user = JSON.parse(localStorage.getItem('user'));
+
+            const response = await Api.deleteUser(user.id);
+            if (response.success) {
+                localStorage.removeItem('user');
+                //alert(response.message || 'Account eliminato con successo!');
+                page.redirect('/login');
+            } else {
+                //alert(response.message || 'Errore durante l\'eliminazione dell\'account. Si prega di riprovare.');
+            }
+        });
     }
 
     updateStoreHTML = async (items, storeTable) => {
@@ -748,7 +809,7 @@ class App {
         this.showItem(itemsFilter);
         // Update the active category state in the sidebar
         this.updateActiveCategory(category);
-    };
+    }
 
     titleClick = async (event) => {
         event.preventDefault();
@@ -772,7 +833,7 @@ class App {
         } else if (category === 'public') {
             this.onClickPublic();
         }
-    };
+    }
 
     updateActiveCategory(filterCat) {
         let dd_menu = document.querySelector(".dropdown-menu");
@@ -811,7 +872,7 @@ class App {
 
             saveButton.addEventListener('click', handleSaveText, { once: true });
         });
-    };
+    }
 
     showComments = async (event) => {
         event.preventDefault();
@@ -819,7 +880,7 @@ class App {
         const itemId = parseInt(button.value, 10);
         const comments = await Api.getComments(itemId);
         this.showCommentsModal(comments);
-    };
+    }
 
 
 
