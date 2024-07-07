@@ -52,8 +52,7 @@ function createStoreTable() {
                         </div>
                         <div class="" id="checkout-form" > 
 
-                            <div class="offcanvas-body listCart">
-                            </div>
+                            <div class="offcanvas-body listCart"></div>
                             
                             <div class="d-flex justify-content-center mb-3" id="checkoutBox">
                                 <button class="btn btn-primary btn-checkout" type="button" value="">Checkout</button>
@@ -96,14 +95,11 @@ function createStoreCard(item) {
                     <div class="modal-dialog">
                         <div class="modal-content">
                             <div class="modal-header">
-                                <h1 class="modal-title fs-5" id="exampleModalLabel">New comment</h1>
+                                <h1 class="modal-title fs-5 text-dark" id="exampleModalLabel">New comment</h1>
                                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                             </div>
                         <div class="modal-body">
                             <form>
-                                <div class="mb-3">
-                                    <label for="recipient-name" class="col-form-label">New comment</label>
-                                </div>
                                 <div class="mb-3">
                                     <label for="message-text" class="col-form-label">Comment:</label>
                                     <textarea class="form-control" id="message-text"></textarea>
@@ -126,7 +122,6 @@ function createStoreCard(item) {
     </div>
     `;
 }
-
 
 function createCartCard(item, quantity) {
     return `

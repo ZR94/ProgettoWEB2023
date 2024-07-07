@@ -77,42 +77,49 @@ function createCard(item) {
 
 function createHistoryPurchasePage() {
   return `
-    <div class="container col-md-auto">
-      <h5 class="offcanvas-title" id="offcanvasScrollingLabel">History Purchase</h5>
-
-    </div>
-  `;
+  <div class="container">
+  <h5 class="offcanvas-title" id="offcanvasScrollingLabel">History Purchase</h5>
+  <div class="row" id="purchase-history-row">
+    <!-- Le tabelle saranno inserite qui -->
+  </div>
+</div>
+`;
 }
 
 function createTablePurchase() {
   return `
-    <div class="row row-cols-1 row-cols-md-3 g-4" id="list">
-          
-    <div class="table-responsive rounded-3 item-purchase" id="item-purchase">
-      <table class="table table-striped m-0">
+  <div class="col-md-4 mb-4">
+  <div class="table-responsive rounded-3 item-purchase" id="item-purchase">
+    <table class="table table-striped m-0">
       <p class="card-text dateTime"></p>
-        <tbody>
-          <!-- Le righe sono inserite da JS -->
-        </tbody>
-      </table>
-    </div>
-    
-    </div>
-  `;
+      <tbody>
+        <!-- Le righe sono inserite da JS -->
+      </tbody>
+    </table>
+  </div>
+</div>
+`;
 }
 
 function createCardPurchase(item, qta) {
   return `
-  <div class="card mb-3" style="width: 12rem; height: 12rem;">
+  <div class="card mb-3" style="width: 12rem; height: 8rem;">
     <div class="">
       <h5 class="card-title fw-bold">${item.name}</h5>
       <p class="card-text">Price: $${item.price.toFixed(2)}</p>
       <p class="card-text">Quantity: ${qta}</p>
-      <button type="button" class="btn btn-primary btn-comment-add" data-bs-toggle="modal" data-bs-target="#commentModal" value="${item.id}">Add Comment</button>
     </div>
   </div>
   `;
 }
 
-export { navbarUserPage, createUserPage, createWishlistPage, createCard, createHistoryPurchasePage, createCardPurchase, createTablePurchase };
+function createTotalRow(total) {
+  return `
+  <tr>
+    <td colspan="3" class="text-first fw-bold">Total: $${total.toFixed(2)}</td>
+  </tr>
+  `;
+}
+
+export { navbarUserPage, createUserPage, createWishlistPage, createCard, createHistoryPurchasePage, createCardPurchase, createTablePurchase, createTotalRow };
 

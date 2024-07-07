@@ -8,7 +8,7 @@ import Comment from './comment.js';
 import { createLoginForm } from './templates/login-template.js';
 import { createSignUpForm } from './templates/sign-template.js';
 import { createHomeForm } from './templates/home-template.js';
-import { navbarUserPage, createUserPage, createWishlistPage, createCard, createHistoryPurchasePage, createCardPurchase, createTablePurchase } from './templates/user-template.js';
+import { navbarUserPage, createUserPage, createWishlistPage, createCard, createHistoryPurchasePage, createCardPurchase, createTablePurchase, createTotalRow } from './templates/user-template.js';
 import { createStoreTable, createStoreCard, createCartCard, addFollowButton, removeFollowButton, addPubIcon, addPrvIcon } from './templates/store-template.js';
 import { createContactForm } from './templates/contact-template.js';
 import { createPricingForm } from './templates/pricing-template.js';
@@ -253,25 +253,62 @@ class App {
             const bodyPage = document.querySelector('.bodyPage');
             bodyPage.innerHTML = createHistoryPurchasePage();
 
+            const purchaseHistoryRow = document.getElementById('purchase-history-row');
+
+
             if (history.length > 0) {
                 let previousDateTime = null;
+                let currentTotal = 0;
+            
                 for (let item of history) {
                     if (item.dateTime !== previousDateTime) {
-                        bodyPage.insertAdjacentHTML('beforeend', createTablePurchase());
+                        // Aggiungi la riga del totale alla tabella precedente se esiste
+                        if (previousDateTime !== null) {
+                            let historyTables = purchaseHistoryRow.querySelectorAll(".table > tbody");
+                            let historyTable = historyTables[historyTables.length - 1];
+                            historyTable.insertAdjacentHTML('beforeend', createTotalRow(currentTotal));
+                        }
+            
+                        // Creazione di una nuova tabella quando l'orario cambia
+                        purchaseHistoryRow.insertAdjacentHTML('beforeend', createTablePurchase());
+                        // Seleziona la nuova tabella appena inserita
+                        let historyTables = purchaseHistoryRow.querySelectorAll(".table > tbody");
+                        let historyTable = historyTables[historyTables.length - 1]; // Ultima tabella aggiunta
+                        // Aggiungi il titolo del dateTime alla nuova tabella
+                        let trDateTime = document.createElement("tr");
+                        let tdDateTime = document.createElement("td");
+                        const [date, time] = item.dateTime.split(' ');
+                        tdDateTime.innerHTML = `<p class="card-text dateTime">Acquisto effettuato il giorno: ${date} alle ore: ${time}</p>`;
+                        trDateTime.appendChild(tdDateTime);
+                        historyTable.appendChild(trDateTime);
+            
+                        // Resetta il totale corrente per la nuova tabella
+                        currentTotal = 0;
                     }
-                    let historyTable = document.querySelector("table > tbody");
+            
+                    // Aggiungi la card all'interno della tabella corrente
+                    let historyTables = purchaseHistoryRow.querySelectorAll(".table > tbody");
+                    let historyTable = historyTables[historyTables.length - 1]; // Ultima tabella aggiunta
                     let tr = document.createElement("tr");
                     let td = document.createElement("td");
                     const getItem = await Api.getItemById(item.idPurchaseItem);
                     td.innerHTML = createCardPurchase(getItem, item.qta);
-                    let dateTime = document.querySelector('.dateTime');
-                    const [date, time] = item.dateTime.split(' ');
-                    dateTime.innerHTML = `Acquisto effettuato il giorno: ${date} alle ore: ${time}`
                     tr.appendChild(td);
                     historyTable.appendChild(tr);
+            
+                    // Aggiorna il totale corrente
+                    currentTotal += getItem.price * item.qta;
+            
+                    // Aggiorna il previousDateTime all'item corrente
                     previousDateTime = item.dateTime;
                 }
+            
+                // Aggiungi la riga del totale all'ultima tabella
+                let historyTables = purchaseHistoryRow.querySelectorAll(".table > tbody");
+                let historyTable = historyTables[historyTables.length - 1];
+                historyTable.insertAdjacentHTML('beforeend', createTotalRow(currentTotal));
             }
+                
         } catch (error) {
             page.redirect('/');
         }
@@ -706,20 +743,9 @@ class App {
         document.getElementById("category").classList.add('active');
         el.classList.add('active');
 
-        const idItemsStore = this.getCardIds();
-        const [categories, itemsFilter] = await Promise.all([
-            Api.getCategories(),
-            Api.getFilterItems(category)
-        ]);
-        const idCategory = categories.find(c => c.obj === category);
+        const itemsFilter = await Api.getFilterItems(category)
 
-        // Display the filtered items\
-        itemsFilter.forEach(item => {
-            if (item.category === idCategory.id && idItemsStore.includes(item.id)) {
-                itemStore.push(item);
-            }
-        });
-        this.showItem(itemStore);
+        this.showItem(itemsFilter);
         // Update the active category state in the sidebar
         this.updateActiveCategory(category);
     };
