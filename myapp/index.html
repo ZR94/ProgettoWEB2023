@@ -33,7 +33,7 @@
 </head>
 
 <body class="d-flex flex-column">
-  
+
   <header>
 
     <nav class="navbar bg-dark navbar-expand-lg">
@@ -42,14 +42,14 @@
           <img src="images/FLF_logo_horizontal_websie.png" alt=" Fast Lean Fit">
         </a>
 
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" data-bs-theme="dark"
-          aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+          data-bs-theme="dark" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
           <span class="navbar-toggler-icon"></span>
         </button>
 
         <div class="collapse navbar-collapse nav justify-content-end" id="navbarNav">
 
-          <ul class="navbar-nav">
+          <ul class="navbar-nav d-flex align-items-center">
             <li class="nav-item">
               <a class="nav-link active" id="homeButton" aria-current="page" href="/">Home</a>
             </li>
@@ -69,17 +69,38 @@
               <a class="nav-link" href="/logout">Logout</a>
             </li>
             <li class="nav-item" id="search">
-              <form class="d-flex" role="search">
-                <input class="form-control me-2" type="search" placeholder="Search" aria-label="Search">
-                <button class="btn btn-outline-light btn-sm" type="submit">Search</button>
-              </form>
+              <!-- Button to trigger modal -->
+              <button type="button" class="btn btn-outline-light btn-sm" data-bs-toggle="modal"
+                data-bs-target="#searchModal">Search</button>
+
+              <!-- Search Modal -->
+              <div class="modal fade" id="searchModal" tabindex="-1" aria-labelledby="searchModalLabel"
+                aria-hidden="true">
+                <div class="modal-dialog">
+                  <div class="modal-content">
+                    <div class="modal-header">
+                      <h5 class="modal-title" id="searchModalLabel">Search Options</h5>
+                      <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body text-center">
+                      <button type="button" class="btn btn-primary btn-search-item" data-bs-dismiss="modal">Search
+                        Item</button>
+                      <button type="button" class="btn btn-primary btn-search-comment" data-bs-dismiss="modal">Search
+                        Comment</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
             </li>
           </ul>
 
         </div>
-        
+
       </div>
     </nav>
+
+    <div id="alert-message"></div>
 
   </header>
 

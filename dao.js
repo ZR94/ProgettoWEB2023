@@ -11,15 +11,15 @@ exports.createItem = function (item) {
                 reject(err);
                 return;
             }
-            resolve(item.code);
+            resolve(this.lastID);
         });
     });
 };
 
-exports.deleteItem = function (item) {
+exports.deleteItem = function (id) {
     return new Promise((resolve, reject) => {
         const sql = 'DELETE FROM item WHERE idItem = ?';
-        db.run(sql, [item.id], (err) => {
+        db.run(sql, [id], (err) => {
             if (err) {
                 reject(err);
                 return;
@@ -123,33 +123,26 @@ exports.createPurchase = function (purchase) {
     });
 };
 
-exports.deleteUser = function (userId) {
+exports.deleteUser = function (id) {
     return new Promise((resolve, reject) => {
         const sql = 'DELETE FROM user WHERE idUser = ?';
-        db.run(sql, [userId], (err) => {
-            if (err) {
-                reject(err);
-                return;
-            }
-            // Verifica se una riga è stata eliminata
-            if (this.changes > 0) {
+        db.run(sql, [id], (err) => {
+            if (err) reject(err);
+            else {
                 resolve({ success: true, message: 'Account eliminato con successo' });
-            } else {
-                reject({ status: 404, msg: 'User not found' });
             }
         });
     });
 };
 
-exports.deleteItem = function (item) {
+exports.deleteItem = function (id) {
     return new Promise((resolve, reject) => {
         const sql = 'DELETE FROM item WHERE idItem = ?';
-        db.run(sql, [item.id], (err) => {
-            if (err) {
-                reject(err);
-                return;
+        db.run(sql, [id], (err) => {
+            if (err) reject(err);
+            else {
+                resolve({ success: true, message: 'Item eliminato con successo' });
             }
-            resolve();
         });
     });
 };
@@ -163,7 +156,7 @@ exports.getUserById = function (id) {
             else if (row === undefined)
                 resolve({ error: 'User not found.' });
             else {
-                const user = { id: row.idUser, name: row.name, surname: row.surname, email: row.email }
+                const user = { id: row.idUser, name: row.name, surname: row.surname, email: row.email, admin: row.admin };
                 resolve(user);
             }
         });
@@ -207,19 +200,21 @@ exports.getWishlistByUserId = function (userId) {
     });
 };
 
-exports.addItem = function (item) {
+exports.getWishlistByVisibility = function (userId, visibility) {
     return new Promise((resolve, reject) => {
-        const sql = "INSERT INTO item (idItem, price, name, img, category) VALUES(?,?,?,?,?)";
-        db.run(sql, [item.id, item.price, item.img, item.category], function (err) {
-            if (err) {
+        const sql = 'SELECT * FROM wishlist WHERE idWishUser = ? and visibility = ?';
+        db.all(sql, [userId, visibility], (err, rows) => {
+            if (err)
                 reject(err);
-            } else {
-                resolve(this.lastID);
+            else if (rows.length === 0)
+                resolve({ error: 'Wishlist not found.' });
+            else {
+                const item = rows.map((row) => ({ idWishUser: row.idWishUser, idWishItem: row.idWishItem, visibility: row.visibility }));
+                resolve(item.sort((a, b) => a.idWishItem - b.idWishItem));
             }
         });
     });
 };
-
 
 exports.addItemInWishList = function (userId, itemId, visibility) {
     return new Promise((resolve, reject) => {
@@ -275,6 +270,22 @@ exports.getItemsByCategory = function (categoryName) {
     });
 };
 
+exports.getItemsByCategoryAndPrice = function (category, priceMin, priceMax) {
+    return new Promise((resolve, reject) => {
+        const sql = "SELECT * FROM item JOIN category ON category.idCategory = item.category WHERE category.idCategory = ? AND item.price BETWEEN ? AND ?";
+        db.all(sql, [category, priceMin, priceMax], (err, row) => {
+            if (err)
+                reject(err);
+            else if (row.length === 0)
+                resolve({ error: 'Items not found.' });
+            else {
+                const item = row.map((row) => ({ id: row.idItem, price: row.price, name: row.name, img: row.img, category: row.category, idCategory: row.idCategory, obj: row.obj }));
+                resolve(item);
+            }
+        });
+    });
+}
+
 exports.addComment = function (userId, itemId, text) {
     return new Promise((resolve, reject) => {
         const sql = "INSERT INTO comment (idCommentUser, idCommentItem, text) VALUES (?,?,?)";
@@ -288,18 +299,36 @@ exports.addComment = function (userId, itemId, text) {
     });
 };
 
-exports.deleteComment = function (userId, itemId) {
+exports.deleteComment = function (commentId) {
     return new Promise((resolve, reject) => {
-        const del = "DELETE FROM comment WHERE idCommentUser = ? AND idCommentItem = ?";
-        db.run(del, [userId, itemId], (err) => {
+        const del = "DELETE FROM comment WHERE idComment = ?";
+        db.run(del, [commentId], (err) => {
             if (err) {
                 reject({ status: 500, msg: err.message });
             } else {
-                resolve();
+                resolve({ success: true, message: 'Commento eliminato con successo' });
             };
         });
     });
 };
+
+exports.updateComment = (id, text) => {
+    return new Promise((resolve, reject) => {
+        const sql = "UPDATE comment SET text = ? WHERE idComment = ?";
+        db.run(sql, [text, id], function (err) {
+            if (err) {
+                reject({ status: 500, message: `Errore durante l'aggiornamento del commento: ${err.message}` });
+            } else {
+                if (this.changes > 0) {
+                    resolve({ success: true, message: 'Commento aggiornato con successo' });
+                } else {
+                    reject({ status: 404, message: 'Nessun commento trovato con questo ID' });
+                }
+            }
+        });
+    });
+};
+
 
 exports.getCommentByUserId = function (userId) {
     return new Promise((resolve, reject) => {
@@ -310,23 +339,23 @@ exports.getCommentByUserId = function (userId) {
             else if (rows.length === 0)
                 resolve({ error: 'Comments not found.' });
             else {
-                const comment = rows.map((row) => ({ idCommentUser: row.idCommentUser, idCommentItem: row.idCommentItem, text: row.text }));
+                const comment = rows.map((row) => ({ id: row.idComment, idCommentUser: row.idCommentUser, idCommentItem: row.idCommentItem, text: row.text }));
                 resolve(comment.sort((a, b) => a.idCommentItem - b.idCommentItem));
             }
         });
     });
 };
 
-exports.getCommentByItemId = function (userId) {
+exports.getCommentByItemId = function (id) {
     return new Promise((resolve, reject) => {
         const sql = 'SELECT * FROM comment WHERE idCommentItem = ?';
-        db.all(sql, [userId], (err, rows) => {
+        db.all(sql, [id], (err, rows) => {
             if (err)
                 reject(err);
             else if (rows.length === 0)
                 resolve({ error: 'Comments not found.' });
             else {
-                const comment = rows.map((row) => ({ idCommentUser: row.idCommentUser, idCommentItem: row.idCommentItem, text: row.text }));
+                const comment = rows.map((row) => ({ id: row.idComment, idCommentUser: row.idCommentUser, idCommentItem: row.idCommentItem, text: row.text }));
                 resolve(comment.sort((a, b) => a.idCommentItem - b.idCommentItem));
             }
         });

@@ -9,7 +9,7 @@ function createLoginForm() {
       <div class="mb-4">
   
         <label for="email">Email</label>
-        <input type="email" name="email" class="form-control" required="" autocomplete=""/>
+        <input type="email" name="email" class="form-control" required autocomplete=""/>
     
       </div>
   
@@ -18,7 +18,7 @@ function createLoginForm() {
         <label for="password">Password</label>
   
         <div class="password-container">
-          <input type="password" name="password" class="form-control" required="" autocomplete=""/>
+          <input type="password" name="password" class="form-control" required autocomplete=""/>
         </div>
   
       </div>
@@ -32,11 +32,6 @@ function createLoginForm() {
           <label for="remember_me">Remember Me</label>
           
         </div>
-        
-        <div>
-          <a class="bodySmall form-footer" href="">Forgot Password</a>
-        </div>
-  
       </div>
   
       <div class="d-flex justify-content-center mb-3">

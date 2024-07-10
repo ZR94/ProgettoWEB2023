@@ -13,9 +13,11 @@ function navbarUserPage(active) {
         <li class="nav-item">
           <a class="nav-link text-dark ${active === 'history' ? 'active' : ''}" ${active === 'history' ? 'aria-current="page"' : ''} href="/history">Cronologia acquisti</a>
         </li>
+        <li class="nav-item">
+          <a class="nav-link text-dark ${active === 'historyComments' ? 'active' : ''}" ${active === 'historyComments' ? 'aria-current="page"' : ''} href="/historyComments">Commenti</a>
+        </li>
       </ul>
-      <div class="container col-md-auto bodyPage">
-      </div> 
+      <div class="container col-md-auto bodyPage"></div> 
     </div>
   `;
 }
@@ -27,15 +29,15 @@ function createUserPage(user) {
       <div class="row g-3">
         <div class="col-md-4">
           <label for="user-name" class="form-label">Nome</label>
-          <input type="text" class="form-control" id="user-name" placeholder="${user.name}" aria-label="${user.name}">
+          <input type="text" class="form-control" id="user-name" placeholder="${user.name}" aria-label="${user.name}" readonly>
         </div>
         <div class="col-md-4">
           <label for="user-surname" class="form-label">Cognome</label>
-          <input type="text" class="form-control" id="user-surname" placeholder="${user.surname}" aria-label="${user.surname}">
+          <input type="text" class="form-control" id="user-surname" placeholder="${user.surname}" aria-label="${user.surname}" readonly>
         </div>
         <div class="col-md-4">
           <label for="user-email" class="form-label">Email</label>
-          <input type="email" class="form-control" id="user-email" placeholder="${user.email}" aria-label="${user.email}">
+          <input type="email" class="form-control" id="user-email" placeholder="${user.email}" aria-label="${user.email}" readonly>
         </div>
         <div class="col-md-4">
           <label for="birthdate" class="form-label">Data di nascita</label>
@@ -82,34 +84,59 @@ function createUserPage(user) {
 
 function createWishlistPage() {
   return `
-    <div class="container col-md-auto">
-      <h5 class="offcanvas-title" id="offcanvasScrollingLabel">Wishlist</h5>
-      <div class="row row-cols-1 row-cols-md-3 g-4" id="list">
-        
-        <div class="table-responsive rounded-3 item-wishlist" id="item-wishlist">
-          <table class="table table-striped m-0">
-            <tbody>
-              <!-- Le righe sono inserite da JS -->
-            </tbody>
-          </table>
+
+  <div class="container-fluid">
+    <div class="row">
+      <!-- Sidebar a sinistra -->
+      <aside class="col-sm-4 col-12 bg-light p-3" id="left-sidebar">
+          <div class="list-group list-group-flush border mt-2">
+              <span id="users" class="list-group-item dropdown">
+                  <div class="dropdown">
+                      <span class="dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                          <img src="./svg/filter.svg" alt="filtro per utente"> Wishlist utenti
+                      </span>
+                      <ul class="dropdown-menu">
+                          <!-- le varie voci (categorie) sono inserite da JS -->
+                      </ul>
+                  </div> 
+              </span>
+          </div>
+      </aside>
+
+      <!-- Contenuto principale -->
+      <div class="col-sm-8 col-12">
+
+        <h5 class="offcanvas-title" id="offcanvasScrollingLabel">Wishlist</h5>
+        <div class="row row-cols-1 row-cols-md-3 g-4" id="wishlistBody">
+          <!-- Gli elementi sono inseriti da JS -->
         </div>
         
       </div>
     </div>
+  </div>
   `;
 }
 
 function createCard(item) {
   return `
-  <div class="d-flex align-items-center mb-5">
-      <div class="flex-shrink-0">
-        <img src="${item.img}" class="img-fluid" style="width: 80px;" alt="Generic placeholder image">
-      </div>
-      <div class="float">
-          <h5 class="align-items-center fw-bold">${item.name}</h5>
-      </div>
+  <div class="col-md-4">
+    <div class="card h-100" id="${item.id}">
+            <img src="${item.img}" class="card-img-top" alt="...">
+        <div class="card-body">
+            <h5 class="card-title">${item.name}</h5>
+            <p class="card-text"></p>
+        </div>
+        <div class="card-footer" id= "product-card-${item.id}">
+            <small class="text-body-secondary">Price: ${item.price}</small>
+        </div>
+
+        <div class="card-footer" id="product-card-${item.id}-footer">
+          
+        </div>
+
+    </div>
   </div>
-  `;
+`;
 }
 
 function createHistoryPurchasePage() {
@@ -125,7 +152,7 @@ function createHistoryPurchasePage() {
 
 function createTablePurchase() {
   return `
-  <div class="col-md-4 mb-4">
+  <div class="col-md-4 mb-4 justify-content-center">
   <div class="table-responsive rounded-3 item-purchase" id="item-purchase">
     <table class="table table-striped m-0">
       <p class="card-text dateTime"></p>
@@ -158,4 +185,25 @@ function createTotalRow(total) {
   `;
 }
 
-export { navbarUserPage, createUserPage, createWishlistPage, createCard, createHistoryPurchasePage, createCardPurchase, createTablePurchase, createTotalRow };
+function createHistoryCommentsPage() {
+  return `
+
+    <div class="container">
+
+        <!-- Contenuto principale -->
+        <div class="row">
+
+          <h5 class="offcanvas-title" id="offcanvasScrollingLabel">History Comments</h5>
+
+          <div class="row row-cols-1 row-cols-md-3 g-4 justify-content-center" id="comments-history-row">
+            <!-- Le card saranno inserite qui -->
+          </div>
+          
+        </div>
+
+    </div>
+ 
+  `;
+}
+
+export { navbarUserPage, createUserPage, createWishlistPage, createCard, createHistoryPurchasePage, createCardPurchase, createTablePurchase, createTotalRow, createHistoryCommentsPage };

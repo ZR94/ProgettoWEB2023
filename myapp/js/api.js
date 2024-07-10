@@ -31,13 +31,13 @@ class Api {
     /**
      * Perform the signUp
      */
-    static doSignUp = async (name, surname, email, password) => {
+    static doSignUp = async (user) => {
         let response = await fetch('/api/user', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ name, surname, email, password }),
+            body: JSON.stringify({ user }),
         });
         if (response.ok) {
             const userJson = await response.json();
@@ -60,34 +60,81 @@ class Api {
         await fetch('/api/sessions/current', { method: 'DELETE' });
     }
 
+    /**
+     * Delete a user by their ID
+     * @param {string} userId - The ID of the user to delete
+     * @returns {Promise<void>} - A promise that resolves when the user is deleted or rejects with an error
+     * @throws {Error} - If there is an error deleting the user
+     */
     static deleteUser = async (userId) => {
         try {
-        let response = await fetch(`/api/user/${userId}/delete`, {
-            method: 'DELETE',
-            headers: {
-                'Content-Type': 'application/json',
+            // Send a DELETE request to the API to delete the user
+            let response = await fetch(`/api/user/${userId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            });
+
+            // If the response is successful, alert the user and resolve the promise
+            if (response.ok) {
+                const result = await response.json();
+                alert('Dati salvati con successo!');
             }
-        });
-        if (response.ok) {
-            const result = await response.json();
-            alert('Dati salvati con successo!');
-          } else {
-            const errorData = await response.json();
-            alert(`Errore: ${errorData.message}`);
-          }
-        } catch (error) {
-          //console.error('Errore durante l\'invio dei dati:', error);
-          alert('Errore durante l\'invio dei dati. Si prega di riprovare.');
+            // If the response is not successful, alert the user with an error message and reject the promise
+            else {
+                const errorData = await response.json();
+                alert(`Errore: ${errorData.message}`);
+            }
+        }
+        // If there is an error sending the request or parsing the response, alert the user and reject the promise
+        catch (error) {
+            alert('Errore durante l\'invio dei dati. Si prega di riprovare.');
         }
     }
 
+    /**
+     * Fetches all users from the API.
+     * @returns {Promise<Array>} - A promise that resolves to an array of user objects.
+     * @throws {Error} - If there is an error fetching the users, this promise will reject with an error object.
+     */
     static getUsers = async () => {
+        // Send a GET request to the API to fetch all users
         let response = await fetch('/api/users');
+
+        // Parse the response as JSON
         const usersJson = await response.json();
+
+        // If the response is successful, return the users
         if (response.ok) {
             return usersJson;
-        } else {
+        }
+        // If the response is not successful, throw an error with the error message from the server
+        else {
             throw usersJson;  // an object with the error coming from the server
+        }
+    }
+
+    /**
+     * Fetches a user from the API by their user ID.
+     * @param {string} userId - The ID of the user to fetch.
+     * @returns {Promise<Object>} - A promise that resolves to a user object.
+     * @throws {Error} - If there is an error fetching the user, this promise will reject with an error object.
+     */
+    static getLoggedUser = async (userId) => {
+        // Send a GET request to the API to fetch the user with the specified ID
+        let response = await fetch(`/api/user/${userId}`);
+
+        // Parse the response as JSON
+        const userJson = await response.json();
+
+        // If the response is successful, return the user
+        if (response.ok) {
+            return userJson;
+        }
+        // If the response is not successful, throw an error with the error message from the server
+        else {
+            throw userJson;  // an object with the error coming from the server
         }
     }
 
@@ -104,6 +151,48 @@ class Api {
         }
     }
 
+    static addItem = async (item) => {
+        try {
+            let response = await fetch('/api/item', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ item }),
+            });
+
+            if (response.ok) {
+                const responseData = await response.json();
+                return responseData;
+            } else {
+                const errDetail = await response.json();
+                throw new Error(errDetail.message || 'An error occurred while adding the item.');
+            }
+        } catch (err) {
+            throw new Error(err.message || 'Network error');
+        }
+    }
+
+    static removeItem = async (id) => {
+        const response = await fetch(`/api/item/${id}/delete`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        });
+
+        if (!response.ok) {
+            try {
+                const errDetail = await response.json();
+                throw errDetail.message;
+            }
+            catch (err) {
+                throw err;
+            }
+        }
+
+    }
+
     static getItemById = async (itemId) => {
         let response = await fetch(`/api/items/${itemId}`);
         if (response.ok) {
@@ -111,32 +200,6 @@ class Api {
             return itemsJson;
         } else {
             throw itemsJson;  // an object with the error coming from the server
-        }
-    }
-
-    static getLoggedUser = async (userId) => {
-        let response = await fetch(`/api/user/${userId}`);
-        if (response.ok) {
-            const userJson = await response.json();
-            return userJson;
-        } else {
-            throw userJson;  // an object with the error coming from the server
-        }
-    }
-
-    static getWishlist = async (userId) => {
-        try {
-            let response = await fetch(`/api/wishlist/${userId}`);
-            const wishlistJson = await response.json();
-
-            if (response.ok) {
-                return wishlistJson;
-            } else {
-                throw wishlistJson;  // Un oggetto con l'errore proveniente dal server
-            }
-        } catch (error) {
-            console.error('Error fetching wishlist:', error);
-            throw error;  // Rilancia l'errore per essere gestito dal chiamante
         }
     }
 
@@ -152,6 +215,39 @@ class Api {
             }
         } catch (error) {
             console.error('Error fetching Items:', error);
+            throw error;  // Rilancia l'errore per essere gestito dal chiamante
+        }
+    }
+
+    static getWishlistByUser = async (userId) => {
+        try {
+            let response = await fetch(`/api/wishlist/${userId}`);
+            const wishlistJson = await response.json();
+
+            if (response.ok) {
+                return wishlistJson;
+            } else {
+                throw wishlistJson;  // Un oggetto con l'errore proveniente dal server
+            }
+        } catch (error) {
+            console.error('Error fetching wishlist:', error);
+            throw error;  // Rilancia l'errore per essere gestito dal chiamante
+        }
+    }
+
+    static getWishlistByVisibility = async (userId, visibility) => {
+        try {
+            let response = await fetch(`/api/wishlist/${userId}/${visibility}`);
+
+            const wishlistJson = await response.json();
+
+            if (response.ok) {
+                return wishlistJson;
+            } else {
+                throw wishlistJson;  // Un oggetto con l'errore proveniente dal server
+            }
+        } catch (error) {
+            console.error('Error fetching wishlist:', error);
             throw error;  // Rilancia l'errore per essere gestito dal chiamante
         }
     }
@@ -175,13 +271,13 @@ class Api {
     static addItemWishlist = async (userId, item, visibility) => {
         try {
             const response = await fetch(`/api/user/${userId}/wishlist`, {
-                method: 'post',
+                method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify( {item, visibility }),
+                body: JSON.stringify({ item, visibility }),
             });
-            
+
             if (response.ok) {
                 const responseData = await response.json();
                 return responseData;
@@ -195,22 +291,21 @@ class Api {
     }
 
     static removeItemFromWishlist = async (userId, item) => {
-        const response = await fetch(`/api/user/${userId}/wishlist/${item.id}`, {
-            method: 'DELETE',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ userId, item }),
-        });
-        if (!response.ok) {
-            try {
+            const response = await fetch(`/api/user/${userId}/wishlist/${item.id}`, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ userId, item }),
+            });
+            if (response.ok) {
+                const responseData = await response.json();
+                return responseData;
+            } else {
                 const errDetail = await response.json();
-                throw errDetail.message;
+                throw new Error(errDetail.message || 'An error occurred while remove the item to the wishlist.');
             }
-            catch (err) {
-                throw err;
-            }
-        }
+
     }
 
     /**
@@ -248,7 +343,7 @@ class Api {
             }
         }
     }
-17
+
     static addComment = async (comment) => {
         try {
             let response = await fetch('/api/comments', {
@@ -256,9 +351,9 @@ class Api {
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify( {comment} ),
+                body: JSON.stringify({ comment }),
             });
-            
+
             if (response.ok) {
                 const responseData = await response.json();
                 return responseData;
@@ -271,13 +366,13 @@ class Api {
         }
     }
 
-    static removeComment = async (userId, item) => {
-        const response = await fetch(`/api/user/${userId}/comments/${item.id}`, {
+    static removeComment = async (commentId) => {
+
+        const response = await fetch(`/api/comments/${commentId}`, {
             method: 'DELETE',
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ userId, item }),
         });
         if (!response.ok) {
             try {
@@ -287,6 +382,27 @@ class Api {
             catch (err) {
                 throw err;
             }
+        }
+    }
+
+    static updateComment = async (text, idComment) => {
+        let response = await fetch(`/api/comments/${idComment}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ text }),
+        });
+        try {
+            if (!response.ok) {
+                const errDetail = await response.json();
+                throw new Error(errDetail.message);
+            }
+
+            const responseData = await response.json();
+            return responseData;
+        } catch (err) {
+            throw new Error(`Errore durante l'aggiornamento del commento: ${err.message}`);
         }
     }
 
@@ -317,6 +433,16 @@ class Api {
             return historyJson;
         } else {
             throw historyJson;  // an object with the error coming from the server
+        }
+    }
+
+    static getSearchByCategoryAndPrice = async (category, priceMin, priceMax) => {
+        let response = await fetch(`/api/search/${category}/${priceMin}/${priceMax}`);
+            const itemsJson = await response.json();
+        if (response.ok) {
+            return itemsJson;
+        } else {
+            throw itemsJson;  // an object with the error coming from the server
         }
     }
 

@@ -79,19 +79,30 @@ app.use(passport.session());
 
 // POST /users
 // Sign up
-app.post('/api/user', /* [add here some validity checks], */(req, res) => {
-  // create a user object from the signup form
-  // additional fields may be useful (name, role, etc.)
+app.post('/api/user', [
+  check('user.email').isEmail().withMessage('Email is required and must be a valid email address'),
+  check('user.password').isLength({ min: 1 }).withMessage('Password is required and must not be empty'),
+], (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(422).json({ errors: errors.array() });
+  }
   const user = {
-    name: req.body.name,
-    surname: req.body.surname,
-    email: req.body.email,
-    password: req.body.password,
-    admin: req.body.admin,
+    name: req.body.user.name,
+    surname: req.body.user.surname,
+    email: req.body.user.email,
+    password: req.body.user.password,
+    admin: req.body.user.admin,
   };
 
   dao.createUser(user)
-    .then((result) => res.status(201).header('Location', `/user/${result}`).end())
+    .then((result) => {
+      if (result) {
+        res.status(201).header('Location', `/user/${result}`).end();
+      } else {
+        res.status(500).json({ error: 'Database error during the signup' });
+      }
+    })
     .catch((err) => res.status(503).json({ error: 'Database error during the signup' }));
 });
 
@@ -113,29 +124,26 @@ app.post('/api/sessions', function (req, res, next) {
   })(req, res, next);
 });
 
-app.post('/api/checkout', /* [add here some validity checks], */(req, res) => {
-  // create a user object from the signup form
-  // additional fields may be useful (name, role, etc.)
+app.post('/api/checkout', isLoggedIn, (req, res) => {
   const listPurchase = req.body.listPurchase;
 
   const insertAllPurchases = async () => {
     const promises = listPurchase.map(purchase => dao.createPurchase(purchase));
     await Promise.all(promises);
   };
-  
+
   insertAllPurchases()
     .then(() => res.status(200).json({ message: 'Item added to purchase successfully' }))
     .catch((err) => res.status(err.status || 500).json({ error: err.msg || 'An error occurred' }));
-  
+
 });
 
-app.post('/api/comments', [  
+app.post('/api/comments', [
   check('comment.idUser').notEmpty().withMessage('User ID is required'),
   check('comment.idItem').notEmpty().withMessage('Item ID is required'),
   check('comment.text').notEmpty().withMessage('Comment text is required'),
 ], (req, res) => {
-  // create a user object from the signup form
-  // additional fields may be useful (name, role, etc.)
+
   const idUser = req.body.comment.idUser;
   const idItem = req.body.comment.idItem;
   const text = req.body.comment.text;
@@ -160,6 +168,19 @@ app.post('/api/user/:userId/wishlist', [
     .catch((err) => res.status(err.status || 500).json({ error: err.msg || 'An error occurred' }));
 });
 
+app.post('/api/item', (req, res) => {
+  const item = {
+    price: req.body.price,
+    name: req.body.name,
+    category: req.body.category,
+    img: req.body.img,
+  };
+  dao.createItem(item)
+    .then((result) => res.status(201).header('Location', `/item/${result}`).end())
+    .catch((err) => res.status(503).json({ error: 'Database error during the item creation' }));
+
+})
+
 // DELETE /sessions/current 
 // Logout
 app.delete('/api/sessions/current', isLoggedIn, function (req, res) {
@@ -173,8 +194,8 @@ app.delete('/api/user/:userId/delete', (req, res) => {
   const userId = req.params.userId;
 
   dao.deleteUser(userId)
-  .then((result) => res.json(result))
-  .catch((err) => res.status(err.status || 500).json({ success: false, message: err.msg || 'Errore durante l\'eliminazione dell\'account' }));
+    .then((result) => res.json(result))
+    .catch((err) => res.status(err.status || 500).json({ success: false, message: err.msg || 'Errore durante l\'eliminazione dell\'account' }));
 });
 
 // Rimuove un item dalla wishlist dell’utente, dato il suo id.
@@ -187,12 +208,26 @@ app.delete('/api/user/:userId/wishlist/:itemId', (req, res) => {
 });
 
 // Rimuove un commento dell’utente, dato il suo id.
-app.delete('/api/user/:userId/comments/:itemId', (req, res) => {
-  const userId = req.params.userId;
+app.delete('/api/comments/:commentId', (req, res) => {
+  const commentId = req.params.commentId;
+  dao.deleteComment(commentId)
+  .then((result) => {
+    if (result) res.status(404).json(result);
+    else res.status(200).end();
+  })
+  .catch((err) =>
+    res.status(500).json({
+      errors: [{ param: "Server", msg: err }],
+    })
+  );
+});
+
+app.delete('/api/item/:itemId', (req, res) => {
   const itemId = req.params.itemId;
-  dao.deleteComment(userId, itemId)
-    .then(() => res.end())
-    .catch((err) => res.status(err.status).json(err.msg));
+
+  dao.deleteItem(itemId)
+    .then((result) => res.json(result))
+    .catch((err) => res.status(err.status || 500).json({ success: false, message: err.msg || 'Errore durante l\'eliminazione dell\'item' }));
 });
 
 // GET /items
@@ -230,8 +265,16 @@ app.get('/api/user/:id', isLoggedIn, (req, res) => {
 
 // GET /api/wishlist/:id
 app.get('/api/wishlist/:id', (req, res) => {
-  const itemId = req.params.id;
-  dao.getWishlistByUserId(itemId)
+  const userId = req.params.id;
+  dao.getWishlistByUserId(userId)
+    .then((wishlist) => res.json(wishlist))
+    .catch((error) => res.status(404).json(error));
+});
+
+app.get('/api/wishlist/:id/:visibility', (req, res) => {
+  const userId = req.params.id;
+  const visibility = req.params.visibility;
+  dao.getWishlistByVisibility(userId, visibility)
     .then((wishlist) => res.json(wishlist))
     .catch((error) => res.status(404).json(error));
 });
@@ -267,8 +310,34 @@ app.get('/api/user/:userId/history', (req, res) => {
   const userId = req.params.userId;
   dao.getHistoryByUserId(userId)
     .then((history) => res.json(history))
-    .catch((error) => res.status(404).json(error)); 
+    .catch((error) => res.status(404).json(error));
 });
+
+app.get('/api/search/:category/:priceMin/:priceMax', (req, res) => {
+  const category = req.params.category;
+  const priceMin = req.params.priceMin;
+  const priceMax = req.params.priceMax;
+  dao.getItemsByCategoryAndPrice(category, priceMin, priceMax)
+    .then((items) => res.json(items))
+    .catch((error) => res.status(404).json(error));
+});
+
+app.put('/api/comments/:idComment', 
+  (req, res) => {
+    const idComment = req.params.idComment;
+    const text = req.body.text;
+    dao.updateComment(idComment, text)
+      .then((result) => {
+        if (result) res.status(404).json(result);
+        else res.status(200).end();
+      })
+      .catch((err) =>
+        res.status(500).json({
+          errors: [{ param: "Server", msg: err }],
+        })
+      );
+  }
+);
 
 app.get('*', (req, res) => {
   res.sendFile(path.resolve(__dirname, 'myapp/index.html'));

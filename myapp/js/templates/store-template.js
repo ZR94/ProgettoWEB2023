@@ -6,15 +6,15 @@ function createStoreTable() {
         <div class="row">
             <!-- Sidebar a sinistra -->
             <aside class="col-sm-4 col-12 bg-light p-3" id="left-sidebar">
+                <div class="mb-3">
+                    <button class="btn btn-primary" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasScrolling" 
+                    data-bs-target="#offcanvasRight" aria-controls="offcanvasScrolling">Cart</button>
+                </div> 
                 <div class="list-group list-group-flush border" >
                     <a href="#" data-id="all" class="list-group-item list-group-item-action active" aria-current="true">
                         <img src="./svg/list.svg" alt="tutti gli items nella wishlist"> Tutti</a>
                     <a href="#" data-id="favourities" class="list-group-item list-group-item-action">
                         <img src="./svg/exclamation-circle.svg" alt="Favourities"> Favourities</a>
-                    <a href="#" data-id="today" class="list-group-item list-group-item-action">
-                        <img src="./svg/calendar-event.svg" alt="scadenza a breve"> Scade oggi</a>
-                    <a href="#" data-id="week" class="list-group-item list-group-item-action">
-                        <img src="./svg/calendar-week.svg" alt="scadenza in settimana"> Scade tra 7 giorni</a>
                     <a href="#" data-id="private" class="list-group-item list-group-item-action">
                         <img src="./svg/eye-slash.svg" alt="visibilità privata"> Privati</a>
                     <a href="#" data-id="public" class="list-group-item list-group-item-action">
@@ -31,15 +31,12 @@ function createStoreTable() {
                             </ul>
                         </div> 
                     </span>
-                </div>  
+                </div>
+
             </aside>
 
             <!-- Contenuto principale -->
             <div class="col-sm-8 col-12">
-                <div class="mb-3">
-                    <button class="btn btn-primary" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasScrolling" 
-                    data-bs-target="#offcanvasRight" aria-controls="offcanvasScrolling">Cart</button>
-                </div>
 
                 <div class="row row-cols-1 row-cols-md-3 g-4" id="my-items"></div>
 
@@ -77,20 +74,21 @@ function createStoreCard(item) {
                 <p class="card-text"></p>
             </div>
             <div class="card-footer" id= "product-card-${item.id}">
-                <small class="text-body-secondary">${item.price}</small>
-                <button class="btn btn-primary btn-add" type="button" value="${item.id}">Add</button>
+                <small class="text-body-secondary">Price: ${item.price}</small>
+                
 
             </div>
 
             <div class="card-footer" id= "product-card-${item.id}">
 
+                <button class="btn btn-primary btn-add" type="button" value="${item.id}">Add</button>
                 <button type="button" class="btn btn-primary btn-comment-add" data-bs-toggle="modal" data-bs-target="#commentModal" data-bs-whatever="comment" id="comment-${item.id}" value="${item.id}">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-plus-circle" viewBox="0 0 16 16">
                         <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
                         <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4"/>
                     </svg> comment
                 </button>
-
+                
                 <div class="modal fade" id="commentModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
                     <div class="modal-dialog">
                         <div class="modal-content">
@@ -113,9 +111,6 @@ function createStoreCard(item) {
                         </div>
                     </div>
                 </div>
-
-                <span class="commentCount" id="commentCount-${item.id}">Numero commenti 0</span>
-
             </div>
 
         </div>
