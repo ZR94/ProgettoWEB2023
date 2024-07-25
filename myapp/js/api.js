@@ -290,22 +290,20 @@ class Api {
         }
     }
 
-    static removeItemFromWishlist = async (userId, item) => {
-            const response = await fetch(`/api/user/${userId}/wishlist/${item.id}`, {
-                method: 'DELETE',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ userId, item }),
-            });
-            if (response.ok) {
-                const responseData = await response.json();
-                return responseData;
-            } else {
-                const errDetail = await response.json();
-                throw new Error(errDetail.message || 'An error occurred while remove the item to the wishlist.');
-            }
+    static removeItemFromWishlist = async (userId, itemId) => {
+        const response = await fetch(`/api/user/${userId}/wishlist/${itemId}`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+        });
 
+        if (!response.ok) {
+            const errDetail = await response.json();
+            throw new Error(errDetail.message || 'Unknown error');
+        }
+
+        return response;
     }
 
     /**
@@ -374,15 +372,14 @@ class Api {
                 'Content-Type': 'application/json',
             },
         });
+
         if (!response.ok) {
-            try {
-                const errDetail = await response.json();
-                throw errDetail.message;
-            }
-            catch (err) {
-                throw err;
-            }
+            const errDetail = await response.json();
+            throw new Error(errDetail.message || 'Unknown error');
         }
+
+        return response;
+
     }
 
     static updateComment = async (text, idComment) => {
@@ -438,7 +435,7 @@ class Api {
 
     static getSearchByCategoryAndPrice = async (category, priceMin, priceMax) => {
         let response = await fetch(`/api/search/${category}/${priceMin}/${priceMax}`);
-            const itemsJson = await response.json();
+        const itemsJson = await response.json();
         if (response.ok) {
             return itemsJson;
         } else {

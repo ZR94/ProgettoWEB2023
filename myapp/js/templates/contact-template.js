@@ -5,12 +5,14 @@ function createContactForm() {
         <div class="mb-4">
     
             <h3 class="call text-center">CALL</h3>
+            <p class="" style="white-space:pre-wrap;">(213) 393-3282</p>
 
         </div>
 
         <div class="mb-4">
     
             <h3 class="email text-center">EMAIL</h3>
+            <p class="" style="white-space:pre-wrap;">dan@fastleanfit.com</p>
       
         </div>
     
@@ -24,10 +26,12 @@ function createContactForm() {
     
         </div>
     
-        <div class="d-flex justify-content-center mb-3">
+        <div class="col sqs-col-8 span-8">
 
-        </div>  
-      
+            <p class="" style="white-space:pre-wrap;"><strong>Koreatown</strong><br>3223 W. 6th St. #1-96<br>Los Angeles, CA 90020</p>
+
+        </div>
+
     </div>
     `;
   }

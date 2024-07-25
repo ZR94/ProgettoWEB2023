@@ -122,4 +122,4 @@ function createSearchCommentPage() {
 }
 
 
-export { createSearchItemTable, createSearchCommentTable };
+export { createSearchItemTable, createSearchCommentTable, createSearchItemPage, createSearchCommentPage };

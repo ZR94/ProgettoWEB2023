@@ -8,13 +8,13 @@ import Comment from './comment.js';
 import { createLoginForm } from './templates/login-template.js';
 import { createSignUpForm } from './templates/sign-template.js';
 import { createHomeForm } from './templates/home-template.js';
-import { navbarUserPage, createUserPage, createWishlistPage, createCard, createHistoryPurchasePage, createCardPurchase, createTablePurchase, createTotalRow, createHistoryCommentsPage } from './templates/user-template.js';
+import { navbarUserPage, createUserPage, createWishlistPage, createCard, createHistoryPurchasePage, createCardPurchase, createTablePurchase, createTotalRow, createHistoryCommentsPage, cardShowCommentsUser } from './templates/user-template.js';
 import { createStoreTable, createStoreCard, createCartCard, addFollowButton, removeFollowButton, addPubIcon, addPrvIcon } from './templates/store-template.js';
 import { navbarAdminPage, createAdminProfile, createUsersPage, createItemsPage, loadUsers, loadItems, cardShowComments, cardShowItems } from './templates/admin-template.js';
 import { createContactForm } from './templates/contact-template.js';
 import { createPricingForm } from './templates/pricing-template.js';
 import { createAlert } from './templates/alert-template.js';
-import { createSearchItemTable, createSearchCommentTable } from './templates/search-template.js';
+import { createSearchItemTable, createSearchCommentTable, createSearchItemPage, createSearchCommentPage } from './templates/search-template.js';
 import page from "//unpkg.com/page/page.mjs";
 
 
@@ -138,7 +138,7 @@ class App {
         });
 
         document.querySelector('.btn-search-item').addEventListener('click', this.searchItems);
-        //document.querySelector('.btn-search-comment').addEventListener('click', this.searchComment);
+        document.querySelector('.btn-search-comment').addEventListener('click', this.searchComments);
 
         // very simple itemple of how to handle a 404 Page Not Found 
         page('*', () => this.appContainer.innerHTML = 'Page not found!');
@@ -589,14 +589,25 @@ class App {
     removeItemWishList = async (event) => {
 
         event.preventDefault();
-        const itemId = event.target.closest('.btn-favourite-remove');
+        const button = event.target.closest('button');
+        const itemId = button.closest('.btn-favourite-remove') || button.closest('.btn-favourite-delete');
         const user = JSON.parse(localStorage.getItem('user'));
 
         try {
-            const item = await Api.getItemById(itemId.value);
-            const response = await Api.removeItemFromWishlist(user.id, item);
-            this.showAlertMessage('success', "Item removed from wishlist successfully");
-            this.showStore();
+            if(button.classList.contains('btn-favourite-remove')) {
+                const item = await Api.getItemById(itemId.value);
+                const response = await Api.removeItemFromWishlist(user.id, item.id);
+                if(response) {
+                    this.showAlertMessage('success', "Item removed to wishlist successfully");
+                    this.showStore();
+                }
+            } else if(button.classList.contains('btn-favourite-delete')) {
+                const item = await Api.getItemById(itemId.value);
+                const response = await Api.removeItemFromWishlist(user.id, item.id);
+                if(response) {
+                    this.showAlertMessage('success', "Item removed to wishlist successfully");
+                }
+            }
 
         } catch (error) {
             if (error) {
@@ -1218,14 +1229,24 @@ class App {
 
     removeComment = async (event) => {
         event.preventDefault();
+        const button = event.target.closest('button');
+        const itemId = button.closest('.btn-remove-comment') || button.closest('.btn-delete-comment');
         const commentId = parseInt(event.target.dataset.id, 10);
 
         try {
-            const response = await Api.removeComment(commentId);
-            if (response) {
-                this.showAlertMessage('success', "Commento eliminato con successo");
-                this.createHistoryComments();
+            if(button.classList.contains('btn-remove-comment')){
+                const response = await Api.removeComment(commentId);
+                if (response) {
+                    this.showAlertMessage('success', "Commento eliminato con successo");
+                    this.createHistoryComments();
+                }
+            } else if(button.classList.contains('btn-delete-comment')){
+                const response = await Api.removeComment(commentId);
+                if (response) {
+                    this.showAlertMessage('success', "Commento eliminato con successo");
+                }
             }
+
         } catch (error) {
             if (error) {
                 const errorMsg = error;
@@ -1367,7 +1388,7 @@ class App {
                 }
             }
 
-            this.addEventListenersToButtons('.btn-delete-item', this.removeItemWishList);
+            this.addEventListenersToButtons('.btn-favourite-delete', this.removeItemWishList);
 
         } catch (error) {
             // If there is an error, display the error message
@@ -1393,12 +1414,12 @@ class App {
             } else {
                 comments.forEach(comment => {
 
-                    let card = cardShowComments(comment);
+                    let card = cardShowCommentsUser(comment);
                     commentsHistoryRow.insertAdjacentHTML('beforeend', card);
                 });
             }
 
-            this.addEventListenersToButtons('.btn-delete-comment', this.removeComment);
+            this.addEventListenersToButtons('.btn-remove-comment', this.removeComment);
             this.addEventListenersToButtons('.btn-update-comment', this.updateComment);
 
         } catch (error) {
@@ -1512,6 +1533,7 @@ class App {
             resultsContainer.appendChild(card);
         });
     }
+
 
 }
 

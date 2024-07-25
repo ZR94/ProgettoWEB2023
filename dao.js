@@ -244,12 +244,14 @@ exports.addItemInWishList = function (userId, itemId, visibility) {
 exports.deleteItemInWishList = function (userId, itemId) {
     return new Promise((resolve, reject) => {
         const del = "DELETE FROM wishlist WHERE idWishItem = ? AND idWishUser = ?";
-        db.run(del, [itemId, userId], (err) => {
+        db.run(del, [itemId, userId], function(err) {
             if (err) {
                 reject({ status: 500, msg: err.message });
+            } else if (this.changes === 0) {
+                resolve({ success: false, message: 'Item not found in wishlist' });
             } else {
-                resolve();
-            };
+                resolve({ success: true, message: 'Item removed from wishlist' });
+            }
         });
     });
 };

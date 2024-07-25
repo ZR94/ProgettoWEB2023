@@ -14,7 +14,7 @@ const dao = require('./dao.js');
 
 // init 
 const app = express();
-const port = 3003;
+const port = 3000;
 
 // set up the middleware
 app.use(morgan('tiny'));
@@ -203,8 +203,18 @@ app.delete('/api/user/:userId/wishlist/:itemId', (req, res) => {
   const userId = req.params.userId;
   const itemId = req.params.itemId;
   dao.deleteItemInWishList(userId, itemId)
-    .then(() => res.end())
-    .catch((err) => res.status(err.status).json(err.msg));
+    .then((result) => {
+      if (result && result.success) {
+        res.status(200).json(result);
+      } else {
+        res.status(404).json({ message: "Item not found in wishlist" });
+      }
+    })
+    .catch((err) =>
+      res.status(500).json({
+        errors: [{ param: "Server", msg: err.message }],
+      })
+    );
 });
 
 // Rimuove un commento dell’utente, dato il suo id.
@@ -212,12 +222,15 @@ app.delete('/api/comments/:commentId', (req, res) => {
   const commentId = req.params.commentId;
   dao.deleteComment(commentId)
   .then((result) => {
-    if (result) res.status(404).json(result);
-    else res.status(200).end();
+    if (result && result.success) {
+      res.status(200).json(result);
+    } else {
+      res.status(404).json({ message: "Comment not found" });
+    }
   })
   .catch((err) =>
     res.status(500).json({
-      errors: [{ param: "Server", msg: err }],
+      errors: [{ param: "Server", msg: err.message }],
     })
   );
 });
@@ -322,7 +335,7 @@ app.get('/api/search/:category/:priceMin/:priceMax', (req, res) => {
     .catch((error) => res.status(404).json(error));
 });
 
-app.put('/api/comments/:idComment', 
+app.put('/api/comments/:idComment',
   (req, res) => {
     const idComment = req.params.idComment;
     const text = req.body.text;

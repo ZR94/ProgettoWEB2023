@@ -268,7 +268,7 @@ function cardShowComments(comment) {
         <div class="card-body">
             <p class="card-text">${comment.text}</p>
             <button class="btn btn-secondary btn-sm btn-update-comment" data-bs-toggle="modal" data-bs-target="#commentModal" data-id="${comment.id}">Modifica</button>
-            <button class="btn btn-danger btn-sm btn-delete-comment" data-id="${comment.id}">Elimina</button>
+            <button class="btn btn-danger btn-sm btn-delete-comment" data-bs-dismiss="modal" data-id="${comment.id}">Elimina</button>
         </div>
     </div>
 
@@ -306,7 +306,7 @@ function cardShowItems(item) {
             <div class="float">
             <h5 class="align-items-center fw-bold">${item.name}</h5>
             </div>
-            <button class="btn btn-danger btn-sm btn-delete-item" data-id="${item.id}">Elimina</button>
+            <button type="button" class="btn btn-danger btn-sm btn-favourite-delete" data-bs-dismiss="modal" id="unfollow-${item.id}" value="${item.id}">Elimina</button>
         </div>
     </div>
     `;
