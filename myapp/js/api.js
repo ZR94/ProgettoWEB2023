@@ -404,7 +404,7 @@ class Api {
     }
 
     static getCommentsbyUserId = async (userId) => {
-        let response = await fetch(`/api/user/${userId}/comments`);
+        let response = await fetch(`/api/search/user/${userId}/comments`);
         const commentsJson = await response.json();
         if (response.ok) {
             return commentsJson;
@@ -414,12 +414,37 @@ class Api {
     }
 
     static getCommentsbyItemId = async (itemId) => {
-        let response = await fetch(`/api/items/${itemId}/comments`);
+        let response = await fetch(`/api/search/items/${itemId}/comments`);
         const commentsJson = await response.json();
         if (response.ok) {
             return commentsJson;
         } else {
             throw commentsJson;  // an object with the error coming from the server
+        }
+    }
+
+    static getCommentsbyUserIdandItemId = async (userId, itemId) => {
+        let response = await fetch(`/api/search/user/${userId}/items/${itemId}/comments`);
+        const commentsJson = await response.json();
+        if (response.ok) {
+            return commentsJson;
+        } else {
+            throw commentsJson;  // an object with the error coming from the server
+        }
+    }
+
+    static getCommentsbyKeyword = async (keyword) => {
+        try {
+            let response = await fetch(`/api/search/comments/${keyword}`);
+            if (response.ok) {
+                const commentsJson = await response.json();
+                return commentsJson;
+            } else {
+                const errDetail = await response.json();
+                throw new Error(errDetail.message || 'No comments found containing the keyword.');
+            }
+        } catch (error) {
+            throw new Error(err.message || 'Network error');
         }
     }
 

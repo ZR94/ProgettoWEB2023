@@ -447,7 +447,6 @@ class App {
         }
     }
 
-
     /**
      * Create the user's purchase history page.
      *
@@ -638,7 +637,7 @@ class App {
 
         } catch (error) {
             if (error) {
-                const errorMsg = error;
+                const errorMsg = "Effettua il login per accedere al negozio";
                 // add an alert message in DOM
                 this.showAlertMessage('danger', errorMsg);
             }
@@ -1312,10 +1311,10 @@ class App {
                 commentsList.insertAdjacentHTML('beforeend', '<p>Non ci sono commenti per questo utente</p>');
             } else {
                 comments.forEach(comment => {
-                    commentsList.insertAdjacentHTML('beforeend', cardShowComments(comment));
+                    commentsList.insertAdjacentHTML('beforeend', cardShowCommentsUser(comment));
                 });
             }
-
+            this.addEventListenersToButtons('.btn-update-comment', this.updateComment);
             this.addEventListenersToButtons('.btn-delete-comment', this.removeComment);
 
         } catch (error) {
@@ -1341,7 +1340,7 @@ class App {
                     commentsList.insertAdjacentHTML('beforeend', cardShowComments(comment));
                 });
             }
-
+            this.addEventListenersToButtons('.btn-update-comment', this.updateComment);
             this.addEventListenersToButtons('.btn-delete-comment', this.removeComment);
 
         } catch (error) {
@@ -1452,6 +1451,9 @@ class App {
             this.appContainer.innerHTML = "";
             this.appContainer.innerHTML = createSearchCommentTable();
             this.populateUsers();
+            this.populateItems();
+
+            this.addEventListenersToButtons('.btn-searchButtonComment', this.performSearchComment);
 
         } catch (error) {
             if (error) {
@@ -1462,34 +1464,28 @@ class App {
         }
     }
 
-
     populateItems = async () => {
-        const itemsList = document.getElementById('itemsList');
-        let categories = await Api.getCategories();
+
+        let categories = await Api.getItems();
         let select = document.getElementById('inputGroupSelect01');
         categories.forEach(category => {
             let option = document.createElement('option');
             option.value = category.id;
-            option.textContent = category.obj;
+            option.textContent = category.name;
             select.appendChild(option);
         });
 
-        
     }
 
     populateUsers = async () => {
-        const usersList = document.getElementById('usersList');
+        
         let users = await Api.getUsers(); // Fetch users from the API
+        let select = document.getElementById('inputGroupSelectUsers');
         users.forEach(user => {
-            usersList.insertAdjacentHTML('beforeend', `<div class="col-md-4">
-                <div class="card">
-                    <div class="card-body">
-                        <h5 class="card-title">${user.name} ${user.surname}</h5>
-                        <p class="card-text">${user.email}</p>
-                        <button class="btn btn-primary btn-sm btn-view-comments" data-id="${user.id}">View Comments</button>
-                    </div>
-                </div>
-            </div>`);
+            let option = document.createElement('option');
+            option.value = user.id;
+            option.textContent = user.name;
+            select.appendChild(option);
         });
     }
 
@@ -1510,12 +1506,40 @@ class App {
         }
     }
 
+    performSearchComment = async () => {
+        let selectedUser = parseInt((document.getElementById('inputGroupSelectUsers').value), 10);
+        let selectedItem = parseInt((document.getElementById('inputGroupSelect01').value), 10);
+        let keyword = (document.getElementById('commentWordInput').value);
+    
+        try {
+            if(selectedUser && selectedItem) {
+                const comments = await Api.getCommentsbyUserIdandItemId(selectedUser, selectedItem);
+                this.displayResults(comments);
+            } else if(selectedUser && !selectedItem) {
+                const comments = await Api.getCommentsbyUserId(selectedUser);
+                this.displayResults(comments);
+            } else if(selectedItem && !selectedUser) {
+                const comments = await Api.getCommentsbyItemId(selectedItem);
+                this.displayResults(comments);
+            } else if (keyword && !selectedUser && !selectedItem) {
+                const comments = await Api.getCommentsbyKeyword(keyword);
+                this.displayResults(comments);
+            }
+        } catch (error) {
+            if(error) {
+                const errorMsg = error;
+                // Add an alert message in DOM
+                this.showAlertMessage('danger', errorMsg);
+            }
+        }
+    }
+
     displayResults(items) {
         let resultsContainer = document.getElementById('resultsContainer');
         resultsContainer.innerHTML = '';
     
-        if (items.length === 0) {
-            resultsContainer.innerHTML = '<p>No items found.</p>';
+        if (items.length === 0 || items.error) {
+            resultsContainer.innerHTML = '<p>No items or comments found.</p>';
             return;
         }
     
@@ -1533,7 +1557,6 @@ class App {
             resultsContainer.appendChild(card);
         });
     }
-
 
 }
 

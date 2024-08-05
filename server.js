@@ -305,16 +305,31 @@ app.get('/api/items/categories/:categoryName', (req, res) => {
     .catch((error) => res.status(404).json(error));
 });
 
-app.get('/api/user/:userId/comments', (req, res) => {
+app.get('/api/search/user/:userId/comments', (req, res) => {
   const userId = req.params.userId;
   dao.getCommentByUserId(userId)
     .then((comments) => res.json(comments))
     .catch((error) => res.status(404).json(error));
 });
 
-app.get('/api/items/:itemId/comments', (req, res) => {
+app.get('/api/search/items/:itemId/comments', (req, res) => {
   const itemId = req.params.itemId;
   dao.getCommentByItemId(itemId)
+    .then((comments) => res.json(comments))
+    .catch((error) => res.status(404).json(error));
+});
+
+app.get('/api/search/user/:userId/items/:itemId/comments', (req, res) => {
+  const userId = req.params.userId;
+  const itemId = req.params.itemId;
+  dao.getCommentByUserIdAndItemId(userId, itemId)
+    .then((comments) => res.json(comments))
+    .catch((error) => res.status(404).json(error));
+})
+
+app.get('/api/search/comments/:keyword', (req, res) => {
+  const keyword = req.params.keyword;
+  dao.getCommentsByKeyword(keyword)
     .then((comments) => res.json(comments))
     .catch((error) => res.status(404).json(error));
 });
@@ -326,7 +341,7 @@ app.get('/api/user/:userId/history', (req, res) => {
     .catch((error) => res.status(404).json(error));
 });
 
-app.get('/api/search/:category/:priceMin/:priceMax', (req, res) => {
+app.get('/api/search/:category/:priceMin/:priceMax', isLoggedIn, (req, res) => {
   const category = req.params.category;
   const priceMin = req.params.priceMin;
   const priceMax = req.params.priceMax;

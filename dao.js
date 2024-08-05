@@ -364,6 +364,49 @@ exports.getCommentByItemId = function (id) {
     });
 };
 
+exports.getCommentByUserIdAndItemId = function (userId, itemId) {
+    return new Promise((resolve, reject) => {
+        const sql = 'SELECT * FROM comment WHERE idCommentUser = ? AND idCommentItem = ?';
+        db.all(sql, [userId, itemId], (err, rows) => {
+            if (err)
+                reject(err);
+            else if (rows.length === 0)
+                resolve({ error: 'Comments not found.' });
+            else {
+                const comments = rows.map((row) => ({
+                    id: row.idComment,
+                    idCommentUser: row.idCommentUser,
+                    idCommentItem: row.idCommentItem,
+                    text: row.text
+                }));
+                resolve(comments.sort((a, b) => a.idComment - b.idComment));
+            }
+        });
+    });
+};
+
+exports.getCommentsByKeyword = function (keyword) {
+    return new Promise((resolve, reject) => {
+        const sql = 'SELECT * FROM comment WHERE text LIKE ?';
+        const searchKeyword = `%${keyword}%`;
+        db.all(sql, [searchKeyword], (err, rows) => {
+            if (err) {
+                reject(err);
+            } else if (rows.length === 0) {
+                resolve({ error: 'No comments found containing the keyword.' });
+            } else {
+                const comments = rows.map((row) => ({
+                    id: row.idComment,
+                    idCommentUser: row.idCommentUser,
+                    idCommentItem: row.idCommentItem,
+                    text: row.text
+                }));
+                resolve(comments.sort((a, b) => a.idComment - b.idComment));
+            }
+        });
+    });
+};
+
 exports.getHistoryByUserId = function (userId) {
     return new Promise((resolve, reject) => {
         const sql = 'SELECT * FROM purchase WHERE idPurchaseUser = ?';
