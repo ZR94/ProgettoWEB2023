@@ -10,11 +10,11 @@ import { createSignUpForm } from './templates/sign-template.js';
 import { createHomeForm } from './templates/home-template.js';
 import { navbarUserPage, createUserPage, createWishlistPage, createCard, createHistoryPurchasePage, createCardPurchase, createTablePurchase, createTotalRow, createHistoryCommentsPage, cardShowCommentsUser } from './templates/user-template.js';
 import { createStoreTable, createStoreCard, createCartCard, addFollowButton, removeFollowButton, addPubIcon, addPrvIcon } from './templates/store-template.js';
-import { navbarAdminPage, createAdminProfile, createUsersPage, createItemsPage, loadUsers, loadItems, cardShowComments, cardShowItems } from './templates/admin-template.js';
+import { navbarAdminPage, createAdminProfile, createUsersPage, createItemsPage, loadUsers, loadItems, cardShowComments, cardShowItems, cardUpdateComments } from './templates/admin-template.js';
 import { createContactForm } from './templates/contact-template.js';
 import { createPricingForm } from './templates/pricing-template.js';
 import { createAlert } from './templates/alert-template.js';
-import { createSearchItemTable, createSearchCommentTable, createSearchItemPage, createSearchCommentPage } from './templates/search-template.js';
+import { createSearchItemTable, createSearchCommentTable, createSearchItemPage, createSearchCommentPage, cardShowComment } from './templates/search-template.js';
 import page from "//unpkg.com/page/page.mjs";
 
 
@@ -275,8 +275,21 @@ class App {
                 bodyPage.innerHTML = createUserPage(userLog);
             }
 
+            if (userLog.birthdate) {
+                document.getElementById('birthdate').value = userLog.birthdate;
+            }
+
+            if (userLog.address) {
+                document.getElementById('address').value = userLog.address;
+            }
+
+            if (userLog.city) {
+                document.getElementById('city').value = userLog.city;
+            }
+
             // Add event listener to the delete button
             document.getElementById('confirmDeleteButton').addEventListener('click', this.onClickDeleteAccount(user.id));
+            document.getElementById('saveButton').addEventListener('click', this.onClickSaveInfo());
 
         } catch (error) {
             if (error) {
@@ -393,6 +406,7 @@ class App {
             this.appContainer.innerHTML = navbarUserPage('wishlist');
             const bodyPage = document.querySelector('.bodyPage');
             bodyPage.innerHTML = createWishlistPage();
+            document.getElementById('userName').textContent = user.name;
 
             // Add each item in the wishlist to the table
             this.insertItemWishList(wishlist);
@@ -417,12 +431,12 @@ class App {
 
             if (wishlist.length > 0) {
                 for (let item of wishlist) {
-                    let tr = document.createElement("tr");
-                    let td = document.createElement("td");
                     const getItem = await Api.getItemById(item.idWishItem);
-                    td.innerHTML = createCard(getItem);
-                    tr.appendChild(td);
-                    wishlistTable.appendChild(tr);
+                    const col = document.createElement("div");
+                    col.classList.add("col-md-4", "mb-4"); // Aggiungi classi Bootstrap per gestione dello spazio
+                    col.innerHTML = createCard(getItem); // Usa la funzione createCard per generare HTML
+                    wishlistTable.appendChild(col);
+
                     const productCard = document.querySelector(`#product-card-${getItem.id}-footer`);
                     productCard.insertAdjacentHTML('beforeend', removeFollowButton(getItem.id));
 
@@ -433,17 +447,16 @@ class App {
                     }
                 }
             } else {
-                let tr = document.createElement("tr");
-                let td = document.createElement("td");
-                td.innerHTML = "Non ci sono elementi nella lista dei desideri";
-                tr.appendChild(td);
-                wishlistTable.appendChild(tr);
+                const emptyMessage = document.createElement("div");
+                emptyMessage.classList.add("col-12", "text-center", "my-4");
+                emptyMessage.innerHTML = `<p class="text-center mb-0">Non ci sono elementi nella lista dei desideri</p>`;
+                wishlistTable.appendChild(emptyMessage);
             }
 
             this.addEventListenersToButtons(".btn-favourite-remove", this.removeItemWishList.bind(this));
 
         } catch (error) {
-
+            console.error("Errore durante l'inserimento degli elementi nella wishlist:", error);
         }
     }
 
@@ -501,6 +514,11 @@ class App {
                     let historyTable = historyTables[historyTables.length - 1]; // Last added table
                     let tr = document.createElement("tr");
                     let td = document.createElement("td");
+
+                    // Imposta lo stile per centrare il contenuto nella cella
+                    td.style.textAlign = "center";
+                    td.style.verticalAlign = "middle"; // Centra verticalmente
+
                     const getItem = await Api.getItemById(item.idPurchaseItem);
                     td.innerHTML = createCardPurchase(getItem, item.qta);
                     tr.appendChild(td);
@@ -593,17 +611,17 @@ class App {
         const user = JSON.parse(localStorage.getItem('user'));
 
         try {
-            if(button.classList.contains('btn-favourite-remove')) {
+            if (button.classList.contains('btn-favourite-remove')) {
                 const item = await Api.getItemById(itemId.value);
                 const response = await Api.removeItemFromWishlist(user.id, item.id);
-                if(response) {
+                if (response) {
                     this.showAlertMessage('success', "Item removed to wishlist successfully");
                     this.showStore();
                 }
-            } else if(button.classList.contains('btn-favourite-delete')) {
+            } else if (button.classList.contains('btn-favourite-delete')) {
                 const item = await Api.getItemById(itemId.value);
                 const response = await Api.removeItemFromWishlist(user.id, item.id);
-                if(response) {
+                if (response) {
                     this.showAlertMessage('success', "Item removed to wishlist successfully");
                 }
             }
@@ -818,6 +836,35 @@ class App {
         }
     }
 
+    onClickSaveInfo = async () => {
+
+        document.getElementById('saveButton').addEventListener('click', async () => {
+            try {
+                const user = JSON.parse(localStorage.getItem('user'));
+
+                const birthdate = document.getElementById('birthdate').value;
+                const address = document.getElementById('address').value;
+                const city = document.getElementById('city').value;
+
+                const dataInfo = {
+                    birthdate: birthdate,
+                    address: address,
+                    city: city
+                };
+
+                const response = await Api.addUserInfo(user.id, dataInfo);
+
+                if (response.success) {
+                    this.showAlertMessage("success", response.message);
+                } else {
+                    this.showAlertMessage("danger", response.message);
+                }
+            } catch (err) {
+                this.showAlertMessage("danger", "Si è verificato un errore: " + err.message);
+            }
+        });
+    }
+
     onClickDeleteAccount = async () => {
 
         document.getElementById('confirmDeleteButton').addEventListener('click', async () => {
@@ -826,7 +873,7 @@ class App {
             const response = await Api.deleteUser(user.id);
             if (response.success) {
                 localStorage.removeItem('user');
-                this.showAlertMessage("success", "Account eliminato con successo!");
+                this.showAlertMessage("success", response.message);
                 page.redirect('/login');
             } else {
                 this.showAlertMessage("danger", "Errore durante l'eliminazione dell'account. Si prega di riprovare.");
@@ -839,7 +886,7 @@ class App {
         const itemId = parseInt(event.target.value);
         const response = await Api.removeItem(itemId);
 
-        if (response.success) {
+        if (response.success === true) {
             this.showAlertMessage('success', 'Item eliminato con successo!');
             this.createAdminItems();
         } else {
@@ -1134,7 +1181,7 @@ class App {
     categoryClickWish = async (event) => {
         event.preventDefault();
         const el = event.target;
-        const correntUser = JSON.parse(localStorage.getItem('user'));
+        const currentUser = JSON.parse(localStorage.getItem('user'));
         // Get the id from the element's data-id property
         const userId = parseInt(el.dataset.id, 10);
         const visibilityPublic = 1;
@@ -1147,7 +1194,10 @@ class App {
         document.getElementById("users").classList.add('active');
         el.classList.add('active');
 
-        if (userId === correntUser.id) {
+        const selectedUserName = await Api.getLoggedUser(userId);
+        document.getElementById('userName').textContent = selectedUserName.name;
+
+        if (userId === currentUser.id) {
             const itemsWish = await Api.getWishlistByUser(userId);
             this.insertItemWishList(itemsWish);
         } else {
@@ -1212,9 +1262,11 @@ class App {
             const text = await this.showModalAndGetText('saveComment');
             const comment = new Comment(user.id, itemId, text);
             const response = await Api.addComment(comment);
+            if (response) {
+                this.showAlertMessage('success', response.message);
+                //this.showStore();
+            }
 
-            this.showAlertMessage('success', response.message);
-            this.showStore();
 
         } catch (error) {
             if (error) {
@@ -1229,17 +1281,16 @@ class App {
     removeComment = async (event) => {
         event.preventDefault();
         const button = event.target.closest('button');
-        const itemId = button.closest('.btn-remove-comment') || button.closest('.btn-delete-comment');
         const commentId = parseInt(event.target.dataset.id, 10);
 
         try {
-            if(button.classList.contains('btn-remove-comment')){
+            if (button.classList.contains('btn-remove-comment')) {
                 const response = await Api.removeComment(commentId);
                 if (response) {
                     this.showAlertMessage('success', "Commento eliminato con successo");
                     this.createHistoryComments();
                 }
-            } else if(button.classList.contains('btn-delete-comment')){
+            } else if (button.classList.contains('btn-delete-comment')) {
                 const response = await Api.removeComment(commentId);
                 if (response) {
                     this.showAlertMessage('success', "Commento eliminato con successo");
@@ -1262,6 +1313,28 @@ class App {
 
         try {
             const text = await this.showModalAndGetText('btn-save-comment');
+            const response = await Api.updateComment(text, commentId);
+            if (response) {
+                this.showAlertMessage('success', "Commento modificato con successo");
+                this.createHistoryComments();
+            }
+
+        } catch (error) {
+            if (error) {
+                const errorMsg = error;
+                // add an alert message in DOM
+                this.showAlertMessage('danger', errorMsg);
+            }
+
+        }
+    }
+
+    updateCommentAdmin = async (event) => {
+        event.preventDefault();
+        const commentId = parseInt(event.target.dataset.id, 10);
+
+        try {
+
             const response = await Api.updateComment(text, commentId);
             if (response) {
                 this.showAlertMessage('success', "Commento modificato con successo");
@@ -1305,17 +1378,22 @@ class App {
             event.preventDefault();
             const userId = event.target.value;
             const comments = await Api.getCommentsbyUserId(userId);
-            const commentsList = document.getElementById('commentsList');
-            commentsList.innerHTML = '';
+            const bodyPage = document.querySelector('.bodyPage');
+            bodyPage.innerHTML = createHistoryCommentsPage();
+            const commentsHistoryRow = document.getElementById('comments-history-row');
+
             if (comments.error) {
-                commentsList.insertAdjacentHTML('beforeend', '<p>Non ci sono commenti per questo utente</p>');
+                commentsHistoryRow.insertAdjacentHTML('beforeend', '<p>Non ci sono commenti per questo utente</p>');
             } else {
-                comments.forEach(comment => {
-                    commentsList.insertAdjacentHTML('beforeend', cardShowCommentsUser(comment));
+                comments.forEach(async comment => {
+                    let itemName = await Api.getItemById(comment.idCommentItem);
+                    let card = cardShowCommentsUser(comment, itemName.name);
+                    commentsHistoryRow.insertAdjacentHTML('beforeend', card);
                 });
             }
+
+            this.addEventListenersToButtons('.btn-remove-comment', this.removeComment);
             this.addEventListenersToButtons('.btn-update-comment', this.updateComment);
-            this.addEventListenersToButtons('.btn-delete-comment', this.removeComment);
 
         } catch (error) {
             if (error) {
@@ -1331,17 +1409,22 @@ class App {
             event.preventDefault();
             const itemId = event.target.value;
             const comments = await Api.getCommentsbyItemId(itemId);
-            const commentsList = document.getElementById('commentsList');
-            commentsList.innerHTML = '';
+            const bodyPage = document.querySelector('.bodyPage');
+            bodyPage.innerHTML = createHistoryCommentsPage();
+            const commentsHistoryRow = document.getElementById('comments-history-row');
+
             if (comments.error) {
-                commentsList.insertAdjacentHTML('beforeend', '<p>Non ci sono commenti per questo oggetto</p>');
+                commentsHistoryRow.insertAdjacentHTML('beforeend', '<p>Non ci sono commenti per questo utente</p>');
             } else {
                 comments.forEach(comment => {
-                    commentsList.insertAdjacentHTML('beforeend', cardShowComments(comment));
+
+                    let card = cardShowCommentsUser(comment);
+                    commentsHistoryRow.insertAdjacentHTML('beforeend', card);
                 });
             }
+
+            this.addEventListenersToButtons('.btn-remove-comment', this.removeComment);
             this.addEventListenersToButtons('.btn-update-comment', this.updateComment);
-            this.addEventListenersToButtons('.btn-delete-comment', this.removeComment);
 
         } catch (error) {
             if (error) {
@@ -1434,7 +1517,7 @@ class App {
         try {
             this.appContainer.innerHTML = "";
             this.appContainer.innerHTML = createSearchItemTable();
-            this.populateItems();
+            this.populateCategories();
             this.addEventListenersToButtons('.btn-searchButton', this.performSearch);
 
         } catch (error) {
@@ -1464,6 +1547,19 @@ class App {
         }
     }
 
+    populateCategories = async () => {
+
+        let categories = await Api.getCategories();
+        let select = document.getElementById('inputGroupSelect01');
+        categories.forEach(category => {
+            let option = document.createElement('option');
+            option.value = category.id;
+            option.textContent = category.obj;
+            select.appendChild(option);
+        });
+
+    }
+
     populateItems = async () => {
 
         let categories = await Api.getItems();
@@ -1478,7 +1574,7 @@ class App {
     }
 
     populateUsers = async () => {
-        
+
         let users = await Api.getUsers(); // Fetch users from the API
         let select = document.getElementById('inputGroupSelectUsers');
         users.forEach(user => {
@@ -1490,15 +1586,15 @@ class App {
     }
 
     performSearch = async () => {
-        let selectedCategory = parseInt((document.getElementById('inputGroupSelect01').value), 10); 
+        let selectedCategory = parseInt((document.getElementById('inputGroupSelect01').value), 10);
         let priceRangeMin = 0;
         let priceRangeMax = parseInt((document.getElementById('customRange3').value), 10);
-    
+
         try {
             const items = await Api.getSearchByCategoryAndPrice(selectedCategory, priceRangeMin, priceRangeMax);
-            this.displayResults(items);
+            this.displayResultsItems(items);
         } catch (error) {
-            if(error) {
+            if (error) {
                 const errorMsg = error;
                 // Add an alert message in DOM
                 this.showAlertMessage('danger', errorMsg);
@@ -1510,23 +1606,23 @@ class App {
         let selectedUser = parseInt((document.getElementById('inputGroupSelectUsers').value), 10);
         let selectedItem = parseInt((document.getElementById('inputGroupSelect01').value), 10);
         let keyword = (document.getElementById('commentWordInput').value);
-    
+
         try {
-            if(selectedUser && selectedItem) {
+            if (selectedUser && selectedItem) {
                 const comments = await Api.getCommentsbyUserIdandItemId(selectedUser, selectedItem);
-                this.displayResults(comments);
-            } else if(selectedUser && !selectedItem) {
+                this.displayResultsComments(comments);
+            } else if (selectedUser && !selectedItem) {
                 const comments = await Api.getCommentsbyUserId(selectedUser);
-                this.displayResults(comments);
-            } else if(selectedItem && !selectedUser) {
+                this.displayResultsComments(comments);
+            } else if (selectedItem && !selectedUser) {
                 const comments = await Api.getCommentsbyItemId(selectedItem);
-                this.displayResults(comments);
+                this.displayResultsComments(comments);
             } else if (keyword && !selectedUser && !selectedItem) {
                 const comments = await Api.getCommentsbyKeyword(keyword);
-                this.displayResults(comments);
+                this.displayResultsComments(comments);
             }
         } catch (error) {
-            if(error) {
+            if (error) {
                 const errorMsg = error;
                 // Add an alert message in DOM
                 this.showAlertMessage('danger', errorMsg);
@@ -1534,28 +1630,40 @@ class App {
         }
     }
 
-    displayResults(items) {
+    displayResultsItems(items) {
         let resultsContainer = document.getElementById('resultsContainer');
         resultsContainer.innerHTML = '';
-    
+
         if (items.length === 0 || items.error) {
-            resultsContainer.innerHTML = '<p>No items or comments found.</p>';
+            resultsContainer.innerHTML = '<p>No items found.</p>';
             return;
         }
-    
+
         items.forEach(item => {
-            let card = document.createElement('div');
-            card.className = 'col-md-4';
-            card.innerHTML = `
-                <div class="card">
-                    <div class="card-body">
-                        <h5 class="card-title">${item.name}</h5>
-                        <p class="card-text">${item.price}</p>
-                    </div>
-                </div>
-            `;
-            resultsContainer.appendChild(card);
+            let card = createStoreCard(item);
+            resultsContainer.insertAdjacentHTML('beforeend', card);
         });
+
+        this.addEventListenersToButtons(".btn-add", this.addCart.bind(this));
+        this.addEventListenersToButtons(".btn-comment-add", this.addComment.bind(this));
+    }
+
+    displayResultsComments(comments) {
+        let resultsContainer = document.getElementById('resultsContainer');
+        resultsContainer.innerHTML = '';
+
+        if (comments.length === 0 || comments.error) {
+            resultsContainer.innerHTML = '<p>No comments found.</p>';
+            return;
+        }
+
+        comments.forEach(async comment => {
+            let itemName = await Api.getItemById(comment.idCommentItem);
+            let userName = await Api.getLoggedUser(comment.idCommentUser);
+            let card = cardShowComment(comment, itemName.name, userName.name);
+            resultsContainer.insertAdjacentHTML('beforeend', card);
+        });
+
     }
 
 }

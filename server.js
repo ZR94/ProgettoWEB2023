@@ -152,6 +152,26 @@ app.post('/api/comments', [
     .catch((err) => res.status(err.status || 500).json({ error: err.msg || 'An error occurred' }));
 });
 
+app.post('/api/user/:userId', [], (req, res) => {
+
+  const idUser = req.params.userId;
+  const { birthdate, address, city } = req.body.dataInfo;
+
+  if (!birthdate || !address || !city, !idUser) {
+    return res.status(400).json({ success: false, error: 'Dati non validi' });
+  }
+
+  dao.addInfoUser(birthdate, address, city, idUser)
+    .then((result) => {
+        if (result.success) {
+            res.status(200).json({ success: true, message: 'Info updated successfully' });
+        } else {
+            res.status(400).json({ success: false, message: 'Info not modified' });
+        }
+    })
+    .catch((err) => res.status(err.status || 500).json({ success: false, error: err.msg || 'An error occurred' }));
+});
+
 // Aggiunge un item alla wishlist dell'utente, dato il suo id.
 app.post('/api/user/:userId/wishlist', [
   check('item.id').notEmpty(),

@@ -188,25 +188,6 @@ function loadUsers(user) {
             </div>
         </div>
 
-        <!-- Modal for Viewing User Comments -->
-        <div class="modal fade" id="userCommentsModal" tabindex="-1" aria-labelledby="userCommentsModalLabel" aria-hidden="true">
-            <div class="modal-dialog modal-lg">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="userCommentsModalLabel">Commenti</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body">
-                        <div class="row g-3 justify-content-center" id="commentsList"></div>
-                    </div>
-                    <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Chiudi</button>
-                </div>
-                </div>
-
-            </div>
-        </div>
-
         <!-- Modal for Viewing User Wishlist -->
         <div class="modal fade" id="userWishlistModal" tabindex="-1" aria-labelledby="userWishlistModalLabel" aria-hidden="true">
             <div class="modal-dialog modal-lg">
@@ -225,7 +206,6 @@ function loadUsers(user) {
             </div>
         </div>
 
-
     `;
 }
 
@@ -237,25 +217,6 @@ function loadItems(item) {
             <p class="card-text">Prezzo: $${item.price}</p>
             <button class="btn btn-primary btn-sm btn-item-comments" data-bs-toggle="modal" data-bs-target="#userCommentsModal" value="${item.id}">Vedi Commenti</button>
             <button class="btn btn-danger btn-sm btn-item-delete" value="${item.id}">Elimina</button>
-        </div>
-    </div>
-
-    <!-- Modal for Viewing User Comments -->
-    <div class="modal fade" id="userCommentsModal" tabindex="-1" aria-labelledby="userCommentsModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="userCommentsModalLabel">Commenti</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <div class="row g-3 justify-content-center" id="commentsList"></div>
-                </div>
-                <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Chiudi</button>
-            </div>
-            </div>
-
         </div>
     </div>
 
@@ -271,7 +232,11 @@ function cardShowComments(comment) {
             <button class="btn btn-danger btn-sm btn-delete-comment" data-bs-dismiss="modal" data-id="${comment.id}">Elimina</button>
         </div>
     </div>
+    `;
+}
 
+function cardUpdateComments() {
+    return `
     <div class="modal fade" id="commentModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
@@ -300,7 +265,7 @@ function cardShowComments(comment) {
 function cardShowItems(item) {
     return `
     <div class="card col-md-4 mb-3 me-3">
-        <div class="card-body">
+        <div class="card-body-admin">
             <p class="card-text">${item.name}</p>
             <img src="${item.img}" class="img-fluid" style="width: 80px;" alt="Generic placeholder image">
             <div class="float">
@@ -312,4 +277,9 @@ function cardShowItems(item) {
     `;
 }
 
-export { navbarAdminPage, createAdminProfile, createUsersPage, createItemsPage, loadUsers, loadItems, cardShowComments, cardShowItems };
+export { navbarAdminPage, createAdminProfile, createUsersPage, createItemsPage, loadUsers, loadItems, cardShowComments, cardShowItems, cardUpdateComments };
+
+/**
+
+
+ */

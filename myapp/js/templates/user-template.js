@@ -52,7 +52,7 @@ function createUserPage(user) {
           <input type="text" class="form-control" id="city" placeholder="Città" aria-label="Città">
         </div>
         <div class="col-12 text-end">
-          <button type="button" class="btn btn-primary" id="saveButton">Salva</button>
+          <button type="button" class="btn btn-primary btn-save" id="saveButton">Salva</button>
           <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteAccountModal">
             Elimina Account
           </button>
@@ -84,7 +84,6 @@ function createUserPage(user) {
 
 function createWishlistPage() {
   return `
-
   <div class="container-fluid">
     <div class="row">
       <!-- Sidebar a sinistra -->
@@ -105,44 +104,42 @@ function createWishlistPage() {
 
       <!-- Contenuto principale -->
       <div class="col-sm-8 col-12">
-
-        <h5 class="offcanvas-title" id="offcanvasScrollingLabel">Wishlist</h5>
-        <div class="row row-cols-1 row-cols-md-3 g-4" id="wishlistBody">
+        <h5 class="offcanvas-title mb-4" id="offcanvasScrollingLabel">Wishlist di <span id="userName"></span></h5>
+        <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 g-4" id="wishlistBody">
           <!-- Gli elementi sono inseriti da JS -->
         </div>
-        
       </div>
     </div>
   </div>
   `;
 }
 
+
 function createCard(item) {
   return `
-  <div class="col-md-4">
-    <div class="card h-100" id="${item.id}">
-            <img src="${item.img}" class="card-img-top" alt="...">
-        <div class="card-body">
-            <h5 class="card-title">${item.name}</h5>
-            <p class="card-text"></p>
-        </div>
-        <div class="card-footer" id= "product-card-${item.id}">
-            <small class="text-body-secondary">Price: ${item.price}</small>
-        </div>
-
-        <div class="card-footer" id="product-card-${item.id}-footer">
-          
-        </div>
-
+  <div class="col-md-4 mb-4">
+    <div class="card h-100 card-wishlist" id="${item.id}">
+      <img src="${item.img}" class="card-img-top-wishlist" alt="${item.name}">
+      <div class="card-body">
+        <h5 class="card-title">${item.name}</h5>
+        <p class="card-text"></p>
+      </div>
+      <div class="card-footer" id="product-card-${item.id}">
+        <small class="text-body-secondary">Price: ${item.price}</small>
+      </div>
+      <div class="card-footer" id="product-card-${item.id}-footer">
+        <!-- Additional content can be added here -->
+      </div>
     </div>
   </div>
-`;
+  `;
 }
+
 
 function createHistoryPurchasePage() {
   return `
   <div class="container">
-  <h5 class="offcanvas-title" id="offcanvasScrollingLabel">History Purchase</h5>
+  <h3 class="offcanvas-title" id="offcanvasScrollingLabel">History Purchase</h3>
   <div class="row" id="purchase-history-row">
     <!-- Le tabelle saranno inserite qui -->
   </div>
@@ -167,8 +164,8 @@ function createTablePurchase() {
 
 function createCardPurchase(item, qta) {
   return `
-  <div class="card mb-3" style="width: 12rem; height: 8rem;">
-    <div class="">
+  <div class="card card-purchase mb-3">
+    <div class="card-body">
       <h5 class="card-title fw-bold">${item.name}</h5>
       <p class="card-text">Price: $${item.price.toFixed(2)}</p>
       <p class="card-text">Quantity: ${qta}</p>
@@ -190,11 +187,10 @@ function createHistoryCommentsPage() {
 
     <div class="container">
 
+      <h3 class="offcanvas-title" id="offcanvasScrollingLabel">History Comments</h3>
+
         <!-- Contenuto principale -->
         <div class="row">
-
-          <h5 class="offcanvas-title" id="offcanvasScrollingLabel">History Comments</h5>
-
           <div class="row row-cols-1 row-cols-md-3 g-4 justify-content-center" id="comments-history-row">
             <!-- Le card saranno inserite qui -->
           </div>
@@ -206,14 +202,18 @@ function createHistoryCommentsPage() {
   `;
 }
 
-function cardShowCommentsUser(comment) {
+function cardShowCommentsUser(comment, itemName) {
   return `
   <div class="card col-md-4 mb-3 me-3">
-      <div class="card-body">
-          <p class="card-text">${comment.text}</p>
-          <button class="btn btn-secondary btn-sm btn-update-comment" data-bs-toggle="modal" data-bs-target="#commentModal" data-id="${comment.id}">Modifica</button>
-          <button class="btn btn-danger btn-sm btn-remove-comment" data-bs-dismiss="modal" data-id="${comment.id}">Elimina</button>
-      </div>
+    <div class="card-body">
+        <!-- Nome dell'oggetto (item) -->
+        <h5 class="card-title">${itemName}</h5>
+        
+        <!-- Testo del commento -->
+        <p class="card-text">${comment.text}</p>
+        <button class="btn btn-secondary btn-sm btn-update-comment" data-bs-toggle="modal" data-bs-dismiss="modal" data-bs-target="#commentModal" data-id="${comment.id}">Modifica</button>
+        <button class="btn btn-danger btn-sm btn-remove-comment" data-bs-dismiss="modal" data-id="${comment.id}">Elimina</button>
+    </div>
   </div>
 
   <div class="modal fade" id="commentModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">

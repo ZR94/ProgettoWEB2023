@@ -1,11 +1,19 @@
+html,
 body {
     font-family: Verdana, Tahoma, sans-serif;
     font-size: 16px;
     line-height: 1.8em;
     letter-spacing: .015em;
     font-weight: 300;
+    height: 100%;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
 }
 
+main {
+    flex-grow: 1;
+}
 
 h1 {
     font-size: 150px;
@@ -31,6 +39,8 @@ h2 {
 }
 
 h3 {
+    margin-top: 20px;
+    margin-bottom: 20px;
     font-weight: 900;
 }
 
@@ -53,14 +63,19 @@ td {
 }
 
 .row-2 {
+    padding: 2rem 0;
     background-color: white;
 }
 
-.row-2 > h2 > p {
+.row-2>h2>p {
     padding-top: 5%;
 }
 
-.row-3, .row-5 {
+.row-3 {
+    padding-bottom: 2rem;
+}
+
+.row-5 {
     padding-top: 5%;
     padding-bottom: 5%;
     padding-left: 21%;
@@ -80,6 +95,30 @@ td {
     top: 0px;
     width: 225px;
     height: 225px;
+    transition: transform 0.2s;
+}
+
+.card:hover {
+    transform: scale(1.05);
+}
+
+.card-img-top {
+    border-radius: 0.5rem;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    /* Mantiene le proporzioni dell'immagine riempiendo completamente il contenitore */
+}
+
+.card-body {
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+}
+
+.card-footer {
+    background-color: transparent;
+    border-top: none;
 }
 
 .col {
@@ -94,7 +133,9 @@ td {
     margin-right: 20%;
 }
 
-.list-group-1, .list-group-2, .list-group-3 {
+.list-group-1,
+.list-group-2,
+.list-group-3 {
     text-align: start;
     list-style: circle inside;
 }
@@ -109,7 +150,8 @@ td {
 }
 
 .footerInfo {
-    table-layout: fixed; width: auto;
+    table-layout: fixed;
+    width: auto;
     text-align: center;
     color: whitesmoke;
 }
@@ -132,4 +174,124 @@ td {
 
 #homeButton {
     color: gray;
-};
+}
+
+;
+
+
+#my-items .col {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+#my-items .card {
+    width: 100%;
+    /* Fa sì che tutte le card abbiano la stessa larghezza */
+    max-width: 300px;
+    /* Limita la larghezza massima delle card */
+}
+
+/* CSS File - contact.css */
+
+.container {
+    max-width: 1200px;
+    margin: auto;
+}
+
+.contact-title {
+    font-size: 2.5rem;
+    font-weight: bold;
+    color: #333;
+}
+
+.contact-subtitle {
+    font-size: 2rem;
+    font-weight: bold;
+    color: #555;
+    margin-bottom: 10px;
+}
+
+.contact-info {
+    font-size: 1.25rem;
+    color: #777;
+    line-height: 1.6;
+}
+
+.contact-section {
+    margin-bottom: 30px;
+}
+
+.map-responsive {
+    overflow: hidden;
+    padding-bottom: 56.25%;
+    /* 16:9 aspect ratio */
+    position: relative;
+    height: 0;
+}
+
+.map-responsive iframe {
+    left: 0;
+    top: 0;
+    height: 100%;
+    width: 100%;
+    position: absolute;
+}
+
+/* Ensure all card images have the same size */
+.card-img-top-wishlist {
+    height: 200px;
+    /* Adjust height as needed */
+    object-fit: cover;
+    /* Ensure the image covers the container without distortion */
+}
+
+/* Optional: Adjust card dimensions to ensure uniformity */
+.card-wishlist {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    /* Ensures the content is evenly spaced */
+    height: 100%;
+}
+
+/* Add spacing between card columns */
+.col-md-4 {
+    margin-bottom: 20px;
+    /* Adjust spacing between rows of cards */
+}
+
+#wishlistBody {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+#purchase-history-row {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.card-purchase {
+    width: 100%; 
+    max-width: 12rem;
+}
+
+.card.card-purchase {
+    height: auto; /* Imposta l'altezza automatica per adattarsi al contenuto */
+    max-height: 8rem; /* Imposta l'altezza massima della card */
+    overflow: hidden; /* Nasconde il contenuto che eccede l'altezza massima */
+    background-color: bisque;
+  }
+  
+  .card.card-purchase .card-body {
+    display: flex;
+    flex-direction: column; /* Dispone il contenuto in colonna */
+    justify-content: center; /* Centra verticalmente il contenuto all'interno della card */
+    height: 100%; /* Assicura che il body della card occupi tutta l'altezza della card */ 
+  }
+
+  .table-striped >  tbody > tr > td {
+    background-color: cornflowerblue;
+  }

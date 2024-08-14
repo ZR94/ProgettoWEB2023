@@ -156,7 +156,15 @@ exports.getUserById = function (id) {
             else if (row === undefined)
                 resolve({ error: 'User not found.' });
             else {
-                const user = { id: row.idUser, name: row.name, surname: row.surname, email: row.email, admin: row.admin };
+                const user = { 
+                    id: row.idUser, 
+                    name: row.name, 
+                    surname: row.surname, 
+                    email: row.email, 
+                    admin: row.admin,
+                    birthdate: row.birthDate,
+                    address: row.address,
+                    city: row.city };
                 resolve(user);
             }
         });
@@ -179,6 +187,21 @@ exports.getUser = function (email, password) {
                     check = true;
 
                 resolve({ user, check });
+            }
+        });
+    });
+};
+
+exports.addInfoUser = function (birthdate, address, city, idUser) {
+    return new Promise((resolve, reject) => {
+        const sql = 'UPDATE user SET birthDate = ?, address = ?, city = ? WHERE idUser = ?';
+        db.run(sql, [birthdate, address, city, idUser], function(err) {  
+            if (err) {
+                reject({ status: 500, msg: err.message });
+            } else if (this.changes === 0) {  
+                reject({ status: 400, msg: 'No record updated. Invalid user ID or data not changed.' });
+            } else {
+                resolve({ success: true, message: 'Info updated successfully' });
             }
         });
     });

@@ -138,6 +138,27 @@ class Api {
         }
     }
 
+    static addUserInfo = async (userId, dataInfo) => {
+        try {
+            let response = await fetch(`/api/user/${userId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ dataInfo }),
+            });
+            if (response.ok) {
+                const responseData = await response.json();
+                return responseData;
+            } else {
+                const errDetail = await response.json();
+                throw new Error(errDetail.message || 'An error occurred while adding the information.');
+            }
+        } catch (err) {
+            throw new Error(err.message || 'Network error');
+        }
+    }
+
     /**
      * Get the list of items store
      */
