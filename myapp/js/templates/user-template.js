@@ -211,12 +211,12 @@ function cardShowCommentsUser(comment, itemName) {
         
         <!-- Testo del commento -->
         <p class="card-text">${comment.text}</p>
-        <button class="btn btn-secondary btn-sm btn-update-comment" data-bs-toggle="modal" data-bs-dismiss="modal" data-bs-target="#commentModal" data-id="${comment.id}">Modifica</button>
-        <button class="btn btn-danger btn-sm btn-remove-comment" data-bs-dismiss="modal" data-id="${comment.id}">Elimina</button>
+        <button class="btn btn-secondary btn-sm btn-update-comment-${comment.id}" data-bs-toggle="modal" data-bs-dismiss="modal" data-bs-target="#commentModal-${comment.id}" data-id="${comment.id}">Modifica</button>
+        <button class="btn btn-danger btn-sm btn-remove-comment-${comment.id}" data-bs-dismiss="modal" data-id="${comment.id}">Elimina</button>
     </div>
   </div>
 
-  <div class="modal fade" id="commentModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+  <div class="modal fade" id="commentModal-${comment.id}" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
       <div class="modal-dialog">
           <div class="modal-content">
               <div class="modal-header">
@@ -227,13 +227,13 @@ function cardShowCommentsUser(comment, itemName) {
               <form>
                   <div class="mb-3">
                       <label for="message-text" class="col-form-label">Comment:</label>
-                      <textarea class="form-control" id="message-text"></textarea>
+                      <textarea class="form-control" id="message-text-${comment.id}"></textarea>
                   </div>
               </form>
           </div>
               <div class="modal-footer">
                   <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                  <button type="button" class="btn btn-primary btn-save-comment" id="btn-save-comment" data-bs-dismiss="modal">Salva</button>
+                  <button type="button" class="btn btn-primary btn-saveComment" id="saveComment" data-bs-dismiss="modal">Salva</button>
               </div>
           </div>
       </div>

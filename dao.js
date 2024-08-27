@@ -102,7 +102,7 @@ exports.createUser = function (user) {
                 if (err) {
                     reject(err);
                 } else {
-                    resolve(user.id);
+                    resolve({ success: true, message: 'Account creato con successo' });
                 }
             });
         }));

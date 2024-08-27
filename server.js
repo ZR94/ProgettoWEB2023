@@ -98,12 +98,11 @@ app.post('/api/user', [
   dao.createUser(user)
     .then((result) => {
       if (result) {
-        res.status(201).header('Location', `/user/${result}`).end();
+        res.status(201).json({ success: true, message: 'Account creato con successo' });
       } else {
-        res.status(500).json({ error: 'Database error during the signup' });
+        res.status(500).json({ success: false, error: 'Database error during the signup' });
       }
     })
-    .catch((err) => res.status(503).json({ error: 'Database error during the signup' }));
 });
 
 // POST /sessions 
@@ -148,7 +147,7 @@ app.post('/api/comments', [
   const idItem = req.body.comment.idItem;
   const text = req.body.comment.text;
   dao.addComment(idUser, idItem, text)
-    .then(() => res.status(200).json({ message: 'Comment added successfully' }))
+    .then(() => res.status(200).json({ success: true, message: 'Comment added successfully' }))
     .catch((err) => res.status(err.status || 500).json({ error: err.msg || 'An error occurred' }));
 });
 
@@ -184,20 +183,20 @@ app.post('/api/user/:userId/wishlist', [
   const userId = req.params.userId;
   const visibility = req.body.visibility;
   dao.addItemInWishList(userId, itemId, visibility)
-    .then(() => res.status(200).json({ message: 'Item added to wishlist successfully' }))
+    .then(() => res.status(200).json({ success: true, message: 'Item added to wishlist successfully' }))
     .catch((err) => res.status(err.status || 500).json({ error: err.msg || 'An error occurred' }));
 });
 
 app.post('/api/item', (req, res) => {
   const item = {
-    price: req.body.price,
-    name: req.body.name,
-    category: req.body.category,
-    img: req.body.img,
+    price: req.body.item.price,
+    name: req.body.item.name,
+    category: req.body.item.category,
+    img: req.body.item.img,
   };
   dao.createItem(item)
-    .then((result) => res.status(201).header('Location', `/item/${result}`).end())
-    .catch((err) => res.status(503).json({ error: 'Database error during the item creation' }));
+    .then(() => res.status(201).json({ success: true, message: 'Item creato con successo' }))
+    .catch((err) => res.status(503).json({ error: err.msg || 'Database error during the item creation' }));
 
 })
 
@@ -210,11 +209,11 @@ app.delete('/api/sessions/current', isLoggedIn, function (req, res) {
   res.end();
 });
 
-app.delete('/api/user/:userId/delete', (req, res) => {
+app.delete('/api/user/:userId', (req, res) => {
   const userId = req.params.userId;
 
   dao.deleteUser(userId)
-    .then((result) => res.json(result))
+    .then(() => res.status(200).json({ success: true, message: 'Account eliminato con successo' }))
     .catch((err) => res.status(err.status || 500).json({ success: false, message: err.msg || 'Errore durante l\'eliminazione dell\'account' }));
 });
 
@@ -241,25 +240,15 @@ app.delete('/api/user/:userId/wishlist/:itemId', (req, res) => {
 app.delete('/api/comments/:commentId', (req, res) => {
   const commentId = req.params.commentId;
   dao.deleteComment(commentId)
-  .then((result) => {
-    if (result && result.success) {
-      res.status(200).json(result);
-    } else {
-      res.status(404).json({ message: "Comment not found" });
-    }
-  })
-  .catch((err) =>
-    res.status(500).json({
-      errors: [{ param: "Server", msg: err.message }],
-    })
-  );
+  .then(() => res.status(200).json({ success: true, message: 'Commento eliminato con successo' }))
+  .catch((err) => res.status(503).json({ error: err.msg || 'Database error during the item creation' }));
 });
 
 app.delete('/api/item/:itemId', (req, res) => {
   const itemId = req.params.itemId;
 
   dao.deleteItem(itemId)
-    .then((result) => res.json(result))
+    .then(() => res.status(200).json({ success: true, message: 'Item eliminato con successo' }))
     .catch((err) => res.status(err.status || 500).json({ success: false, message: err.msg || 'Errore durante l\'eliminazione dell\'item' }));
 });
 
@@ -375,15 +364,8 @@ app.put('/api/comments/:idComment',
     const idComment = req.params.idComment;
     const text = req.body.text;
     dao.updateComment(idComment, text)
-      .then((result) => {
-        if (result) res.status(404).json(result);
-        else res.status(200).end();
-      })
-      .catch((err) =>
-        res.status(500).json({
-          errors: [{ param: "Server", msg: err }],
-        })
-      );
+    .then(() => res.status(201).json({ success: true, message: 'Commento aggiornato con successo' }))
+    .catch((err) => res.status(503).json({ error: err.msg || 'Database error during the item creation' }));
   }
 );
 

@@ -76,20 +76,20 @@ class Api {
                 }
             });
 
-            // If the response is successful, alert the user and resolve the promise
+            // If the response is successful,
             if (response.ok) {
                 const result = await response.json();
-                alert('Dati salvati con successo!');
+                return result;
             }
-            // If the response is not successful, alert the user with an error message and reject the promise
+            // If the response is not successful, throw an error
             else {
                 const errorData = await response.json();
-                alert(`Errore: ${errorData.message}`);
+                throw errorData;
             }
         }
         // If there is an error sending the request or parsing the response, alert the user and reject the promise
         catch (error) {
-            alert('Errore durante l\'invio dei dati. Si prega di riprovare.');
+            throw error;
         }
     }
 
@@ -195,21 +195,19 @@ class Api {
     }
 
     static removeItem = async (id) => {
-        const response = await fetch(`/api/item/${id}/delete`, {
+        const response = await fetch(`/api/item/${id}`, {
             method: 'DELETE',
             headers: {
                 'Content-Type': 'application/json',
             }
         });
 
-        if (!response.ok) {
-            try {
-                const errDetail = await response.json();
-                throw errDetail.message;
-            }
-            catch (err) {
-                throw err;
-            }
+        if (response.ok) {
+            const responseData = await response.json();
+            return responseData;
+        } else {
+            const errDetail = await response.json();
+            throw new Error(errDetail.message || 'An error occurred while adding the item.');
         }
 
     }
@@ -399,7 +397,8 @@ class Api {
             throw new Error(errDetail.message || 'Unknown error');
         }
 
-        return response;
+        const responseData = await response.json();
+        return responseData;
 
     }
 

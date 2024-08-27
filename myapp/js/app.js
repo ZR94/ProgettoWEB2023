@@ -14,7 +14,7 @@ import { navbarAdminPage, createAdminProfile, createUsersPage, createItemsPage, 
 import { createContactForm } from './templates/contact-template.js';
 import { createPricingForm } from './templates/pricing-template.js';
 import { createAlert } from './templates/alert-template.js';
-import { createSearchItemTable, createSearchCommentTable, createSearchItemPage, createSearchCommentPage, cardShowComment } from './templates/search-template.js';
+import { createSearchItemTable, createSearchCommentTable, createSearchItemPage, createSearchCommentPage, cardShowComment, createSearchItemCard } from './templates/search-template.js';
 import page from "//unpkg.com/page/page.mjs";
 
 
@@ -381,6 +381,7 @@ class App {
                 this.addEventListenersToButtons(".btn-item-delete", this.onClickDeleteItem);
                 this.addEventListenersToButtons(".btn-item-add", this.onClickAddItem);
                 this.addEventListenersToButtons(".btn-item-comments", this.showCommentsItems);
+
             }
         } catch (error) {
             if (error) {
@@ -556,16 +557,30 @@ class App {
     addItemWishList = async (event) => {
 
         event.preventDefault();
-        const itemId = event.target.closest('.btn-favourite-add');
+        const button = event.target.closest('.btn-favourite-add');
+        const itemId = button.value;
         const user = JSON.parse(localStorage.getItem('user'));
 
         try {
-            const visibility = await this.showModalAndGetVisibility();
-            const item = await Api.getItemById(itemId.value);
+            const item = await Api.getItemById(itemId);
+            const visibility = await this.showModalAndGetVisibility(item.id);
             const response = await Api.addItemWishlist(user.id, item, visibility);
             if (response) {
                 this.showAlertMessage('success', response.message);
-                this.showStore();
+
+                // Trova la card specifica dell'item
+                const card = document.getElementById(itemId);
+                if (card) {
+                    // Aggiorna il pulsante "Aggiungi ai preferiti" con uno di rimozione
+                    const followButton = card.querySelector('.btn-favourite-add');
+                    followButton.outerHTML = removeFollowButton(itemId);
+
+                    // Aggiungi l'icona di visibilità
+                    const visibilityIcon = (visibility == 1) ? addPubIcon() : addPrvIcon();
+                    card.querySelector('.card-footer-price').insertAdjacentHTML('afterbegin', visibilityIcon);
+
+                    this.addEventListenersToButtons(".btn-favourite-remove", this.removeItemWishList.bind(this));
+                }
             }
 
         } catch (error) {
@@ -574,7 +589,6 @@ class App {
                 // add an alert message in DOM
                 this.showAlertMessage('danger', errorMsg);
             }
-            page.redirect('/');
         }
 
     }
@@ -584,46 +598,59 @@ class App {
      *
      * @return {Promise<number>} A promise that resolves to the visibility choice made by the user.
      */
-    showModalAndGetVisibility = () => {
-        return new Promise((resolve) => {
-
-            // Get the save button element
-            const saveButton = document.getElementById('saveChoice');
-
-            // Define the event handler for the save button click event
-            const handleSaveText = () => {
-                // Get the value of the selected visibility option
-                const visibility = parseInt(document.querySelector('input[name="visibilityOptions"]:checked').value, 10);
-                // Resolve the promise with the visibility choice
-                resolve(visibility);
+    showModalAndGetVisibility = (itemId) => {
+        return new Promise((resolve, reject) => {
+            const modalId = `#staticBackdrop-${itemId}`;
+            const modal = document.querySelector(modalId);
+        
+            // Quando l'utente clicca su "Save choice", risolvi la Promise con la scelta dell'utente
+            const saveButton = modal.querySelector('.btn-saveChoice');
+            saveButton.onclick = function() {
+                try {
+                    const visibility = parseInt(modal.querySelector('input[name="visibilityOptions"]:checked').value, 10);
+                    resolve(visibility);
+                } catch (error) {
+                    reject('Non si è selezionata la visibilità. Prego riprovare.');
+                }
             };
-
-            // Add the event listener for the save button click event and set it to execute only once
-            saveButton.addEventListener('click', handleSaveText, { once: true });
         });
     }
-
+    
     removeItemWishList = async (event) => {
 
         event.preventDefault();
         const button = event.target.closest('button');
-        const itemId = button.closest('.btn-favourite-remove') || button.closest('.btn-favourite-delete');
+        const itemId = button.value;
         const user = JSON.parse(localStorage.getItem('user'));
 
         try {
-            if (button.classList.contains('btn-favourite-remove')) {
-                const item = await Api.getItemById(itemId.value);
-                const response = await Api.removeItemFromWishlist(user.id, item.id);
-                if (response) {
-                    this.showAlertMessage('success', "Item removed to wishlist successfully");
-                    this.showStore();
+            const item = await Api.getItemById(itemId);
+            const response = await Api.removeItemFromWishlist(user.id, item.id);
+            if (response) {
+                this.showAlertMessage('success', "Item removed from wishlist successfully");
+                const card = document.getElementById(item.id);
+                const wishlistPage = document.getElementById('wishlistBody');
+
+                if (wishlistPage) {
+                    card.remove();
+                } else {
+                    // Trova la card specifica dell'item
+                    if (card) {
+                        // Aggiorna il pulsante "Rimuovi dai preferiti" con uno di aggiunta
+                        const unfollowButton = card.querySelector('.btn-favourite-remove');
+                        unfollowButton.outerHTML = addFollowButton(item.id);
+
+                        // Rimuovi l'icona di visibilità se presente
+                        const visibilityIcon = card.querySelector('img[alt^="visibilità"]');
+                        if (visibilityIcon) {
+                            visibilityIcon.remove();
+                        }
+
+                        this.addEventListenersToButtons(".btn-favourite-add", this.addItemWishList.bind(this));
+                    }
                 }
-            } else if (button.classList.contains('btn-favourite-delete')) {
-                const item = await Api.getItemById(itemId.value);
-                const response = await Api.removeItemFromWishlist(user.id, item.id);
-                if (response) {
-                    this.showAlertMessage('success', "Item removed to wishlist successfully");
-                }
+
+
             }
 
         } catch (error) {
@@ -886,8 +913,8 @@ class App {
         const itemId = parseInt(event.target.value);
         const response = await Api.removeItem(itemId);
 
-        if (response.success === true) {
-            this.showAlertMessage('success', 'Item eliminato con successo!');
+        if (response.success) {
+            this.showAlertMessage('success', response.message);
             this.createAdminItems();
         } else {
             this.showAlertMessage('danger', 'Errore durante l\'eliminazione dell\'item. Si prega di riprovare.');
@@ -899,16 +926,21 @@ class App {
         event.preventDefault();
         const itemName = document.getElementById('itemName').value;
         const itemPrice = parseFloat(document.getElementById('itemPrice').value);
-        const itemCategory = document.getElementById('itemCategory').value;
+        const itemCategory = parseFloat(document.getElementById('itemCategory').value);
         const itemImg = document.getElementById('itemImg').value;
-        const item = new Item(itemPrice, itemName, itemCategory, itemImg);
 
-        const response = await Api.addItem(item);
-        if (response.success) {
-            this.showAlertMessage("success", "Account eliminato con successo!");
-            this.createAdminItems();
-        } else {
-            this.showAlertMessage("danger", "Errore durante l'eliminazione dell'account. Si prega di riprovare.");
+        try {
+            const item = new Item(itemPrice, itemName, itemCategory, itemImg);
+
+            const response = await Api.addItem(item);
+            if (response.success) {
+                this.showAlertMessage("success", response.message);
+                this.createAdminItems();
+            } else {
+                this.showAlertMessage("danger", "Errore durante l'inserimento dell'item. Si prega di riprovare.");
+            }
+        } catch (error) {
+            this.showAlertMessage("danger", "Errore durante l'inserimento dell'item. Si prega di riprovare.");
         }
     }
 
@@ -921,8 +953,8 @@ class App {
         const user = new User(userName, userSurname, userEmail, password);
 
         const response = await Api.doSignUp(user);
-        if (response.ok) {
-            this.showAlertMessage('success', 'User aggiunto con successo!');
+        if (response.success) {
+            this.showAlertMessage('success', response.message);
             this.createAdminUsers();
         } else {
             this.showAlertMessage('danger', 'Errore durante l\'aggiunta dell\'user. Si prega di riprovare.');
@@ -934,13 +966,22 @@ class App {
         event.preventDefault();
         const userId = parseInt(event.target.value);
         const response = await Api.deleteUser(userId);
-        if (response.ok) {
-            this.showAlertMessage('success', 'User eliminato con successo!');
-            localStorage.removeItem('user');
+        if (response.success) {
+            // Recupera gli utenti dal localStorage
+            let users = JSON.parse(localStorage.getItem('users')) || [];
+
+            // Filtra l'array per rimuovere l'utente con l'userId specificato
+            users = users.filter(user => user.id !== userId);
+
+            // Aggiorna il localStorage con l'array filtrato
+            localStorage.setItem('users', JSON.stringify(users));
+
+            // Mostra un messaggio di successo e aggiorna la UI
+            this.showAlertMessage('success', response.message);
+            this.createAdminUsers();
         } else {
             this.showAlertMessage('danger', 'Errore durante l\'eliminazione dell\'user. Si prega di riprovare.');
         }
-        this.createAdminUsers();
     }
 
     updateStoreHTML = async (items, storeTable) => {
@@ -952,7 +993,7 @@ class App {
             const itemRow = createStoreCard(item);
             storeTable.insertAdjacentHTML('beforeend', itemRow);
             // Seleziona il productCard corrispondente all'item corrente
-            const productCard = document.querySelector(`#product-card-${item.id}`);
+            const productCard = document.querySelector(`#product-card-follow-${item.id}`);
 
             if (wishlist.error) {
                 productCard.insertAdjacentHTML('beforeend', addFollowButton(item.id));
@@ -1238,18 +1279,26 @@ class App {
         dd_menu.querySelector(`a[data-id="${filterCat}"`).classList.add('active');
     }
 
-    showModalAndGetText = (type) => {
-        return new Promise((resolve) => {
 
-            const saveButton = document.getElementById(type);
-            const handleSaveText = () => {
-                const text = document.getElementById('message-text').value;
-                resolve(text);
+    showModalAndGetText = (itemId) => {
+        return new Promise((resolve, reject) => {
+            const modalId = `#commentModal-${itemId}`;
+            const modal = document.querySelector(modalId);
+            const messageText = document.getElementById(`message-text-${itemId}`);
+        
+            // Quando l'utente clicca su "Save choice", risolvi la Promise con la scelta dell'utente
+            const saveButton = modal.querySelector('.btn-saveComment');
+            saveButton.onclick = function() {
+                try {
+                    const text = messageText.value;
+                    resolve(text);
+                } catch (error) {
+                    reject('Non è stato aggiunto il teste del commento. Prego riprovare.');
+                }
             };
-
-            saveButton.addEventListener('click', handleSaveText, { once: true });
         });
     }
+    
 
     addComment = async (event) => {
 
@@ -1259,12 +1308,11 @@ class App {
         const user = JSON.parse(localStorage.getItem('user'));
 
         try {
-            const text = await this.showModalAndGetText('saveComment');
+            const text = await this.showModalAndGetText(itemId);
             const comment = new Comment(user.id, itemId, text);
             const response = await Api.addComment(comment);
             if (response) {
                 this.showAlertMessage('success', response.message);
-                //this.showStore();
             }
 
 
@@ -1284,16 +1332,16 @@ class App {
         const commentId = parseInt(event.target.dataset.id, 10);
 
         try {
-            if (button.classList.contains('btn-remove-comment')) {
+            if (button.classList.contains(`btn-remove-comment-${commentId}`)) {
                 const response = await Api.removeComment(commentId);
-                if (response) {
-                    this.showAlertMessage('success', "Commento eliminato con successo");
+                if (response.success) {
+                    this.showAlertMessage('success', response.message);
                     this.createHistoryComments();
                 }
             } else if (button.classList.contains('btn-delete-comment')) {
                 const response = await Api.removeComment(commentId);
-                if (response) {
-                    this.showAlertMessage('success', "Commento eliminato con successo");
+                if (response.success) {
+                    this.showAlertMessage('success', response.message);
                 }
             }
 
@@ -1312,7 +1360,7 @@ class App {
         const commentId = parseInt(event.target.dataset.id, 10);
 
         try {
-            const text = await this.showModalAndGetText('btn-save-comment');
+            const text = await this.showModalAndGetText(commentId);
             const response = await Api.updateComment(text, commentId);
             if (response) {
                 this.showAlertMessage('success', "Commento modificato con successo");
@@ -1334,11 +1382,11 @@ class App {
         const commentId = parseInt(event.target.dataset.id, 10);
 
         try {
-
+            const text = await this.showModalAndGetText('btn-save-comment');
             const response = await Api.updateComment(text, commentId);
-            if (response) {
-                this.showAlertMessage('success', "Commento modificato con successo");
-                this.createHistoryComments();
+            if (response.success) {
+                this.showAlertMessage(response.message);
+                this.showCommentsItems();
             }
 
         } catch (error) {
@@ -1358,7 +1406,7 @@ class App {
         try {
             const text = await this.showModalAndGetText('btn-update-comment');
             const response = await Api.updateComment(text, commentId);
-            if (response) {
+            if (response.success) {
                 this.showAlertMessage('success', "Commento modificato con successo");
                 this.createHistoryComments();
             }
@@ -1387,13 +1435,13 @@ class App {
             } else {
                 comments.forEach(async comment => {
                     let itemName = await Api.getItemById(comment.idCommentItem);
-                    let card = cardShowCommentsUser(comment, itemName.name);
+                    let card = cardShowCommentsUser(comment, itemName.name, itemName.id);
                     commentsHistoryRow.insertAdjacentHTML('beforeend', card);
                 });
             }
 
             this.addEventListenersToButtons('.btn-remove-comment', this.removeComment);
-            this.addEventListenersToButtons('.btn-update-comment', this.updateComment);
+            this.addEventListenersToButtons('.btn-update-comment', this.updateCommentAdmin);
 
         } catch (error) {
             if (error) {
@@ -1416,15 +1464,15 @@ class App {
             if (comments.error) {
                 commentsHistoryRow.insertAdjacentHTML('beforeend', '<p>Non ci sono commenti per questo utente</p>');
             } else {
-                comments.forEach(comment => {
-
-                    let card = cardShowCommentsUser(comment);
+                comments.forEach(async comment => {
+                    let itemName = await Api.getItemById(comment.idCommentItem);
+                    let card = cardShowCommentsUser(comment, itemName.name);
                     commentsHistoryRow.insertAdjacentHTML('beforeend', card);
                 });
             }
 
             this.addEventListenersToButtons('.btn-remove-comment', this.removeComment);
-            this.addEventListenersToButtons('.btn-update-comment', this.updateComment);
+            this.addEventListenersToButtons('.btn-update-comment', this.updateCommentAdmin);
 
         } catch (error) {
             if (error) {
@@ -1494,15 +1542,16 @@ class App {
             if (comments.error) {
                 commentsHistoryRow.insertAdjacentHTML('beforeend', '<p>Non ci sono commenti per questo utente</p>');
             } else {
-                comments.forEach(comment => {
-
-                    let card = cardShowCommentsUser(comment);
+                comments.forEach(async comment => {
+                    let itemName = await Api.getItemById(comment.idCommentItem);
+                    let card = cardShowCommentsUser(comment, itemName.name);
                     commentsHistoryRow.insertAdjacentHTML('beforeend', card);
+                    let btnUpdate = document.querySelector(`.btn-update-comment-${comment.id}`);
+                    let btnRemove = document.querySelector(`.btn-remove-comment-${comment.id}`);
+                    btnUpdate.addEventListener('click', this.updateComment);
+                    btnRemove.addEventListener('click', this.removeComment);
                 });
             }
-
-            this.addEventListenersToButtons('.btn-remove-comment', this.removeComment);
-            this.addEventListenersToButtons('.btn-update-comment', this.updateComment);
 
         } catch (error) {
             if (error) {
@@ -1630,7 +1679,7 @@ class App {
         }
     }
 
-    displayResultsItems(items) {
+    displayResultsItems = async (items) => {
         let resultsContainer = document.getElementById('resultsContainer');
         resultsContainer.innerHTML = '';
 
@@ -1640,12 +1689,10 @@ class App {
         }
 
         items.forEach(item => {
-            let card = createStoreCard(item);
+            let card = createSearchItemCard(item);
             resultsContainer.insertAdjacentHTML('beforeend', card);
         });
 
-        this.addEventListenersToButtons(".btn-add", this.addCart.bind(this));
-        this.addEventListenersToButtons(".btn-comment-add", this.addComment.bind(this));
     }
 
     displayResultsComments(comments) {
@@ -1669,3 +1716,29 @@ class App {
 }
 
 export default App;
+
+/** 
+ *         const user = JSON.parse(localStorage.getItem('user'));
+        const wishlist = await Api.getWishlistByUser(user.id);
+ *             const productCard = document.querySelector(`#product-card-${item.id}`);
+
+            if (wishlist.error) {
+                productCard.insertAdjacentHTML('beforeend', addFollowButton(item.id));
+            } else {
+                const itemFound = wishlist.filter(itemWish => itemWish.idWishItem == item.id);
+                if (itemFound.length > 0) {
+                    productCard.insertAdjacentHTML('beforeend', removeFollowButton(item.id));
+                    if (itemFound[0].visibility > 0) {
+                        productCard.insertAdjacentHTML('beforeend', addPubIcon());
+                    } else {
+                        productCard.insertAdjacentHTML('beforeend', addPrvIcon());
+                    }
+                } else {
+                    productCard.insertAdjacentHTML('beforeend', addFollowButton(item.id));
+                }
+            }
+
+                    this.addEventListenersToButtons(".btn-comment-add", this.addComment.bind(this));
+        this.addEventListenersToButtons(".btn-favourite-add", this.addItemWishList.bind(this));
+        this.addEventListenersToButtons(".btn-favourite-remove", this.removeItemWishList.bind(this));
+*/
