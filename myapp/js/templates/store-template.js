@@ -50,14 +50,18 @@ function createStoreTable() {
                             <h5 class="offcanvas-title" id="offcanvasScrollingLabel">List cart</h5>
                             <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
                         </div>
-                        <div class="" id="checkout-form" > 
+                        <div class="" id="checkout-form"> 
 
-                            <div class="offcanvas-body listCart"></div>
+                            <!-- Contenitore scrollabile per gli articoli -->
+                            <div class="offcanvas-body listCart" style="max-height: 80vh; overflow-y: auto;"></div>
                             
-                            <div class="d-flex justify-content-center mb-3" id="checkoutBox">
-                                <button class="btn btn-primary btn-checkout" type="button" value="">Checkout</button>
+                            <!-- Contenitore fisso per il pulsante di checkout -->
+                            <div class="checkout-container">
+                                <div class="d-flex justify-content-center mb-3" id="checkoutBox">
+                                    <button class="btn btn-primary btn-checkout" type="button" value="">Checkout</button>
+                                </div>
                             </div>
-                            
+        
                         </div>
                     </div>
                 </div>

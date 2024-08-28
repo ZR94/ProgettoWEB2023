@@ -210,7 +210,7 @@ function cardShowCommentsUser(comment, itemName) {
         <h5 class="card-title">${itemName}</h5>
         
         <!-- Testo del commento -->
-        <p class="card-text">${comment.text}</p>
+        <p class="card-text card-text-${comment.id}">${comment.text}</p>
         <button class="btn btn-secondary btn-sm btn-update-comment-${comment.id}" data-bs-toggle="modal" data-bs-dismiss="modal" data-bs-target="#commentModal-${comment.id}" data-id="${comment.id}">Modifica</button>
         <button class="btn btn-danger btn-sm btn-remove-comment-${comment.id}" data-bs-dismiss="modal" data-id="${comment.id}">Elimina</button>
     </div>

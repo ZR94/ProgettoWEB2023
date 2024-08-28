@@ -10,7 +10,7 @@ import { createSignUpForm } from './templates/sign-template.js';
 import { createHomeForm } from './templates/home-template.js';
 import { navbarUserPage, createUserPage, createWishlistPage, createCard, createHistoryPurchasePage, createCardPurchase, createTablePurchase, createTotalRow, createHistoryCommentsPage, cardShowCommentsUser } from './templates/user-template.js';
 import { createStoreTable, createStoreCard, createCartCard, addFollowButton, removeFollowButton, addPubIcon, addPrvIcon } from './templates/store-template.js';
-import { navbarAdminPage, createAdminProfile, createUsersPage, createItemsPage, loadUsers, loadItems, cardShowComments, cardShowItems, cardUpdateComments } from './templates/admin-template.js';
+import { navbarAdminPage, createAdminProfile, createUsersPage, createItemsPage, loadUsers, loadItems, cardShowItems } from './templates/admin-template.js';
 import { createContactForm } from './templates/contact-template.js';
 import { createPricingForm } from './templates/pricing-template.js';
 import { createAlert } from './templates/alert-template.js';
@@ -705,38 +705,42 @@ class App {
     onClickCheckout = async () => {
 
         try {
-            const user = JSON.parse(localStorage.getItem('user'));
+            const user = JSON.parse(localStorage.getItem('user')); // Recupera l'utente corrente
+            if (!user) {
+                console.error("User not found. Please log in.");
+                return;
+            }
+    
+            const cartKey = `cart_${user.id}`;
+            this.itemCart = JSON.parse(localStorage.getItem(cartKey)) || {}; // Carica il carrello specifico dell'utente
+    
             const listPurchase = [];
             const dateTime = moment().format("DD/MM/YYYY HH:mm:ss");
-
-            this.itemCart.forEach(item => {
-
+    
+            // Itera attraverso gli elementi del carrello e crea l'ordine di acquisto
+            Object.values(this.itemCart).forEach(item => {
                 if (item) {
                     const itemId = item.id;
                     const itemQuantity = item.quantity;
                     const itemPrice = item.price;
-
+    
                     let addPurchase = new Purchase(user.id, itemId, itemQuantity, itemPrice, dateTime);
                     listPurchase.push(addPurchase);
                 }
-
             });
-
+    
+            // Effettua il checkout tramite l'API
             const response = await Api.doCheckout(listPurchase);
             if (response) {
-                localStorage.removeItem('cart');
-                this.showAlertMessage('success', response.message);
-                this.updateCartHtml();
+                localStorage.removeItem(cartKey); // Rimuove il carrello specifico dell'utente
+                this.showAlertMessage('success', response.message); // Mostra un messaggio di successo
+                this.updateCartHtml(); // Aggiorna l'interfaccia utente del carrello
             }
         } catch (error) {
-            if (error) {
-                const errorMsg = error;
-                // add an alert message in DOM
-                this.showAlertMessage('danger', errorMsg);
-            }
-
+            console.error(error); // Log dell'errore per il debug
+            this.showAlertMessage('danger', 'An error occurred during checkout. Please try again.'); // Messaggio di errore per l'utente
         }
-
+    
     }
 
     /**
@@ -1035,21 +1039,31 @@ class App {
      * @param {*} items 
      */
     addCart = async (event) => {
-
         event.preventDefault();
+    
         const itemId = event.target.value;
-        const items = await Api.getItems();
-
+        const user = JSON.parse(localStorage.getItem('user')); // Assicurati che l'utente sia già memorizzato nel localStorage
+        if (!user) {
+            console.error("User not found. Please log in.");
+            return;
+        }
+        
+        const cartKey = `cart_${user.id}`;
+        this.itemCart = JSON.parse(localStorage.getItem(cartKey)) || {}; // Carica il carrello specifico dell'utente
+    
         try {
+            const items = await Api.getItems();
             if (!this.itemCart[itemId]) {
                 this.itemCart[itemId] = items.filter(product => product.id == itemId)[0];
                 this.itemCart[itemId].quantity = 1;
             } else {
                 this.itemCart[itemId].quantity++;
             }
-            localStorage.setItem('cart', JSON.stringify(this.itemCart));
+            this.showAlertMessage('success', 'Item added to cart');
+            localStorage.setItem(cartKey, JSON.stringify(this.itemCart)); // Salva il carrello specifico dell'utente
             this.updateCartHtml();
         } catch (error) {
+            console.error("Error adding item to cart:", error);
             page.redirect('/');
         }
     }
@@ -1057,18 +1071,26 @@ class App {
     /**
      * Update cart with item added at the cart in the HTML
      */
-    updateCartHtml() {
-
-        this.itemCart = JSON.parse(localStorage.getItem('cart')) || [];
+    updateCartHtml = () => {
+        const user = JSON.parse(localStorage.getItem('user')); // Assicurati che l'utente sia già memorizzato nel localStorage
+        if (!user) {
+            console.error("User not found. Please log in.");
+            return;
+        }
+    
+        const cartKey = `cart_${user.id}`;
+        this.itemCart = JSON.parse(localStorage.getItem(cartKey)) || {}; // Carica il carrello specifico dell'utente
+        
         const listCart = document.querySelector('.listCart');
         listCart.innerHTML = '';
         if (this.itemCart) {
-            this.itemCart.forEach(x => {
+            Object.values(this.itemCart).forEach(x => {
                 if (x) {
                     const newItem = createCartCard(x, x.quantity);
                     listCart.insertAdjacentHTML('beforeend', newItem);
                 }
             });
+    
             const buttons = document.querySelectorAll(".btnQnt");
             for (const btn of buttons) {
                 btn.addEventListener("click", this.changeQntCart);
@@ -1086,17 +1108,32 @@ class App {
         event.preventDefault();
         const itemId = event.target.value;
         const btnType = event.target.name;
-
-        if (btnType == '+') {
-            this.itemCart[itemId].quantity++;
-        } else if (btnType == '-') {
-            this.itemCart[itemId].quantity--;
-            if (this.itemCart[itemId].quantity <= 0) {
-                delete this.itemCart[itemId];
-            }
+    
+        const user = JSON.parse(localStorage.getItem('user')); // Recupera l'utente corrente
+        if (!user) {
+            console.error("User not found. Please log in.");
+            return;
         }
-        localStorage.setItem('cart', JSON.stringify(this.itemCart));
-        this.updateCartHtml();
+    
+        const cartKey = `cart_${user.id}`;
+        this.itemCart = JSON.parse(localStorage.getItem(cartKey)) || {}; // Carica il carrello specifico dell'utente
+    
+        if (this.itemCart[itemId]) {
+            if (btnType === '+') {
+                this.itemCart[itemId].quantity++;
+            } else if (btnType === '-') {
+                this.itemCart[itemId].quantity--;
+                if (this.itemCart[itemId].quantity <= 0) {
+                    delete this.itemCart[itemId];
+                }
+            }
+        } else {
+            console.error("Item not found in cart.");
+            return;
+        }
+    
+        localStorage.setItem(cartKey, JSON.stringify(this.itemCart)); // Salva il carrello aggiornato
+        this.updateCartHtml(); // Aggiorna l'HTML del carrello
     }
 
     /**
@@ -1328,77 +1365,65 @@ class App {
 
     removeComment = async (event) => {
         event.preventDefault();
-        const button = event.target.closest('button');
         const commentId = parseInt(event.target.dataset.id, 10);
-
+    
         try {
-            if (button.classList.contains(`btn-remove-comment-${commentId}`)) {
-                const response = await Api.removeComment(commentId);
-                if (response.success) {
-                    this.showAlertMessage('success', response.message);
-                    this.createHistoryComments();
-                }
-            } else if (button.classList.contains('btn-delete-comment')) {
-                const response = await Api.removeComment(commentId);
-                if (response.success) {
-                    this.showAlertMessage('success', response.message);
+            const response = await Api.removeComment(commentId);
+            if (response.success) {
+                this.showAlertMessage('success', response.message);
+    
+                // Rimuovi la card del commento eliminato dal DOM
+                const commentCard = event.target.closest('.card');
+                if (commentCard) {
+                    commentCard.remove();
                 }
             }
-
         } catch (error) {
             if (error) {
                 const errorMsg = error;
-                // add an alert message in DOM
+                // Aggiungi un messaggio di alert nel DOM in caso di errore
                 this.showAlertMessage('danger', errorMsg);
             }
         }
-
     }
+    
 
     updateComment = async (event) => {
         event.preventDefault();
         const commentId = parseInt(event.target.dataset.id, 10);
-
+    
         try {
+            // Ottieni il testo del commento aggiornato dall'utente tramite il modale
             const text = await this.showModalAndGetText(commentId);
+    
+            // Invia il commento aggiornato al server tramite l'API
             const response = await Api.updateComment(text, commentId);
-            if (response) {
-                this.showAlertMessage('success', "Commento modificato con successo");
-                this.createHistoryComments();
-            }
-
-        } catch (error) {
-            if (error) {
-                const errorMsg = error;
-                // add an alert message in DOM
-                this.showAlertMessage('danger', errorMsg);
-            }
-
-        }
-    }
-
-    updateCommentAdmin = async (event) => {
-        event.preventDefault();
-        const commentId = parseInt(event.target.dataset.id, 10);
-
-        try {
-            const text = await this.showModalAndGetText('btn-save-comment');
-            const response = await Api.updateComment(text, commentId);
+    
             if (response.success) {
-                this.showAlertMessage(response.message);
-                this.showCommentsItems();
+                // Mostra un messaggio di successo all'utente
+                this.showAlertMessage('success', response.message);
+    
+                // Trova l'elemento del commento nel DOM
+                const commentElement = document.querySelector(`.card-text-${commentId}`);
+    
+                if (commentElement) {
+                    // Aggiorna il testo del commento nel DOM
+                    commentElement.textContent = text;
+                } else {
+                    // Se non si trova l'elemento nel DOM, aggiorna la cronologia dei commenti
+                    this.createHistoryComments();
+                }
             }
-
+    
         } catch (error) {
             if (error) {
+                // Mostra un messaggio di errore se qualcosa va storto
                 const errorMsg = error;
-                // add an alert message in DOM
                 this.showAlertMessage('danger', errorMsg);
             }
-
         }
     }
-
+    
     updateItem = async (event) => {
         event.preventDefault();
         const commentId = parseInt(event.target.dataset.id, 10);
@@ -1437,11 +1462,12 @@ class App {
                     let itemName = await Api.getItemById(comment.idCommentItem);
                     let card = cardShowCommentsUser(comment, itemName.name, itemName.id);
                     commentsHistoryRow.insertAdjacentHTML('beforeend', card);
+                    let btnUpdate = document.querySelector(`.btn-update-comment-${comment.id}`);
+                    let btnRemove = document.querySelector(`.btn-remove-comment-${comment.id}`);
+                    btnUpdate.addEventListener('click', this.updateComment);
+                    btnRemove.addEventListener('click', this.removeComment);
                 });
             }
-
-            this.addEventListenersToButtons('.btn-remove-comment', this.removeComment);
-            this.addEventListenersToButtons('.btn-update-comment', this.updateCommentAdmin);
 
         } catch (error) {
             if (error) {
@@ -1468,12 +1494,12 @@ class App {
                     let itemName = await Api.getItemById(comment.idCommentItem);
                     let card = cardShowCommentsUser(comment, itemName.name);
                     commentsHistoryRow.insertAdjacentHTML('beforeend', card);
+                    let btnUpdate = document.querySelector(`.btn-update-comment-${comment.id}`);
+                    let btnRemove = document.querySelector(`.btn-remove-comment-${comment.id}`);
+                    btnUpdate.addEventListener('click', this.updateComment);
+                    btnRemove.addEventListener('click', this.removeComment);
                 });
             }
-
-            this.addEventListenersToButtons('.btn-remove-comment', this.removeComment);
-            this.addEventListenersToButtons('.btn-update-comment', this.updateCommentAdmin);
-
         } catch (error) {
             if (error) {
                 const errorMsg = error;
@@ -1716,29 +1742,3 @@ class App {
 }
 
 export default App;
-
-/** 
- *         const user = JSON.parse(localStorage.getItem('user'));
-        const wishlist = await Api.getWishlistByUser(user.id);
- *             const productCard = document.querySelector(`#product-card-${item.id}`);
-
-            if (wishlist.error) {
-                productCard.insertAdjacentHTML('beforeend', addFollowButton(item.id));
-            } else {
-                const itemFound = wishlist.filter(itemWish => itemWish.idWishItem == item.id);
-                if (itemFound.length > 0) {
-                    productCard.insertAdjacentHTML('beforeend', removeFollowButton(item.id));
-                    if (itemFound[0].visibility > 0) {
-                        productCard.insertAdjacentHTML('beforeend', addPubIcon());
-                    } else {
-                        productCard.insertAdjacentHTML('beforeend', addPrvIcon());
-                    }
-                } else {
-                    productCard.insertAdjacentHTML('beforeend', addFollowButton(item.id));
-                }
-            }
-
-                    this.addEventListenersToButtons(".btn-comment-add", this.addComment.bind(this));
-        this.addEventListenersToButtons(".btn-favourite-add", this.addItemWishList.bind(this));
-        this.addEventListenersToButtons(".btn-favourite-remove", this.removeItemWishList.bind(this));
-*/

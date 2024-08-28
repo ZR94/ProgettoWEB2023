@@ -223,61 +223,20 @@ function loadItems(item) {
     `;
 }
 
-function cardShowComments(comment) {
-    return `
-    <div class="card col-md-4 mb-3 me-3">
-        <div class="card-body">
-            <p class="card-text">${comment.text}</p>
-            <button class="btn btn-secondary btn-sm btn-update-comment" data-bs-toggle="modal" data-bs-target="#commentModal" data-id="${comment.id}">Modifica</button>
-            <button class="btn btn-danger btn-sm btn-delete-comment" data-bs-dismiss="modal" data-id="${comment.id}">Elimina</button>
-        </div>
-    </div>
-    `;
-}
-
-function cardUpdateComments() {
-    return `
-    <div class="modal fade" id="commentModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h1 class="modal-title fs-5 text-dark" id="exampleModalLabel">New comment</h1>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-            <div class="modal-body">
-                <form>
-                    <div class="mb-3">
-                        <label for="message-text" class="col-form-label">Comment:</label>
-                        <textarea class="form-control" id="message-text"></textarea>
-                    </div>
-                </form>
-            </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                    <button type="button" class="btn btn-primary btn-save-comment" id="btn-save-comment" data-bs-dismiss="modal">Salva</button>
-                </div>
-            </div>
-        </div>
-    </div>
-    `;
-}
-
 function cardShowItems(item) {
     return `
     <div class="card col-md-4 mb-3 me-3">
         <div class="card-body-admin">
-            <p class="card-text">${item.name}</p>
-            <img src="${item.img}" class="img-fluid" style="width: 80px;" alt="Generic placeholder image">
-            <div class="float">
             <h5 class="align-items-center fw-bold">${item.name}</h5>
-            </div>
+            <img src="${item.img}" class="img-fluid" style="width: 80px;" alt="Generic placeholder image">
+            <div class="float"></div>
             <button type="button" class="btn btn-danger btn-sm btn-favourite-delete" data-bs-dismiss="modal" id="unfollow-${item.id}" value="${item.id}">Elimina</button>
         </div>
     </div>
     `;
 }
 
-export { navbarAdminPage, createAdminProfile, createUsersPage, createItemsPage, loadUsers, loadItems, cardShowComments, cardShowItems, cardUpdateComments };
+export { navbarAdminPage, createAdminProfile, createUsersPage, createItemsPage, loadUsers, loadItems, cardShowItems };
 
 /**
 
