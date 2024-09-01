@@ -11,13 +11,11 @@ import { createHomeForm } from './templates/home-template.js';
 import { navbarUserPage, createUserPage, createWishlistPage, createCard, createHistoryPurchasePage, createCardPurchase, createTablePurchase, createTotalRow, createHistoryCommentsPage, cardShowCommentsUser } from './templates/user-template.js';
 import { createStoreTable, createStoreCard, createCartCard, addFollowButton, removeFollowButton, addPubIcon, addPrvIcon } from './templates/store-template.js';
 import { navbarAdminPage, createAdminProfile, createUsersPage, createItemsPage, loadUsers, loadItems, cardShowItems } from './templates/admin-template.js';
+import { createSearchItemTable, createSearchCommentTable, cardShowComment, createSearchItemCard } from './templates/search-template.js';
 import { createContactForm } from './templates/contact-template.js';
 import { createPricingForm } from './templates/pricing-template.js';
 import { createAlert } from './templates/alert-template.js';
-import { createSearchItemTable, createSearchCommentTable, createSearchItemPage, createSearchCommentPage, cardShowComment, createSearchItemCard } from './templates/search-template.js';
 import page from "//unpkg.com/page/page.mjs";
-
-
 
 class App {
 
@@ -148,21 +146,26 @@ class App {
 
     /**
      * Event listener for the submission of the login form. Handle the login.
-     * @param {*} event 
+     * @param {Event} event - The event object of the form submission
      */
     onLoginSubmitted = async (event) => {
         event.preventDefault();
         const form = event.target;
+
         try {
+            // Call the login API and get the user object
             const user = await Api.doLogin(form.email.value, form.password.value);
+            // Save the user in the local storage
             localStorage.setItem('user', JSON.stringify(user));
-            this.showAlertMessage('success', 'Welcome ' + user.name + '!');
+            // Show a success alert message with the welcome message
+            this.showAlertMessage('success', `Welcome ${user.name}!`);
+            // Redirect to the store page
             page.redirect('/store');
 
         } catch (error) {
+            // Show an error alert message with the error message
             if (error) {
                 const errorMsg = error;
-                // add an alert message in DOM
                 this.showAlertMessage('danger', errorMsg);
             }
         }
@@ -350,6 +353,11 @@ class App {
         }
     }
 
+    /**
+     * Create the admin items page.
+     *
+     * @returns {Promise<void>} Promise that resolves when the page is rendered 
+     */
     createAdminItems = async () => {
         try {
             const user = JSON.parse(localStorage.getItem('user'));
@@ -424,6 +432,12 @@ class App {
 
     }
 
+    /**
+     * Insert the items in the wishlist into the page.
+     *
+     * @param {Array} wishlist The wishlist array, containing the items.
+     * @returns {Promise<void>} Promise that resolves when the page is rendered
+     */
     insertItemWishList = async (wishlist) => {
 
         try {
@@ -464,7 +478,7 @@ class App {
     /**
      * Create the user's purchase history page.
      *
-     * @returns {Promise<void>}
+     * @returns {Promise<void>} Promise that resolves when the page is rendered
      */
     createHistoryPurchase = async () => {
 
@@ -539,7 +553,11 @@ class App {
             } else {
                 let tr = document.createElement("tr");
                 let td = document.createElement("td");
-                td.innerHTML = "Nessun acquisto ancora effetuato";
+    
+                // Assegna una classe univoca al td
+                td.classList.add('no-purchase-message');
+    
+                td.innerHTML = "Nessun acquisto ancora effettuato";
                 tr.appendChild(td);
                 purchaseHistoryRow.appendChild(tr);
             }
@@ -1316,7 +1334,6 @@ class App {
         dd_menu.querySelector(`a[data-id="${filterCat}"`).classList.add('active');
     }
 
-
     showModalAndGetText = (itemId) => {
         return new Promise((resolve, reject) => {
             const modalId = `#commentModal-${itemId}`;
@@ -1336,7 +1353,6 @@ class App {
         });
     }
     
-
     addComment = async (event) => {
 
         event.preventDefault();
@@ -1387,7 +1403,6 @@ class App {
         }
     }
     
-
     updateComment = async (event) => {
         event.preventDefault();
         const commentId = parseInt(event.target.dataset.id, 10);

@@ -96,6 +96,7 @@ td {
     width: 225px;
     height: 225px;
     transition: transform 0.2s;
+    margin: 0 auto;
 }
 
 .card:hover {
@@ -180,7 +181,8 @@ td {
     padding-bottom: 30px;
     margin-top: 10px;
     z-index: 1;
-    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1); /* Un piccolo ombreggiamento per evidenziarlo */
+    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+    /* Un piccolo ombreggiamento per evidenziarlo */
 }
 
 #homeButton {
@@ -199,8 +201,6 @@ td {
     max-width: 300px;
     /* Limita la larghezza massima delle card */
 }
-
-/* CSS File - contact.css */
 
 .container {
     max-width: 1200px;
@@ -282,24 +282,51 @@ td {
 }
 
 .card-purchase {
-    width: 100%; 
+    width: 100%;
     max-width: 12rem;
 }
 
 .card.card-purchase {
-    height: auto; /* Imposta l'altezza automatica per adattarsi al contenuto */
-    max-height: 8rem; /* Imposta l'altezza massima della card */
-    overflow: hidden; /* Nasconde il contenuto che eccede l'altezza massima */
+    height: auto;
+    /* Imposta l'altezza automatica per adattarsi al contenuto */
+    max-height: 8rem;
+    /* Imposta l'altezza massima della card */
+    overflow: hidden;
+    /* Nasconde il contenuto che eccede l'altezza massima */
     background-color: bisque;
-  }
-  
-  .card.card-purchase .card-body {
-    display: flex;
-    flex-direction: column; /* Dispone il contenuto in colonna */
-    justify-content: center; /* Centra verticalmente il contenuto all'interno della card */
-    height: 100%; /* Assicura che il body della card occupi tutta l'altezza della card */ 
-  }
+}
 
-  .table-striped >  tbody > tr > td {
+.card.card-purchase .card-body {
+    display: flex;
+    flex-direction: column;
+    /* Dispone il contenuto in colonna */
+    justify-content: center;
+    /* Centra verticalmente il contenuto all'interno della card */
+    height: 100%;
+    /* Assicura che il body della card occupi tutta l'altezza della card */
+}
+
+.table-striped>tbody>tr>td {
     background-color: cornflowerblue;
-  }
+}
+
+.no-purchase-message {
+    text-align: center;
+    vertical-align: middle;
+    height: 200px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+#searchTitle {
+    margin-bottom: 20px;
+}
+
+#itemsList .input-group {
+    margin-bottom: 20px;
+}
+
+#resultsContainer {
+    padding-top: 20px;
+}

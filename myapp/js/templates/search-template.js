@@ -7,7 +7,7 @@ function createSearchItemTable() {
 
                 <!-- Titolo centrale -->
                 <div class="col-12 text-center">
-                    <h4 id="searchTitle">Ricerca Item</h4>
+                    <h2 id="searchTitle">Ricerca Item</h2>
                 </div>
 
                 <!-- Contenuto principale centrato e con margini ridotti -->
@@ -26,7 +26,7 @@ function createSearchItemTable() {
                             <input type="range" class="form-range" min="0" max="200" step="5" id="customRange3">
                         </div>
 
-                        <div class="col-12 text-center">
+                        <div class="col-12 text-center mb-4">
                             <button type="button" class="btn btn-primary btn-searchButton" id="searchButton">Cerca</button>
                         </div>
                     </div>
@@ -35,7 +35,7 @@ function createSearchItemTable() {
 
                 <!-- Contenitore dei risultati centrato e con margini ridotti -->
                 <div class="col-lg-8 col-md-10 col-12 mx-auto">
-                    <div class="row row-cols-1 row-cols-md-3 g-4" id="resultsContainer"></div>
+                    <div class="row row-cols-1 row-cols-md-3 g-4 d-flex justify-content-center align-items-center" id="resultsContainer"></div>
                 </div>
 
             </div>
@@ -44,6 +44,7 @@ function createSearchItemTable() {
     `;
 }
 
+
 function createSearchCommentTable() {
     return `
         <div class="container-fluid">
@@ -51,7 +52,7 @@ function createSearchCommentTable() {
 
             <!-- Titolo centrale -->
             <div class="col-12 text-center">
-                <h4 id="searchTitle">Ricerca Commenti</h4>
+                <h2 id="searchTitle">Ricerca Commenti</h2>
             </div>
 
                 <!-- Contenuto principale centrato e con margini ridotti -->
@@ -89,35 +90,15 @@ function createSearchCommentTable() {
                     </div>
                 </div>
 
-                <!-- Contenitore dei risultati centrato -->
-                <div class="col-lg-8 col-md-10 col-12 mx-auto mt-4">
-                    <div class="row" id="resultsContainer"></div>
+                <!-- Contenitore dei risultati centrato e con margini ridotti -->
+                <div class="col-lg-8 col-md-10 col-12 mx-auto">
+                    <div class="row row-cols-1 row-cols-md-3 g-4 d-flex justify-content-center align-items-center" id="resultsContainer"></div>
                 </div>
 
             </div>
         </div>
 
     `;
-}
-
-function createSearchItemPage() {
-    return `
-    <div class="container mt-5">
-      <h3>Search Items</h3>
-      <div class="row g-3" id="itemsList">
-        <!-- Items will be inserted here by JS -->
-      </div>
-    </div>`;
-}
-
-function createSearchCommentPage() {
-    return `
-    <div class="container mt-5">
-      <h3>Search Comments by User</h3>
-      <div class="row g-3" id="usersList">
-        <!-- Users will be inserted here by JS -->
-      </div>
-    </div>`;
 }
 
 function cardShowComment(comment, itemName, userName) {
@@ -184,4 +165,4 @@ function cardShowComment(comment, itemName, userName) {
 }
 
 
-export { createSearchItemTable, createSearchCommentTable, createSearchItemPage, createSearchCommentPage, cardShowComment, createSearchItemCard };
+export { createSearchItemTable, createSearchCommentTable, cardShowComment, createSearchItemCard };
