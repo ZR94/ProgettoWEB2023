@@ -8,7 +8,8 @@ import Comment from './comment.js';
 import { createLoginForm } from './templates/login-template.js';
 import { createSignUpForm } from './templates/sign-template.js';
 import { createHomeForm } from './templates/home-template.js';
-import { navbarUserPage, createUserPage, createWishlistPage, createCard, createHistoryPurchasePage, createCardPurchase, createTablePurchase, createTotalRow, createHistoryCommentsPage, cardShowCommentsUser } from './templates/user-template.js';
+import { navbarUserPage, createUserPage, createWishlistPage, createCard, createHistoryPurchasePage, 
+        createCardPurchase, createTablePurchase, createTotalRow, createHistoryCommentsPage, cardShowCommentsUser } from './templates/user-template.js';
 import { createStoreTable, createStoreCard, createCartCard, addFollowButton, removeFollowButton, addPubIcon, addPrvIcon } from './templates/store-template.js';
 import { navbarAdminPage, createAdminProfile, createUsersPage, createItemsPage, loadUsers, loadItems, cardShowItems } from './templates/admin-template.js';
 import { createSearchItemTable, createSearchCommentTable, cardShowComment, createSearchItemCard } from './templates/search-template.js';
@@ -19,6 +20,10 @@ import page from "//unpkg.com/page/page.mjs";
 
 class App {
 
+    /**
+     * Constructor of the App class.
+     * @param {HTMLElement} appContainer - The element that will contain the application.
+     */
     constructor(appContainer) {
         // reference to the the item container (HTML element)
         this.appContainer = appContainer;
@@ -572,6 +577,10 @@ class App {
         }
     }
 
+    /**
+     * Add an item to the user's wishlist
+     * @param {Event} event - The event that triggered the function
+     */
     addItemWishList = async (event) => {
 
         event.preventDefault();
@@ -586,17 +595,19 @@ class App {
             if (response) {
                 this.showAlertMessage('success', response.message);
 
-                // Trova la card specifica dell'item
+                // Find the specific card of the item
                 const card = document.getElementById(itemId);
                 if (card) {
-                    // Aggiorna il pulsante "Aggiungi ai preferiti" con uno di rimozione
+
+                    // Update the "Add to favourites" button with a remove button
                     const followButton = card.querySelector('.btn-favourite-add');
                     followButton.outerHTML = removeFollowButton(itemId);
 
-                    // Aggiungi l'icona di visibilità
+                    // Add the visibility icon
                     const visibilityIcon = (visibility == 1) ? addPubIcon() : addPrvIcon();
                     card.querySelector('.card-footer-price').insertAdjacentHTML('afterbegin', visibilityIcon);
 
+                    // Add the event listeners to the new button
                     this.addEventListenersToButtons(".btn-favourite-remove", this.removeItemWishList.bind(this));
                 }
             }
@@ -634,6 +645,10 @@ class App {
         });
     }
     
+    /**
+     * Remove an item from the wishlist of the current user.
+     * @param {*} event The click event.
+     */
     removeItemWishList = async (event) => {
 
         event.preventDefault();
@@ -720,6 +735,12 @@ class App {
         this.updateStoreHTML(items, storeTable);
     }
 
+    /**
+     * Handles the click event when the "Checkout" button is clicked.
+     * Retrieves the items in the user's cart, creates a new purchase object for each item and sends the purchase request to the server.
+     * If the checkout is successful, it removes the user's cart from local storage and updates the cart icon in the UI.
+     * @return {Promise<void>} - A promise that resolves when the checkout is completed.
+     */
     onClickCheckout = async () => {
 
         try {
@@ -802,23 +823,46 @@ class App {
         }
     }
 
+    /**
+     * Handles the click event when the "Private" button is clicked.
+     * Retrieves the private wishlist items for the logged-in user and updates the store table in the UI.
+     *
+     * @return {Promise<void>} - A promise that resolves when the store table is updated.
+     */
     onClickPrivate = async () => {
 
         try {
+            // Retrieve the logged-in user from local storage
             const user = JSON.parse(localStorage.getItem('user'));
+
+            // Retrieve the private wishlist items for the user
             const wishlist = await Api.getWishlistByUser(user.id);
+
+            // Get the store table element from the UI
             const storeTable = document.querySelector('#my-items');
+
+            // Clear the store table before updating it
             storeTable.innerHTML = "";
+
+            // Create an empty array to store the private wishlist items
             const itemWishlist = [];
 
+            // Iterate over each wishlist item
             for (let item of wishlist) {
+                // Check if the item is private
                 if (item.visibility === 0) {
+                    // Retrieve the item details by its ID
                     const itemWish = await Api.getItemById(item.idWishItem);
+
+                    // Add the item to the private wishlist array
                     itemWishlist.push(itemWish);
                 }
             }
 
+            // Update the cart HTML to reflect any changes in the cart
             this.updateCartHtml();
+
+            // Update the store table HTML with the private wishlist items
             this.updateStoreHTML(itemWishlist, storeTable);
 
         } catch (error) {
@@ -830,6 +874,11 @@ class App {
         }
     }
 
+    /**
+     * Handle the click event on the "Public" button in the User page.
+     * This function retrieves the public wishlist items for the user
+     * and updates the store table in the UI.
+     */
     onClickPublic = async () => {
 
         try {
@@ -845,7 +894,6 @@ class App {
                     itemWishlist.push(itemWish);
                 }
             }
-
             this.updateCartHtml();
             this.updateStoreHTML(itemWishlist, storeTable);
         } catch (error) {
@@ -857,6 +905,12 @@ class App {
         }
     }
 
+    /**
+     * Handle the click event on the "Comment" button in the User page.
+     * This function sets up the modal for adding a new comment and
+     * updates the title and input field of the modal with the
+     * recipient user's name.
+     */
     onClickComment = async () => {
 
         try {
@@ -885,6 +939,11 @@ class App {
         }
     }
 
+    /**
+     * Handle the click event on the "Save" button in the User page.
+     * This function gets the values of the form fields and sends them
+     * to the server to save the user's information.
+     */
     onClickSaveInfo = async () => {
 
         document.getElementById('saveButton').addEventListener('click', async () => {
@@ -914,6 +973,10 @@ class App {
         });
     }
 
+    /**
+     * Handle the click event on the "Delete Account" button in the User page.
+     * This function gets the user's ID from the localStorage and sends it to the server to delete the user's account.
+     */
     onClickDeleteAccount = async () => {
 
         document.getElementById('confirmDeleteButton').addEventListener('click', async () => {
@@ -930,6 +993,11 @@ class App {
         });
     }
 
+    /**
+     * Handle the click event on the "Delete Item" button in the Admin page.
+     * This function gets the item's ID from the button's value and sends it to the server to delete the item.
+     * @param {Event} event - The click event on the button.
+     */
     onClickDeleteItem = async (event) => {
         event.preventDefault();
         const itemId = parseInt(event.target.value);
@@ -944,6 +1012,11 @@ class App {
 
     }
 
+    /**
+     * Handle the click event on the "Add Item" button in the Admin page.
+     * This function gets the item's details from the form and sends it to the server to add the item.
+     * @param {Event} event - The click event on the button.
+     */
     onClickAddItem = async (event) => {
         event.preventDefault();
         const itemName = document.getElementById('itemName').value;
@@ -966,6 +1039,11 @@ class App {
         }
     }
 
+    /**
+     * Handle the click event on the "Add User" button in the Admin page.
+     * This function gets the user's details from the form and sends it to the server to add the user.
+     * @param {Event} event - The click event on the button.
+     */
     onClickAddUser = async (event) => {
         event.preventDefault();
         const userName = document.getElementById('userName').value;
@@ -984,6 +1062,11 @@ class App {
 
     }
 
+    /**
+     * Handle the click event on the "Delete User" button in the Admin page.
+     * This function gets the user's ID from the button and sends it to the server to delete the user.
+     * @param {Event} event - The click event on the button.
+     */
     onClickDeleteUser = async (event) => {
         event.preventDefault();
         const userId = parseInt(event.target.value);
@@ -1006,6 +1089,12 @@ class App {
         }
     }
 
+    /**
+     * Updates the HTML of the store page with the given items.
+     * Also adds the "Add to Cart" and "Add to Wishlist" buttons to each item.
+     * @param {Array} items - The array of items to display in the store.
+     * @param {HTMLElement} storeTable - The table element where the items will be displayed.
+     */
     updateStoreHTML = async (items, storeTable) => {
 
         const user = JSON.parse(localStorage.getItem('user'));
@@ -1041,6 +1130,11 @@ class App {
 
     }
 
+    /**
+     * Adds click event listeners to buttons.
+     * @param {string} buttonClass - The class name of the buttons to add event listeners to.
+     * @param {function} event - The function to call when a button is clicked.
+     */
     addEventListenersToButtons(buttonClass, event) {
         const buttons = document.querySelectorAll(buttonClass);
         for (const btn of buttons) {
@@ -1048,6 +1142,10 @@ class App {
         }
     }
 
+    /**
+     * Returns the HTML string for the public icon.
+     * @return {string} - The HTML string for the public icon.
+     */
     static pubIcon() {
         return `<img src='./svg/eye.svg' alt='visibilità pubblica'>`
     }
@@ -1178,6 +1276,11 @@ class App {
         });
     }
 
+    /**
+     * Retrieves the list of all categories from the server.
+     * 
+     * @return {Promise<string[]>} A promise that resolves to an array of category names.
+     */
     getTypes = async () => {
         let categories = [];
         const items = await Api.getCategories();
@@ -1191,6 +1294,17 @@ class App {
         return categories.sort();
     }
 
+    /**
+     * Populates the categories dropdown menu with the list of item categories.
+     * Adds event listeners to handle category clicks in the dropdown menu.
+     * 
+     * This function uses the `getTypes` method to retrieve the list of all categories
+     * from the server, and then iterates over the list to create the menu items.
+     * The `createFiltersByCategory` and `createFiltersByTitle` methods are called
+     * to add event listeners to the menu items.
+     * 
+     * @return {Promise<void>}
+     */
     createCategoriesList = async () => {
         const leftSidebar = document.querySelector("#left-sidebar");
         let dd_menu = leftSidebar.querySelector(".dropdown-menu");
@@ -1205,6 +1319,17 @@ class App {
         this.createFiltersByTitle();
     }
 
+    /**
+     * Populates the categories dropdown menu with the list of all users' names.
+     * Adds event listeners to handle user clicks in the dropdown menu.
+     * 
+     * This function uses the `getUsers` method to retrieve the list of all users
+     * from the server, and then iterates over the list to create the menu items.
+     * The `createFiltersByCategory` method is called to add event listeners to the
+     * menu items.
+     * 
+     * @return {Promise<void>}
+     */
     createCategoriesListWish = async () => {
         const leftSidebar = document.querySelector("#left-sidebar");
         let dd_menu = leftSidebar.querySelector(".dropdown-menu");
@@ -1217,6 +1342,15 @@ class App {
         this.createFiltersByCategory(this.categoryClickWish);
     }
 
+    /**
+     * Adds event listeners to handle category clicks in the dropdown menu.
+     * 
+     * This function iterates over all the `li` elements in the `leftSidebar` element.
+     * For each of them, it adds a click event listener that calls the callback function
+     * with the click event as argument.
+     * 
+     * @param {function} fun - The callback function to be called when a category is clicked.
+     */
     createFiltersByCategory(fun) {
         const leftSidebar = document.querySelector("#left-sidebar");
 
@@ -1225,6 +1359,10 @@ class App {
         categoryLinks.forEach(cat => { cat.addEventListener('click', fun) });
     }
 
+    /**
+     * Adds event listeners to each title in the list group of the left sidebar.
+     * Handles the click event to filter movies by the selected title.
+     */
     createFiltersByTitle() {
         const leftSidebar = document.querySelector("#left-sidebar");
 
@@ -1233,6 +1371,12 @@ class App {
         categoryLinks.forEach(cat => { cat.addEventListener('click', this.titleClick) });
     }
 
+    /**
+     * Returns an array of integers representing the IDs of the cards in the page.
+     * The IDs are obtained from the elements with class "card h-100" inside the element with id "my-items".
+     * The IDs are converted from strings to integers using the parseInt function.
+     * @returns {number[]} - an array of integers representing the IDs of the cards in the page
+     */
     getCardIds() {
         // Seleziona il div con id "my-items"
         const myItemsDiv = document.getElementById('my-items');
@@ -1253,6 +1397,10 @@ class App {
         return intIds;
     }
 
+    /**
+     * Handles the click event on a category link in the left sidebar.
+     * @param {Event} event - The click event object.
+     */
     categoryClick = async (event) => {
         event.preventDefault();
         const el = event.target;
@@ -1274,6 +1422,10 @@ class App {
         this.updateActiveCategory(category);
     }
 
+    /**
+     * Handles the click event on a user link in the left sidebar.
+     * @param {Event} event - The click event object.
+     */
     categoryClickWish = async (event) => {
         event.preventDefault();
         const el = event.target;
@@ -1304,6 +1456,10 @@ class App {
         this.updateActiveCategory(userId);
     }
 
+    /**
+     * Handles the click event on a category link in the left sidebar.
+     * @param {Event} event - The click event object.
+     */
     titleClick = async (event) => {
         event.preventDefault();
         const el = event.target;
@@ -1328,12 +1484,21 @@ class App {
         }
     }
 
+    /**
+     * Updates the active category state in the sidebar.
+     * @param {string} filterCat - The category to be marked as active.
+     */
     updateActiveCategory(filterCat) {
         let dd_menu = document.querySelector(".dropdown-menu");
         dd_menu.querySelector('a.active').classList.remove('active');
         dd_menu.querySelector(`a[data-id="${filterCat}"`).classList.add('active');
     }
 
+    /**
+     * Shows a modal dialog to get the comment text from the user.
+     * @param {number} itemId - The ID of the item for which the comment is being added.
+     * @returns {Promise<string>} - A promise that resolves with the comment text entered by the user.
+     */
     showModalAndGetText = (itemId) => {
         return new Promise((resolve, reject) => {
             const modalId = `#commentModal-${itemId}`;
@@ -1353,6 +1518,10 @@ class App {
         });
     }
     
+    /**
+     * Handles the click event on the "Add comment" button.
+     * @param {Event} event - The event object.
+     */
     addComment = async (event) => {
 
         event.preventDefault();
@@ -1379,6 +1548,10 @@ class App {
 
     }
 
+    /**
+     * Handles the click event on the "Remove comment" button.
+     * @param {Event} event - The event object.
+     */
     removeComment = async (event) => {
         event.preventDefault();
         const commentId = parseInt(event.target.dataset.id, 10);
@@ -1402,7 +1575,14 @@ class App {
             }
         }
     }
-    
+
+    /**
+     * Handles the click event on the "Update comment" button.
+     * This method will show a modal to the user to input the new text for the comment.
+     * After the user inputs the text, it will send a request to the server to update the comment.
+     * If the request is successful, it will update the comment text in the DOM and show a success message to the user.
+     * @param {Event} event - The event object.
+     */    
     updateComment = async (event) => {
         event.preventDefault();
         const commentId = parseInt(event.target.dataset.id, 10);
@@ -1438,7 +1618,11 @@ class App {
             }
         }
     }
-    
+
+    /**
+     * Updates a comment in the database and in the DOM.
+     * @param {Event} event - The event object.
+     */    
     updateItem = async (event) => {
         event.preventDefault();
         const commentId = parseInt(event.target.dataset.id, 10);
@@ -1461,6 +1645,10 @@ class App {
         }
     }
 
+    /**
+     * Shows the comments of a user in the page.
+     * @param {Event} event - The event object.
+     */
     showCommentsUsers = async (event) => {
         try {
             event.preventDefault();
@@ -1493,6 +1681,10 @@ class App {
         }
     }
 
+    /**
+     * Shows the comments of an item in the page.
+     * @param {Event} event - The event object.
+     */
     showCommentsItems = async (event) => {
         try {
             event.preventDefault();
@@ -1570,6 +1762,10 @@ class App {
         }
     }
 
+    /**
+     * This function is used to display the user's history of comments made
+     * @returns {Promise<void>}
+     */
     createHistoryComments = async () => {
         try {
             const user = JSON.parse(localStorage.getItem('user'));
@@ -1603,6 +1799,10 @@ class App {
         }
     }
 
+    /**
+     * This function is used to display the search form for items.
+     * @returns {Promise<void>}
+     */
     searchItems = async () => {
         try {
             this.appContainer.innerHTML = "";
@@ -1619,6 +1819,12 @@ class App {
         }
     }
 
+    /**
+     * This function is used to display the search form for comments.
+     * It populates the form with the list of users and items, and adds
+     * event listeners to the buttons.
+     * @returns {Promise<void>}
+     */
     searchComments = async () => {
         try {
             this.appContainer.innerHTML = "";
@@ -1637,6 +1843,10 @@ class App {
         }
     }
 
+    /**
+     * Populate the select element with the list of categories.
+     * @returns {Promise<void>}
+     */
     populateCategories = async () => {
 
         let categories = await Api.getCategories();
@@ -1650,6 +1860,10 @@ class App {
 
     }
 
+    /**
+     * Populate the select element with the list of items.
+     * @returns {Promise<void>}
+     */
     populateItems = async () => {
 
         let categories = await Api.getItems();
@@ -1663,6 +1877,10 @@ class App {
 
     }
 
+    /**
+     * Populate the select element with the list of users.
+     * @returns {Promise<void>}
+     */
     populateUsers = async () => {
 
         let users = await Api.getUsers(); // Fetch users from the API
@@ -1675,6 +1893,10 @@ class App {
         });
     }
 
+    /**
+     * Perform a search of items by category and price range.
+     * @returns {Promise<void>}
+     */
     performSearch = async () => {
         let selectedCategory = parseInt((document.getElementById('inputGroupSelect01').value), 10);
         let priceRangeMin = 0;
@@ -1692,6 +1914,11 @@ class App {
         }
     }
 
+    /**
+     * Perform a search of comments by user, item, or keyword.
+     * If all fields are empty, the function does nothing.
+     * @returns {Promise<void>}
+     */
     performSearchComment = async () => {
         let selectedUser = parseInt((document.getElementById('inputGroupSelectUsers').value), 10);
         let selectedItem = parseInt((document.getElementById('inputGroupSelect01').value), 10);
@@ -1720,6 +1947,12 @@ class App {
         }
     }
 
+    /**
+     * Display the results of a search in the page.
+     * If the search has no results, a message is shown.
+     * @param {Array<Object>} items - the array of items to show
+     * @returns {Promise<void>}
+     */
     displayResultsItems = async (items) => {
         let resultsContainer = document.getElementById('resultsContainer');
         resultsContainer.innerHTML = '';
@@ -1736,6 +1969,12 @@ class App {
 
     }
 
+    /**
+     * Display the results of a search in the page.
+     * If the search has no results, a message is shown.
+     * @param {Array<Object>} comments - the array of comments to show
+     * @returns {Promise<void>}
+     */
     displayResultsComments(comments) {
         let resultsContainer = document.getElementById('resultsContainer');
         resultsContainer.innerHTML = '';

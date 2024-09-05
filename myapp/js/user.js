@@ -2,6 +2,13 @@
 
 class User {
 
+    /**
+     * Construct an User
+     * @param {string} name - Name of the user
+     * @param {string} surname - Surname of the user
+     * @param {string} email - Email address of the user
+     * @param {string} password - Password of the user
+     */
     constructor(name, surname, email, password) {
         this.name = name;
         this.surname = surname;

@@ -44,7 +44,6 @@ function createSearchItemTable() {
     `;
 }
 
-
 function createSearchCommentTable() {
     return `
         <div class="container-fluid">
@@ -163,6 +162,5 @@ function cardShowComment(comment, itemName, userName) {
     </div>
     `;
 }
-
 
 export { createSearchItemTable, createSearchCommentTable, cardShowComment, createSearchItemCard };

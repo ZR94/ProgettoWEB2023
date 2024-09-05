@@ -1,3 +1,5 @@
+"use strict";
+
 function createPricingForm() {
     return `
     <div class="row row-2">

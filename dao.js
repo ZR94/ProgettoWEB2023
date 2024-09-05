@@ -3,6 +3,11 @@
 const db = require('./db.js');
 const bcrypt = require('bcrypt');
 
+/**
+ * Creates a new item in the database
+ * @param {Object} item - The item object with its properties.
+ * @returns {Promise<number>} A promise that resolves to the ID of the newly created item.
+ */
 exports.createItem = function (item) {
     return new Promise((resolve, reject) => {
         const sql = 'INSERT INTO item(price, name, img, category) VALUES (?, ?, ?, ?)';
@@ -16,6 +21,11 @@ exports.createItem = function (item) {
     });
 };
 
+/**
+ * Deletes an item from the database
+ * @param {number} id - The ID of the item to delete.
+ * @returns {Promise<void>} A promise that resolves when the item has been deleted.
+ */
 exports.deleteItem = function (id) {
     return new Promise((resolve, reject) => {
         const sql = 'DELETE FROM item WHERE idItem = ?';
@@ -29,6 +39,10 @@ exports.deleteItem = function (id) {
     });
 };
 
+/**
+ * Retrieves all items from the database
+ * @returns {Promise<Object[]>} A promise that resolves to an array of item objects, each with properties id, price, name, img, and category
+ */
 exports.getAllItems = function () {
     return new Promise((resolve, reject) => {
         const sql = 'SELECT * FROM item';
@@ -44,6 +58,10 @@ exports.getAllItems = function () {
     });
 };
 
+/**
+ * Retrieves all categories from the database
+ * @returns {Promise<Object[]>} A promise that resolves to an array of category objects, each with properties id and obj
+ */
 exports.getAllCategories = function () {
     return new Promise((resolve, reject) => {
         const sql = 'SELECT * FROM category';
@@ -59,6 +77,10 @@ exports.getAllCategories = function () {
     });
 };
 
+/**
+ * Retrieves all users from the database
+ * @returns {Promise<Object[]>} A promise that resolves to an array of user objects, each with properties id, name, surname, and email
+ */
 exports.getAllUsers = function () {
     return new Promise((resolve, reject) => {
         const sql = 'SELECT * FROM user';
@@ -74,6 +96,11 @@ exports.getAllUsers = function () {
     });
 };
 
+/**
+ * Retrieves an item by its ID from the database
+ * @param {number} id - Item's unique ID
+ * @returns {Promise<Object>} A promise that resolves to an object with properties id, price, name, img, and category
+ */
 exports.getItemById = function (id) {
     return new Promise((resolve, reject) => {
         const sql = 'SELECT * FROM item WHERE idItem = ?';
@@ -92,7 +119,11 @@ exports.getItemById = function (id) {
     });
 };
 
-
+/**
+ * Creates a new user in the database
+ * @param {Object} user - User data: name, surname, email, password, and admin (true or false)
+ * @returns {Promise<Object>} A promise that resolves to an object with a success property set to true and a message property with a success message
+ */
 exports.createUser = function (user) {
     return new Promise((resolve, reject) => {
         const sql = 'INSERT INTO user (name, surname, email, password, admin) VALUES (?, ?, ?, ?, ?)';
@@ -109,7 +140,11 @@ exports.createUser = function (user) {
     });
 };
 
-
+/**
+ * Creates a new purchase in the database
+ * @param {Object} purchase - Purchase data: idUser, idItem, qta, price, and dateTime
+ * @returns {Promise<number>} A promise that resolves to the id of the newly created purchase
+ */
 exports.createPurchase = function (purchase) {
     return new Promise((resolve, reject) => {
         const sql = 'INSERT INTO purchase(idPurchaseUser, idPurchaseItem, qta, price, dateTime) VALUES (?, ?, ?, ?, ?)';
@@ -123,6 +158,11 @@ exports.createPurchase = function (purchase) {
     });
 };
 
+/**
+ * Deletes a user from the database
+ * @param {number} id - The id of the user to delete
+ * @returns {Promise<Object>} A promise that resolves to an object with a success property set to true and a message property with a success message
+ */
 exports.deleteUser = function (id) {
     return new Promise((resolve, reject) => {
         const sql = 'DELETE FROM user WHERE idUser = ?';
@@ -135,6 +175,11 @@ exports.deleteUser = function (id) {
     });
 };
 
+/**
+ * Deletes an item from the database
+ * @param {number} id - The id of the item to delete
+ * @returns {Promise<Object>} A promise that resolves to an object with a success property set to true and a message property with a success message
+ */
 exports.deleteItem = function (id) {
     return new Promise((resolve, reject) => {
         const sql = 'DELETE FROM item WHERE idItem = ?';
@@ -147,6 +192,11 @@ exports.deleteItem = function (id) {
     });
 };
 
+/**
+ * Retrieves a user from the database by its id
+ * @param {number} id - The id of the user to retrieve
+ * @returns {Promise<Object>} A promise that resolves to an object with the user's data or an error message
+ */
 exports.getUserById = function (id) {
     return new Promise((resolve, reject) => {
         const sql = 'SELECT * FROM user WHERE idUser = ?';
@@ -171,6 +221,12 @@ exports.getUserById = function (id) {
     });
 };
 
+/**
+ * Retrieves a user from the database by its email and password
+ * @param {string} email - The email of the user to retrieve
+ * @param {string} password - The password of the user to retrieve
+ * @returns {Promise<Object>} A promise that resolves to an object with the user's data and a boolean indicating if the password is correct or an error message
+ */
 exports.getUser = function (email, password) {
     return new Promise((resolve, reject) => {
         const sql = 'SELECT * FROM user WHERE email = ?';
@@ -192,6 +248,14 @@ exports.getUser = function (email, password) {
     });
 };
 
+/**
+ * Updates the user's information (birthdate, address, city) in the database.
+ * @param {string} birthdate - The user's birthdate.
+ * @param {string} address - The user's address.
+ * @param {string} city - The user's city.
+ * @param {number} idUser - The user's ID.
+ * @returns {Promise<Object>} A promise that resolves to an object with a success message or an error message.
+ */
 exports.addInfoUser = function (birthdate, address, city, idUser) {
     return new Promise((resolve, reject) => {
         const sql = 'UPDATE user SET birthDate = ?, address = ?, city = ? WHERE idUser = ?';
@@ -207,6 +271,11 @@ exports.addInfoUser = function (birthdate, address, city, idUser) {
     });
 };
 
+/**
+ * Gets the wishlist of a user by their ID.
+ * @param {number} userId - The user's ID.
+ * @returns {Promise<Object[]>} - A promise that resolves to an array of objects containing the wishlist items.
+ */
 exports.getWishlistByUserId = function (userId) {
     return new Promise((resolve, reject) => {
         const sql = 'SELECT * FROM wishlist WHERE idWishUser = ?';
@@ -223,6 +292,12 @@ exports.getWishlistByUserId = function (userId) {
     });
 };
 
+/**
+ * Gets the wishlist of a user filtered by visibility.
+ * @param {number} userId - The user's ID.
+ * @param {string} visibility - The visibility of the wishlist items. Can be 'public', 'private' or 'all'.
+ * @returns {Promise<Object[]>} - A promise that resolves to an array of objects containing the wishlist items with the specified visibility.
+ */
 exports.getWishlistByVisibility = function (userId, visibility) {
     return new Promise((resolve, reject) => {
         const sql = 'SELECT * FROM wishlist WHERE idWishUser = ? and visibility = ?';
@@ -239,6 +314,13 @@ exports.getWishlistByVisibility = function (userId, visibility) {
     });
 };
 
+/**
+ * Adds an item to the wishlist of the user.
+ * @param {number} userId - The user's ID.
+ * @param {number} itemId - The item's ID.
+ * @param {string} visibility - The visibility of the item. Can be 'public', 'private' or 'all'.
+ * @returns {Promise<number>} - A promise that resolves to the ID of the inserted item, or rejects with an error.
+ */
 exports.addItemInWishList = function (userId, itemId, visibility) {
     return new Promise((resolve, reject) => {
         // controlla se l'item non sia già nella wishlist dell'utente
@@ -264,6 +346,12 @@ exports.addItemInWishList = function (userId, itemId, visibility) {
     });
 };
 
+/**
+ * Deletes an item from the wishlist of the user.
+ * @param {number} userId - The user's ID.
+ * @param {number} itemId - The item's ID.
+ * @returns {Promise<Object>} - A promise that resolves to an object with a success property and a message property describing the result of the operation.
+ */
 exports.deleteItemInWishList = function (userId, itemId) {
     return new Promise((resolve, reject) => {
         const del = "DELETE FROM wishlist WHERE idWishItem = ? AND idWishUser = ?";
@@ -279,6 +367,11 @@ exports.deleteItemInWishList = function (userId, itemId) {
     });
 };
 
+/**
+ * Retrieves all items of a given category from the database
+ * @param {string} categoryName - The name of the category.
+ * @returns {Promise<Object[]>} A promise that resolves to an array of item objects, each with properties id, price, name, img, category, idCategory, and obj.
+ */
 exports.getItemsByCategory = function (categoryName) {
     return new Promise((resolve, reject) => {
         const sql = "SELECT * FROM item JOIN category ON category.idCategory = item.category WHERE category.obj = ?";
@@ -295,6 +388,13 @@ exports.getItemsByCategory = function (categoryName) {
     });
 };
 
+/**
+ * Retrieves all items of a given category and price range from the database
+ * @param {string} category - The name of the category.
+ * @param {number} priceMin - The minimum price of the items.
+ * @param {number} priceMax - The maximum price of the items.
+ * @returns {Promise<Object[]>} A promise that resolves to an array of item objects, each with properties id, price, name, img, category, idCategory, and obj.
+ */
 exports.getItemsByCategoryAndPrice = function (category, priceMin, priceMax) {
     return new Promise((resolve, reject) => {
         const sql = "SELECT * FROM item JOIN category ON category.idCategory = item.category WHERE category.idCategory = ? AND item.price BETWEEN ? AND ?";
@@ -311,6 +411,13 @@ exports.getItemsByCategoryAndPrice = function (category, priceMin, priceMax) {
     });
 }
 
+/**
+ * Adds a comment to the database.
+ * @param {number} userId - The ID of the user that is adding the comment.
+ * @param {number} itemId - The ID of the item on which the comment is being added.
+ * @param {string} text - The text of the comment.
+ * @returns {Promise<number>} - A promise that resolves to the ID of the added comment.
+ */
 exports.addComment = function (userId, itemId, text) {
     return new Promise((resolve, reject) => {
         const sql = "INSERT INTO comment (idCommentUser, idCommentItem, text) VALUES (?,?,?)";
@@ -324,6 +431,11 @@ exports.addComment = function (userId, itemId, text) {
     });
 };
 
+/**
+ * Deletes a comment from the database.
+ * @param {number} commentId - The ID of the comment to delete.
+ * @returns {Promise<Object>} - A promise that resolves to an object with a success property and a message property describing the result of the operation.
+ */
 exports.deleteComment = function (commentId) {
     return new Promise((resolve, reject) => {
         const del = "DELETE FROM comment WHERE idComment = ?";
@@ -337,6 +449,12 @@ exports.deleteComment = function (commentId) {
     });
 };
 
+/**
+ * Updates a comment in the database.
+ * @param {number} id - The ID of the comment to update.
+ * @param {string} text - The new text of the comment.
+ * @returns {Promise<Object>} - A promise that resolves to an object with a success property and a message property describing the result of the operation.
+ */
 exports.updateComment = (id, text) => {
     return new Promise((resolve, reject) => {
         const sql = "UPDATE comment SET text = ? WHERE idComment = ?";
@@ -354,7 +472,11 @@ exports.updateComment = (id, text) => {
     });
 };
 
-
+/**
+ * Gets all the comments of a user from the database.
+ * @param {number} userId - The ID of the user.
+ * @returns {Promise<Object[]>} - A promise that resolves to an array of objects containing the comments.
+ */
 exports.getCommentByUserId = function (userId) {
     return new Promise((resolve, reject) => {
         const sql = 'SELECT * FROM comment WHERE idCommentUser = ?';
@@ -371,6 +493,11 @@ exports.getCommentByUserId = function (userId) {
     });
 };
 
+/**
+ * Gets all the comments of an item from the database.
+ * @param {number} id - The ID of the item.
+ * @returns {Promise<Object[]>} - A promise that resolves to an array of objects containing the comments.
+ */
 exports.getCommentByItemId = function (id) {
     return new Promise((resolve, reject) => {
         const sql = 'SELECT * FROM comment WHERE idCommentItem = ?';
@@ -387,6 +514,12 @@ exports.getCommentByItemId = function (id) {
     });
 };
 
+/**
+ * Gets all the comments of an item made by a user from the database.
+ * @param {number} userId - The ID of the user.
+ * @param {number} itemId - The ID of the item.
+ * @returns {Promise<Object[]>} - A promise that resolves to an array of objects containing the comments.
+ */
 exports.getCommentByUserIdAndItemId = function (userId, itemId) {
     return new Promise((resolve, reject) => {
         const sql = 'SELECT * FROM comment WHERE idCommentUser = ? AND idCommentItem = ?';
@@ -408,6 +541,11 @@ exports.getCommentByUserIdAndItemId = function (userId, itemId) {
     });
 };
 
+/**
+ * Gets all the comments that contain a given keyword from the database.
+ * @param {string} keyword - The keyword to search in the comments.
+ * @returns {Promise<Object[]>} - A promise that resolves to an array of objects containing the comments.
+ */
 exports.getCommentsByKeyword = function (keyword) {
     return new Promise((resolve, reject) => {
         const sql = 'SELECT * FROM comment WHERE text LIKE ?';
@@ -430,6 +568,11 @@ exports.getCommentsByKeyword = function (keyword) {
     });
 };
 
+/**
+ * Gets the purchase history of the user with the given ID from the database.
+ * @param {number} userId - The ID of the user.
+ * @returns {Promise<Object[]>} - A promise that resolves to an array of objects containing the purchase history.
+ */
 exports.getHistoryByUserId = function (userId) {
     return new Promise((resolve, reject) => {
         const sql = 'SELECT * FROM purchase WHERE idPurchaseUser = ?';

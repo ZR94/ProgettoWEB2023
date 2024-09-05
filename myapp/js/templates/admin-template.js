@@ -1,6 +1,5 @@
 "use strict";
 
-
 function navbarAdminPage(active) {
   return `
     <div class="container col-md-auto navbarAdmin">
@@ -237,8 +236,3 @@ function cardShowItems(item) {
 }
 
 export { navbarAdminPage, createAdminProfile, createUsersPage, createItemsPage, loadUsers, loadItems, cardShowItems };
-
-/**
-
-
- */

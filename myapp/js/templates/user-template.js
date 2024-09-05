@@ -114,7 +114,6 @@ function createWishlistPage() {
   `;
 }
 
-
 function createCard(item) {
   return `
   <div class="col-md-4 mb-4">
@@ -134,7 +133,6 @@ function createCard(item) {
   </div>
   `;
 }
-
 
 function createHistoryPurchasePage() {
   return `

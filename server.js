@@ -9,8 +9,8 @@ const passport = require('passport'); // auth middleware
 const LocalStrategy = require('passport-local').Strategy; // username and password for login
 const session = require('express-session');
 const FileStore = require('session-file-store')(session);
-const bcrypt = require('bcrypt');
 const dao = require('./dao.js');
+//const bcrypt = require('bcrypt');
 
 // init 
 const app = express();
@@ -78,6 +78,7 @@ app.use(passport.session());
 // === REST API (item, user, session) === //
 
 // POST /users
+
 // Sign up
 app.post('/api/user', [
   check('user.email').isEmail().withMessage('Email is required and must be a valid email address'),
@@ -106,6 +107,7 @@ app.post('/api/user', [
 });
 
 // POST /sessions 
+
 // Login
 app.post('/api/sessions', function (req, res, next) {
   passport.authenticate('local', function (err, user, info) {
@@ -200,7 +202,8 @@ app.post('/api/item', (req, res) => {
 
 })
 
-// DELETE /sessions/current 
+// DELETE /sessions/current
+
 // Logout
 app.delete('/api/sessions/current', isLoggedIn, function (req, res) {
   req.logout(function (err) {
@@ -253,6 +256,7 @@ app.delete('/api/item/:itemId', (req, res) => {
 });
 
 // GET /items
+
 app.get('/api/items', isLoggedIn, (req, res) => {
   dao.getAllItems()
     .then(items => res.json(items))
@@ -286,6 +290,7 @@ app.get('/api/user/:id', isLoggedIn, (req, res) => {
 });
 
 // GET /api/wishlist/:id
+
 app.get('/api/wishlist/:id', (req, res) => {
   const userId = req.params.id;
   dao.getWishlistByUserId(userId)

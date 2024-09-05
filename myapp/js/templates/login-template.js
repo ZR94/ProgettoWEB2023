@@ -1,3 +1,5 @@
+"use strict";
+
 function createLoginForm() {
   return `
   <div class="container col-md-auto containerLogin">

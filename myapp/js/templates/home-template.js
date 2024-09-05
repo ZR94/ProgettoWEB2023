@@ -1,3 +1,5 @@
+"use strict";
+
 function createHomeForm() {
     return `
     <div class="row row-1">

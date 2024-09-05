@@ -138,6 +138,13 @@ class Api {
         }
     }
 
+    /**
+     * Add user information to a user with the specified ID.
+     * @param {string} userId - The ID of the user to add information to.
+     * @param {Object} dataInfo - The information to add to the user.
+     * @returns {Promise<Object>} - A promise that resolves to the updated user object.
+     * @throws {Error} - If there is an error adding the information, this promise will reject with an error object.
+     */
     static addUserInfo = async (userId, dataInfo) => {
         try {
             let response = await fetch(`/api/user/${userId}`, {
@@ -172,6 +179,12 @@ class Api {
         }
     }
 
+    /**
+     * Add a new item to the store.
+     * @param {Object} item - The item to add.
+     * @returns {Promise<Object>} - A promise that resolves to the created item object.
+     * @throws {Error} - If there is an error adding the item, this promise will reject with an error object.
+     */
     static addItem = async (item) => {
         try {
             let response = await fetch('/api/item', {
@@ -194,6 +207,12 @@ class Api {
         }
     }
 
+    /**
+     * Remove an item from the store.
+     * @param {number} id - The id of the item to remove.
+     * @returns {Promise<Object>} - A promise that resolves to the removed item object.
+     * @throws {Error} - If there is an error removing the item, this promise will reject with an error object.
+     */
     static removeItem = async (id) => {
         const response = await fetch(`/api/item/${id}`, {
             method: 'DELETE',
@@ -212,6 +231,12 @@ class Api {
 
     }
 
+    /**
+     * Retrieve an item from the store by its id.
+     * @param {number} itemId - The id of the item to retrieve.
+     * @returns {Promise<Object>} - A promise that resolves to the retrieved item object.
+     * @throws {Error} - If there is an error retrieving the item, this promise will reject with an error object.
+     */
     static getItemById = async (itemId) => {
         let response = await fetch(`/api/items/${itemId}`);
         if (response.ok) {
@@ -222,6 +247,12 @@ class Api {
         }
     }
 
+    /**
+     * Retrieve items from the store that match the given category name.
+     * @param {string} categoryName - The name of the category to filter by.
+     * @returns {Promise<Object[]>} - A promise that resolves to an array of item objects that match the category.
+     * @throws {Error} - If there is an error retrieving the items, this promise will reject with an error object.
+     */
     static getFilterItems = async (categoryName) => {
         try {
             let response = await fetch(`/api/items/categories/${categoryName}`);
@@ -238,6 +269,12 @@ class Api {
         }
     }
 
+    /**
+     * Retrieve the wishlist for a given user.
+     * @param {number} userId - The id of the user to retrieve the wishlist for.
+     * @returns {Promise<Object[]>} - A promise that resolves to an array of item objects in the user's wishlist.
+     * @throws {Error} - If there is an error retrieving the wishlist, this promise will reject with an error object.
+     */
     static getWishlistByUser = async (userId) => {
         try {
             let response = await fetch(`/api/wishlist/${userId}`);
@@ -254,6 +291,14 @@ class Api {
         }
     }
 
+    /**
+     * Retrieve the wishlist for a given user and visibility.
+     * @param {number} userId - The id of the user to retrieve the wishlist for.
+     * @param {string} visibility - The visibility of the items in the wishlist.
+     * @returns {Promise<Object[]>} - A promise that resolves to an array of item objects in the user's wishlist
+     * with the specified visibility.
+     * @throws {Error} - If there is an error retrieving the wishlist, this promise will reject with an error object.
+     */
     static getWishlistByVisibility = async (userId, visibility) => {
         try {
             let response = await fetch(`/api/wishlist/${userId}/${visibility}`);
@@ -271,6 +316,13 @@ class Api {
         }
     }
 
+    /**
+     * Retrieve the list of item titles for a given category.
+     * @param {string} categoryName - The name of the category to retrieve the items for.
+     * @returns {Promise<Object[]>} - A promise that resolves to an array of item objects, with the shape
+     * { id: number, name: string, price: number }, containing the titles of items in the category.
+     * @throws {Error} - If there is an error retrieving the items, this promise will reject with an error object.
+     */
     static getFilterTitle = async (categoryName) => {
         try {
             let response = await fetch(`/api/items/titles/${categoryName}`);
@@ -287,6 +339,15 @@ class Api {
         }
     }
 
+    /**
+     * Adds a new item to the user's wishlist.
+     * @param {number} userId - The ID of the user to add the item to.
+     * @param {Object} item - The item object to add to the wishlist.
+     * @param {boolean} visibility - The visibility of the item in the wishlist.
+     * @returns {Promise<Object>} - A promise that resolves to the added item object with the shape
+     * { id: number, name: string, price: number, visibility: boolean }.
+     * @throws {Error} - If there is an error adding the item, this promise will reject with an error object.
+     */
     static addItemWishlist = async (userId, item, visibility) => {
         try {
             const response = await fetch(`/api/user/${userId}/wishlist`, {
@@ -309,6 +370,13 @@ class Api {
         }
     }
 
+    /**
+     * Removes an item from the user's wishlist.
+     * @param {number} userId - The ID of the user to remove the item from.
+     * @param {number} itemId - The ID of the item to remove from the wishlist.
+     * @returns {Promise<Response>} - A promise that resolves to the response object from the server.
+     * @throws {Error} - If there is an error removing the item, this promise will reject with an error object.
+     */
     static removeItemFromWishlist = async (userId, itemId) => {
         const response = await fetch(`/api/user/${userId}/wishlist/${itemId}`, {
             method: 'DELETE',
@@ -338,6 +406,12 @@ class Api {
         }
     }
 
+    /**
+     * Perform a checkout with the given list of purchases.
+     * @param {Object[]} listPurchase - The list of purchases to checkout.
+     * @returns {Promise<Object>} - A promise that resolves to the response object from the server.
+     * @throws {Error} - If there is an error during the checkout, this promise will reject with an error object.
+     */
     static doCheckout = async (listPurchase) => {
         let response = await fetch('/api/checkout', {
             method: 'POST',
@@ -361,6 +435,14 @@ class Api {
         }
     }
 
+    /**
+     * Add a comment to a given item.
+     * @param {Object} comment - The comment to add.
+     * @param {number} comment.idItem - The id of the item to comment.
+     * @param {string} comment.text - The comment text.
+     * @returns {Promise<Object>} - A promise that resolves to the response object from the server.
+     * @throws {Error} - If there is an error during the comment addition, this promise will reject with an error object.
+     */
     static addComment = async (comment) => {
         try {
             let response = await fetch('/api/comments', {
@@ -383,6 +465,12 @@ class Api {
         }
     }
 
+    /**
+     * Remove a comment from the server.
+     * @param {number} commentId - The id of the comment to remove.
+     * @returns {Promise<Object>} - A promise that resolves to the response object from the server.
+     * @throws {Error} - If there is an error during the comment removal, this promise will reject with an error object.
+     */
     static removeComment = async (commentId) => {
 
         const response = await fetch(`/api/comments/${commentId}`, {
@@ -402,6 +490,13 @@ class Api {
 
     }
 
+    /**
+     * Update a comment on the server.
+     * @param {string} text - The new text for the comment.
+     * @param {number} idComment - The id of the comment to update.
+     * @returns {Promise<Object>} - A promise that resolves to the response object from the server.
+     * @throws {Error} - If there is an error during the comment update, this promise will reject with an error object.
+     */
     static updateComment = async (text, idComment) => {
         let response = await fetch(`/api/comments/${idComment}`, {
             method: 'PUT',
@@ -423,6 +518,12 @@ class Api {
         }
     }
 
+    /**
+     * Fetches the comments made by the user with the given ID from the server.
+     * @param {number} userId - The ID of the user.
+     * @returns {Promise<Object[]>} - A promise that resolves to an array of comment objects.
+     * @throws {Object} - If there is an error during the fetch, this promise will reject with an error object.
+     */
     static getCommentsbyUserId = async (userId) => {
         let response = await fetch(`/api/search/user/${userId}/comments`);
         const commentsJson = await response.json();
@@ -433,6 +534,12 @@ class Api {
         }
     }
 
+    /**
+     * Fetches the comments made on the item with the given ID from the server.
+     * @param {number} itemId - The ID of the item.
+     * @returns {Promise<Object[]>} - A promise that resolves to an array of comment objects.
+     * @throws {Object} - If there is an error during the fetch, this promise will reject with an error object.
+     */
     static getCommentsbyItemId = async (itemId) => {
         let response = await fetch(`/api/search/items/${itemId}/comments`);
         const commentsJson = await response.json();
@@ -443,6 +550,13 @@ class Api {
         }
     }
 
+    /**
+     * Fetches the comments made by the user with the given ID on the item with the given ID from the server.
+     * @param {number} userId - The ID of the user.
+     * @param {number} itemId - The ID of the item.
+     * @returns {Promise<Object[]>} - A promise that resolves to an array of comment objects.
+     * @throws {Object} - If there is an error during the fetch, this promise will reject with an error object.
+     */
     static getCommentsbyUserIdandItemId = async (userId, itemId) => {
         let response = await fetch(`/api/search/user/${userId}/items/${itemId}/comments`);
         const commentsJson = await response.json();
@@ -453,6 +567,12 @@ class Api {
         }
     }
 
+    /**
+     * Fetches the comments containing the given keyword from the server.
+     * @param {string} keyword - The keyword to search.
+     * @returns {Promise<Object[]>} - A promise that resolves to an array of comment objects.
+     * @throws {Error} - If there is an error during the fetch, this promise will reject with an error object.
+     */
     static getCommentsbyKeyword = async (keyword) => {
         try {
             let response = await fetch(`/api/search/comments/${keyword}`);
@@ -468,6 +588,12 @@ class Api {
         }
     }
 
+    /**
+     * Fetches the history of purchases made by the user with the given ID from the server.
+     * @param {number} userId - The ID of the user.
+     * @returns {Promise<Object[]>} - A promise that resolves to an array of purchase objects.
+     * @throws {Object} - If there is an error during the fetch, this promise will reject with an error object.
+     */
     static getHistoryPurchase = async (userId) => {
         let response = await fetch(`/api/user/${userId}/history`);
         const historyJson = await response.json();
@@ -478,6 +604,14 @@ class Api {
         }
     }
 
+    /**
+     * Fetches the items in the given category and price range from the server.
+     * @param {string} category - The category of the items.
+     * @param {number} priceMin - The minimum price of the items.
+     * @param {number} priceMax - The maximum price of the items.
+     * @returns {Promise<Object[]>} - A promise that resolves to an array of item objects.
+     * @throws {Object} - If there is an error during the fetch, this promise will reject with an error object.
+     */
     static getSearchByCategoryAndPrice = async (category, priceMin, priceMax) => {
         let response = await fetch(`/api/search/${category}/${priceMin}/${priceMax}`);
         const itemsJson = await response.json();

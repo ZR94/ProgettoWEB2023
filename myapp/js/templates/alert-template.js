@@ -1,3 +1,5 @@
+"use strict";
+
 function createAlert(type, message) {
     return `<div class="alert alert-${type} alert-dismissible fade show" role="alert">
     <strong>${message}</strong>

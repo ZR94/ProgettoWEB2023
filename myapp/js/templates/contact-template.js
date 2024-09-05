@@ -45,5 +45,4 @@ function createContactForm() {
     `;
 }
 
-  
-  export {createContactForm};
+export { createContactForm };
