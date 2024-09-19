@@ -57,7 +57,7 @@ const isLoggedIn = (req, res, next) => {
   if (req.isAuthenticated()) {
     return next();
   }
-  return res.status(401).json({ "statusCode": 401, "message": "not authenticated" });
+  return res.status(401).json({ "statusCode": 401, "message": "You are not authenticated" });
 }
 
 // set up the session
@@ -81,13 +81,24 @@ app.use(passport.session());
 
 // Sign up
 app.post('/api/user', [
-  check('user.email').isEmail().withMessage('Email is required and must be a valid email address'),
-  check('user.password').isLength({ min: 1 }).withMessage('Password is required and must not be empty'),
+  check('user.email')
+    .isEmail().withMessage('Email must be a valid email address')
+    .notEmpty().withMessage('Email is required'),
+  check('user.password')
+    .isLength({ min: 4 }).withMessage('Password must be at least 4 characters long')
+    .notEmpty().withMessage('Password is required'),
+  check('user.name')
+    .notEmpty().withMessage('First name is required'),
+  check('user.surname')
+    .notEmpty().withMessage('Last name is required'),
+  check('user.admin')
+    .optional()
 ], (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
-    return res.status(422).json({ errors: errors.array() });
+    return res.status(422).json({ success: false, errors: errors.array() });
   }
+
   const user = {
     name: req.body.user.name,
     surname: req.body.user.surname,
@@ -104,7 +115,11 @@ app.post('/api/user', [
         res.status(500).json({ success: false, error: 'Database error during the signup' });
       }
     })
+    .catch((error) => {
+        return res.status(409).json({ success: false, message: error.message });
+    });
 });
+
 
 // POST /sessions 
 
@@ -158,23 +173,23 @@ app.post('/api/user/:userId', [], (req, res) => {
   const idUser = req.params.userId;
   const { birthdate, address, city } = req.body.dataInfo;
 
-  if (!birthdate || !address || !city, !idUser) {
+  if (!birthdate || !address || !city || !idUser) {
     return res.status(400).json({ success: false, error: 'Dati non validi' });
   }
 
   dao.addInfoUser(birthdate, address, city, idUser)
     .then((result) => {
-        if (result.success) {
-            res.status(200).json({ success: true, message: 'Info updated successfully' });
-        } else {
-            res.status(400).json({ success: false, message: 'Info not modified' });
-        }
+      if (result.success) {
+        res.status(200).json({ success: true, message: 'Info updated successfully' });
+      } else {
+        res.status(400).json({ success: false, message: 'Info not modified' });
+      }
     })
     .catch((err) => res.status(err.status || 500).json({ success: false, error: err.msg || 'An error occurred' }));
 });
 
 // Aggiunge un item alla wishlist dell'utente, dato il suo id.
-app.post('/api/user/:userId/wishlist', [
+app.post('/api/user/:userId/wishlist', isLoggedIn, [
   check('item.id').notEmpty(),
 ], (req, res) => {
   const errors = validationResult(req);
@@ -189,7 +204,7 @@ app.post('/api/user/:userId/wishlist', [
     .catch((err) => res.status(err.status || 500).json({ error: err.msg || 'An error occurred' }));
 });
 
-app.post('/api/item', (req, res) => {
+app.post('/api/item', isLoggedIn, (req, res) => {
   const item = {
     price: req.body.item.price,
     name: req.body.item.name,
@@ -243,8 +258,8 @@ app.delete('/api/user/:userId/wishlist/:itemId', (req, res) => {
 app.delete('/api/comments/:commentId', (req, res) => {
   const commentId = req.params.commentId;
   dao.deleteComment(commentId)
-  .then(() => res.status(200).json({ success: true, message: 'Commento eliminato con successo' }))
-  .catch((err) => res.status(503).json({ error: err.msg || 'Database error during the item creation' }));
+    .then(() => res.status(200).json({ success: true, message: 'Commento eliminato con successo' }))
+    .catch((err) => res.status(503).json({ error: err.msg || 'Database error during the item creation' }));
 });
 
 app.delete('/api/item/:itemId', (req, res) => {
@@ -306,7 +321,7 @@ app.get('/api/wishlist/:id/:visibility', (req, res) => {
     .catch((error) => res.status(404).json(error));
 });
 
-app.get('/api/items/categories/:categoryName', (req, res) => {
+app.get('/api/items/categories/:categoryName', isLoggedIn, (req, res) => {
   const categoryName = req.params.categoryName;
   let result;
   if (categoryName === 'all-categories') {
@@ -319,21 +334,21 @@ app.get('/api/items/categories/:categoryName', (req, res) => {
     .catch((error) => res.status(404).json(error));
 });
 
-app.get('/api/search/user/:userId/comments', (req, res) => {
+app.get('/api/search/user/:userId/comments', isLoggedIn, (req, res) => {
   const userId = req.params.userId;
   dao.getCommentByUserId(userId)
     .then((comments) => res.json(comments))
     .catch((error) => res.status(404).json(error));
 });
 
-app.get('/api/search/items/:itemId/comments', (req, res) => {
+app.get('/api/search/items/:itemId/comments', isLoggedIn, (req, res) => {
   const itemId = req.params.itemId;
   dao.getCommentByItemId(itemId)
     .then((comments) => res.json(comments))
     .catch((error) => res.status(404).json(error));
 });
 
-app.get('/api/search/user/:userId/items/:itemId/comments', (req, res) => {
+app.get('/api/search/user/:userId/items/:itemId/comments', isLoggedIn, (req, res) => {
   const userId = req.params.userId;
   const itemId = req.params.itemId;
   dao.getCommentByUserIdAndItemId(userId, itemId)
@@ -341,14 +356,14 @@ app.get('/api/search/user/:userId/items/:itemId/comments', (req, res) => {
     .catch((error) => res.status(404).json(error));
 })
 
-app.get('/api/search/comments/:keyword', (req, res) => {
+app.get('/api/search/comments/:keyword', isLoggedIn, (req, res) => {
   const keyword = req.params.keyword;
   dao.getCommentsByKeyword(keyword)
     .then((comments) => res.json(comments))
     .catch((error) => res.status(404).json(error));
 });
 
-app.get('/api/user/:userId/history', (req, res) => {
+app.get('/api/user/:userId/history', isLoggedIn, (req, res) => {
   const userId = req.params.userId;
   dao.getHistoryByUserId(userId)
     .then((history) => res.json(history))
@@ -364,14 +379,13 @@ app.get('/api/search/:category/:priceMin/:priceMax', isLoggedIn, (req, res) => {
     .catch((error) => res.status(404).json(error));
 });
 
-app.put('/api/comments/:idComment',
-  (req, res) => {
-    const idComment = req.params.idComment;
-    const text = req.body.text;
-    dao.updateComment(idComment, text)
+app.put('/api/comments/:idComment', isLoggedIn, (req, res) => {
+  const idComment = req.params.idComment;
+  const text = req.body.text;
+  dao.updateComment(idComment, text)
     .then(() => res.status(201).json({ success: true, message: 'Commento aggiornato con successo' }))
     .catch((err) => res.status(503).json({ error: err.msg || 'Database error during the item creation' }));
-  }
+}
 );
 
 app.get('*', (req, res) => {

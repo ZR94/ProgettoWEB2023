@@ -120,25 +120,36 @@ exports.getItemById = function (id) {
 };
 
 /**
- * Creates a new user in the database
- * @param {Object} user - User data: name, surname, email, password, and admin (true or false)
+ * Creates a new user in the database, after checking if the email already exists
+ * @param {Object} user - User data: name, surname, email, password, and admin (1 or 0)
  * @returns {Promise<Object>} A promise that resolves to an object with a success property set to true and a message property with a success message
  */
 exports.createUser = function (user) {
     return new Promise((resolve, reject) => {
-        const sql = 'INSERT INTO user (name, surname, email, password, admin) VALUES (?, ?, ?, ?, ?)';
-        // create the hash as an async call, given that the operation may be CPU-intensive (and we don't want to block the server)
-        bcrypt.hash(user.password, 10).then((hash => {
-            db.run(sql, [user.name, user.surname, user.email, hash, user.admin], (err) => {
-                if (err) {
-                    reject(err);
-                } else {
-                    resolve({ success: true, message: 'Account creato con successo' });
-                }
-            });
-        }));
+        const checkEmailSql = 'SELECT email FROM user WHERE email = ?';
+        db.get(checkEmailSql, [user.email], (err, row) => {
+            if (err) {
+                reject({ status: 500, msg: err.message })
+            } else if (row) {
+                reject({ success: false, message: 'This email already exists. Please use a different email' });
+            } else {
+                const insertUserSql = 'INSERT INTO user (name, surname, email, password, admin) VALUES (?, ?, ?, ?, ?)';
+                bcrypt.hash(user.password, 10).then((hash) => {
+                    db.run(insertUserSql, [user.name, user.surname, user.email, hash, user.admin], (err) => {
+                        if (err) {
+                            reject({ status: 500, msg: err.message })
+                        } else {
+                            resolve({ success: true, message: 'Account created successfully' });
+                        }
+                    });
+                }).catch((hashError) => {
+                    reject(hashError);
+                });
+            }
+        });
     });
 };
+
 
 /**
  * Creates a new purchase in the database

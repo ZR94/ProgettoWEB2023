@@ -84,7 +84,7 @@ function createSearchCommentTable() {
                         </div>
                     </div>
 
-                    <div class="col-12 text-center">
+                    <div class="col-12 text-center mb-4">
                         <button type="button" class="btn btn-primary btn-searchButtonComment" id="searchButtonComment">Cerca</button>
                     </div>
                 </div>

@@ -45,7 +45,11 @@ class Api {
         } else {
             try {
                 const errDetail = await response.json();
-                throw errDetail.message;
+                if (errDetail.errors) {
+                    throw errDetail.errors;
+                } else {
+                    throw new Error(errDetail.message);
+                }
             }
             catch (err) {
                 throw err;
@@ -541,12 +545,17 @@ class Api {
      * @throws {Object} - If there is an error during the fetch, this promise will reject with an error object.
      */
     static getCommentsbyItemId = async (itemId) => {
-        let response = await fetch(`/api/search/items/${itemId}/comments`);
-        const commentsJson = await response.json();
-        if (response.ok) {
-            return commentsJson;
-        } else {
-            throw commentsJson;  // an object with the error coming from the server
+        try {
+            let response = await fetch(`/api/search/items/${itemId}/comments`);
+            if (response.ok) {
+                const commentsJson = await response.json();
+                return commentsJson;
+            } else {
+                const errDetail = await response.json();
+                throw new Error(errDetail.message || 'No comments found containing the keyword.');
+            }
+        } catch (error) {
+            throw new Error(error.message || 'Network error');
         }
     }
 
@@ -558,12 +567,17 @@ class Api {
      * @throws {Object} - If there is an error during the fetch, this promise will reject with an error object.
      */
     static getCommentsbyUserIdandItemId = async (userId, itemId) => {
-        let response = await fetch(`/api/search/user/${userId}/items/${itemId}/comments`);
-        const commentsJson = await response.json();
-        if (response.ok) {
-            return commentsJson;
-        } else {
-            throw commentsJson;  // an object with the error coming from the server
+        try {
+            let response = await fetch(`/api/search/user/${userId}/items/${itemId}/comments`);
+            if (response.ok) {
+                const commentsJson = await response.json();
+                return commentsJson;
+            } else {
+                const errDetail = await response.json();
+                throw new Error(errDetail.message || 'No comments found containing the keyword.');
+            }
+        } catch (error) {
+            throw new Error(error.message || 'Network error');
         }
     }
 
@@ -584,7 +598,7 @@ class Api {
                 throw new Error(errDetail.message || 'No comments found containing the keyword.');
             }
         } catch (error) {
-            throw new Error(err.message || 'Network error');
+            throw new Error(error.message || 'Network error');
         }
     }
 
@@ -613,12 +627,17 @@ class Api {
      * @throws {Object} - If there is an error during the fetch, this promise will reject with an error object.
      */
     static getSearchByCategoryAndPrice = async (category, priceMin, priceMax) => {
-        let response = await fetch(`/api/search/${category}/${priceMin}/${priceMax}`);
-        const itemsJson = await response.json();
-        if (response.ok) {
-            return itemsJson;
-        } else {
-            throw itemsJson;  // an object with the error coming from the server
+        try {
+            let response = await fetch(`/api/search/${category}/${priceMin}/${priceMax}`);
+            if (response.ok) {
+                const itemsJson = await response.json();
+                return itemsJson;
+            } else {
+                const errDetail = await response.json();
+                throw new Error(errDetail.message || 'No items found.');
+            }
+        } catch (error) {
+            throw new Error(error.message || 'Network error');
         }
     }
 

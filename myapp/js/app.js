@@ -8,8 +8,10 @@ import Comment from './comment.js';
 import { createLoginForm } from './templates/login-template.js';
 import { createSignUpForm } from './templates/sign-template.js';
 import { createHomeForm } from './templates/home-template.js';
-import { navbarUserPage, createUserPage, createWishlistPage, createCard, createHistoryPurchasePage, 
-        createCardPurchase, createTablePurchase, createTotalRow, createHistoryCommentsPage, cardShowCommentsUser } from './templates/user-template.js';
+import {
+    navbarUserPage, createUserPage, createWishlistPage, createCard, createHistoryPurchasePage,
+    createCardPurchase, createTablePurchase, createTotalRow, createHistoryCommentsPage, cardShowCommentsUser
+} from './templates/user-template.js';
 import { createStoreTable, createStoreCard, createCartCard, addFollowButton, removeFollowButton, addPubIcon, addPrvIcon } from './templates/store-template.js';
 import { navbarAdminPage, createAdminProfile, createUsersPage, createItemsPage, loadUsers, loadItems, cardShowItems } from './templates/admin-template.js';
 import { createSearchItemTable, createSearchCommentTable, cardShowComment, createSearchItemCard } from './templates/search-template.js';
@@ -62,7 +64,7 @@ class App {
             if (this.loggedUser != null) {
                 this.renderNavBar(this.loggedUser.name);
                 this.appContainer.innerHTML = "";
-                this.appContainer.innerHTML = this.personalUserPage();
+                this.appContainer.innerHTML = this.userPersonalPage();
             }
 
         });
@@ -70,7 +72,7 @@ class App {
         page('/wishlist', () => {
             this.loggedUser = JSON.parse(localStorage.getItem('user'));
             if (this.loggedUser != null) {
-                this.appContainer.innerHTML = this.createUserWishList();
+                this.appContainer.innerHTML = this.userWishListPage();
 
             }
         });
@@ -78,7 +80,7 @@ class App {
         page('/history', () => {
             this.loggedUser = JSON.parse(localStorage.getItem('user'));
             if (this.loggedUser != null) {
-                this.appContainer.innerHTML = this.createHistoryPurchase();
+                this.appContainer.innerHTML = this.historyPurchasePage();
             }
         });
 
@@ -92,14 +94,14 @@ class App {
         page('/users', () => {
             this.loggedUser = JSON.parse(localStorage.getItem('user'));
             if (this.loggedUser != null) {
-                this.appContainer.innerHTML = this.createAdminUsers();
+                this.appContainer.innerHTML = this.adminUsersPage();
             }
         });
 
         page('/items', () => {
             this.loggedUser = JSON.parse(localStorage.getItem('user'));
             if (this.loggedUser != null) {
-                this.appContainer.innerHTML = this.createAdminItems();
+                this.appContainer.innerHTML = this.adminItemsPage();
             }
         });
 
@@ -185,29 +187,37 @@ class App {
         event.preventDefault();
         const form = event.target;
 
+
+        // extract form data
+        const userName = form.validationCustom01.value;
+        const userSurname = form.validationCustom02.value;
+        const userEmail = form.validationCustomUsername.value;
+        const userPassword = form.validationCustomPassword.value;
+        const adminCheck = form.adminCheck.checked;
+
+        // create user object
+        const user = new User(userName, userSurname, userEmail, userPassword);
+
+        // set admin property
+        if (adminCheck) {
+            user.admin = 1;
+        }
         try {
-            // extract form data
-            const userName = form.validationCustomUsername.value;
-            const userSurname = form.validationCustom02.value;
-            const userEmail = form.validationCustomUsername.value;
-            const userPassword = form.validationCustomPassword.value;
-
-            // create user object
-            const user = new User(userName, userSurname, userEmail, userPassword);
-
             // make API call to signup
             const response = await Api.doSignUp(user);
 
-            // show success message
-            this.showAlertMessage('success', 'Signup avvenuto con successo!');
-
-            // redirect to login page
-            page.redirect('/login');
+            if (response.success) {
+                this.showAlertMessage('success', response.message);
+                page.redirect('/login');
+            }
         } catch (error) {
-            if (error) {
-                const errorMsg = error;
-                // add an alert message in DOM
-                this.showAlertMessage('danger', errorMsg);
+            if (Array.isArray(error)) {
+                error.forEach(err => {
+                    this.showAlertMessage('danger', err.msg);
+                });
+            } else {
+
+                this.showAlertMessage('danger', error.toString());
             }
         }
     }
@@ -235,22 +245,36 @@ class App {
     * Perform the logout
     */
     logout = async () => {
-        await Api.doLogout();
-        this.logoutLink.classList.add('invisible');
-        this.loginLink.innerHTML = "";
-        this.loginLink.innerHTML = '<a class="nav-link" href="/login">Login | Register</a>';
-        this.loggedUser = null;
-        localStorage.removeItem('user');
-        page.redirect('/login');
+        try {
+            await Api.doLogout();
+            this.logoutLink.classList.add('invisible');
+            this.loginLink.innerHTML = "";
+            this.loginLink.innerHTML = '<a class="nav-link" href="/login">Login | Register</a>';
+            this.loggedUser = null;
+            localStorage.removeItem('user');
+            page.redirect('/login');
+        } catch (error) {
+            if (error) {
+                const errorMsg = error;
+                this.showAlertMessage('danger', errorMsg);
+            }
+        }
     }
 
     /**
      * Render the navbar and show the logout link
      */
     renderNavBar = (active) => {
-        this.loginLink.innerHTML = "";
-        this.loginLink.innerHTML = '<a class="nav-link" href="/userPage">' + `${active}` + '</a>';
-        this.logoutLink.classList.remove('invisible');
+        try {
+            if (!this.loginLink || !this.logoutLink) {
+                throw new Error('Elementi loginLink o logoutLink mancanti');
+            }
+            this.loginLink.innerHTML = "";
+            this.loginLink.innerHTML = '<a class="nav-link" href="/userPage">' + `${active}` + '</a>';
+            this.logoutLink.classList.remove('invisible');
+        } catch (error) {
+            this.showAlertMessage('danger', error);
+        }
     }
 
     /**
@@ -260,7 +284,7 @@ class App {
      *
      * @returns {Promise<void>} Promise that resolves when the page is rendered
      */
-    personalUserPage = async () => {
+    userPersonalPage = async () => {
 
         try {
             // Get the logged user from local storage
@@ -283,19 +307,13 @@ class App {
                 bodyPage.innerHTML = createUserPage(userLog);
             }
 
-            if (userLog.birthdate) {
-                document.getElementById('birthdate').value = userLog.birthdate;
-            }
+            ['birthdate', 'address', 'city'].forEach(field => {
+                if (userLog[field]) {
+                    document.getElementById(field).value = userLog[field];
+                }
+            });
 
-            if (userLog.address) {
-                document.getElementById('address').value = userLog.address;
-            }
-
-            if (userLog.city) {
-                document.getElementById('city').value = userLog.city;
-            }
-
-            // Add event listener to the delete button
+            // Add event listeners
             document.getElementById('confirmDeleteButton').addEventListener('click', this.onClickDeleteAccount(user.id));
             document.getElementById('saveButton').addEventListener('click', this.onClickSaveInfo());
 
@@ -315,7 +333,7 @@ class App {
      *
      * @returns {Promise<void>} Promise that resolves when the page is rendered
      */
-    createAdminUsers = async () => {
+    adminUsersPage = async () => {
         try {
             // Get the logged user from local storage
             const user = JSON.parse(localStorage.getItem('user'));
@@ -363,7 +381,7 @@ class App {
      *
      * @returns {Promise<void>} Promise that resolves when the page is rendered 
      */
-    createAdminItems = async () => {
+    adminItemsPage = async () => {
         try {
             const user = JSON.parse(localStorage.getItem('user'));
             if (user != null) {
@@ -375,7 +393,7 @@ class App {
                 bodyPage.innerHTML = createItemsPage();
 
                 const categorySelect = document.getElementById('itemCategory');
-                categorySelect.innerHTML = ''; // Clear existing options
+                categorySelect.innerHTML = '';
 
                 categories.forEach(category => {
                     const option = document.createElement('option');
@@ -390,7 +408,7 @@ class App {
                         itemsList.insertAdjacentHTML('beforeend', loadItems(item));
                     }
                 })
-                //aggiungere addeventlistener
+
                 this.addEventListenersToButtons(".btn-item-delete", this.onClickDeleteItem);
                 this.addEventListenersToButtons(".btn-item-add", this.onClickAddItem);
                 this.addEventListenersToButtons(".btn-item-comments", this.showCommentsItems);
@@ -410,7 +428,7 @@ class App {
      *
      * @returns {Promise<void>}
      */
-    createUserWishList = async () => {
+    userWishListPage = async () => {
 
         try {
             const user = JSON.parse(localStorage.getItem('user'));
@@ -485,7 +503,7 @@ class App {
      *
      * @returns {Promise<void>} Promise that resolves when the page is rendered
      */
-    createHistoryPurchase = async () => {
+    historyPurchasePage = async () => {
 
         try {
             const user = JSON.parse(localStorage.getItem('user'));
@@ -558,10 +576,10 @@ class App {
             } else {
                 let tr = document.createElement("tr");
                 let td = document.createElement("td");
-    
+
                 // Assegna una classe univoca al td
                 td.classList.add('no-purchase-message');
-    
+
                 td.innerHTML = "Nessun acquisto ancora effettuato";
                 tr.appendChild(td);
                 purchaseHistoryRow.appendChild(tr);
@@ -631,10 +649,10 @@ class App {
         return new Promise((resolve, reject) => {
             const modalId = `#staticBackdrop-${itemId}`;
             const modal = document.querySelector(modalId);
-        
+
             // Quando l'utente clicca su "Save choice", risolvi la Promise con la scelta dell'utente
             const saveButton = modal.querySelector('.btn-saveChoice');
-            saveButton.onclick = function() {
+            saveButton.onclick = function () {
                 try {
                     const visibility = parseInt(modal.querySelector('input[name="visibilityOptions"]:checked').value, 10);
                     resolve(visibility);
@@ -644,7 +662,7 @@ class App {
             };
         });
     }
-    
+
     /**
      * Remove an item from the wishlist of the current user.
      * @param {*} event The click event.
@@ -682,7 +700,6 @@ class App {
                         this.addEventListenersToButtons(".btn-favourite-add", this.addItemWishList.bind(this));
                     }
                 }
-
 
             }
 
@@ -728,11 +745,15 @@ class App {
      * @param  {Array} items - The array of items objects to display.
      */
     showItem = async (items) => {
-        const storeTable = document.querySelector('#my-items');
-        storeTable.innerHTML = "";
+        try {
+            const storeTable = document.querySelector('#my-items');
+            storeTable.innerHTML = "";
 
-        this.updateCartHtml();
-        this.updateStoreHTML(items, storeTable);
+            this.updateCartHtml();
+            this.updateStoreHTML(items, storeTable);
+        } catch (error) {
+            this.showAlertMessage('danger', error);
+        }
     }
 
     /**
@@ -749,25 +770,25 @@ class App {
                 console.error("User not found. Please log in.");
                 return;
             }
-    
+
             const cartKey = `cart_${user.id}`;
             this.itemCart = JSON.parse(localStorage.getItem(cartKey)) || {}; // Carica il carrello specifico dell'utente
-    
+
             const listPurchase = [];
             const dateTime = moment().format("DD/MM/YYYY HH:mm:ss");
-    
+
             // Itera attraverso gli elementi del carrello e crea l'ordine di acquisto
             Object.values(this.itemCart).forEach(item => {
                 if (item) {
                     const itemId = item.id;
                     const itemQuantity = item.quantity;
                     const itemPrice = item.price;
-    
+
                     let addPurchase = new Purchase(user.id, itemId, itemQuantity, itemPrice, dateTime);
                     listPurchase.push(addPurchase);
                 }
             });
-    
+
             // Effettua il checkout tramite l'API
             const response = await Api.doCheckout(listPurchase);
             if (response) {
@@ -779,7 +800,7 @@ class App {
             console.error(error); // Log dell'errore per il debug
             this.showAlertMessage('danger', 'An error occurred during checkout. Please try again.'); // Messaggio di errore per l'utente
         }
-    
+
     }
 
     /**
@@ -979,18 +1000,22 @@ class App {
      */
     onClickDeleteAccount = async () => {
 
-        document.getElementById('confirmDeleteButton').addEventListener('click', async () => {
-            const user = JSON.parse(localStorage.getItem('user'));
+        try {
+            document.getElementById('confirmDeleteButton').addEventListener('click', async () => {
+                const user = JSON.parse(localStorage.getItem('user'));
 
-            const response = await Api.deleteUser(user.id);
-            if (response.success) {
-                localStorage.removeItem('user');
-                this.showAlertMessage("success", response.message);
-                page.redirect('/login');
-            } else {
-                this.showAlertMessage("danger", "Errore durante l'eliminazione dell'account. Si prega di riprovare.");
-            }
-        });
+                const response = await Api.deleteUser(user.id);
+                if (response.success) {
+                    localStorage.removeItem('user');
+                    this.showAlertMessage("success", response.message);
+                    page.redirect('/login');
+                } else {
+                    this.showAlertMessage("danger", "Errore durante l'eliminazione dell'account. Si prega di riprovare.");
+                }
+            });
+        } catch (error) {
+            this.showAlertMessage('danger', error);
+        }
     }
 
     /**
@@ -999,15 +1024,19 @@ class App {
      * @param {Event} event - The click event on the button.
      */
     onClickDeleteItem = async (event) => {
-        event.preventDefault();
-        const itemId = parseInt(event.target.value);
-        const response = await Api.removeItem(itemId);
+        try {
+            event.preventDefault();
+            const itemId = parseInt(event.target.value);
+            const response = await Api.removeItem(itemId);
 
-        if (response.success) {
-            this.showAlertMessage('success', response.message);
-            this.createAdminItems();
-        } else {
-            this.showAlertMessage('danger', 'Errore durante l\'eliminazione dell\'item. Si prega di riprovare.');
+            if (response.success) {
+                this.showAlertMessage('success', response.message);
+                this.adminItemsPage();
+            } else {
+                this.showAlertMessage('danger', 'Errore durante l\'eliminazione dell\'item. Si prega di riprovare.');
+            }
+        } catch (error) {
+            this.showAlertMessage('danger', error);
         }
 
     }
@@ -1019,18 +1048,19 @@ class App {
      */
     onClickAddItem = async (event) => {
         event.preventDefault();
-        const itemName = document.getElementById('itemName').value;
-        const itemPrice = parseFloat(document.getElementById('itemPrice').value);
-        const itemCategory = parseFloat(document.getElementById('itemCategory').value);
-        const itemImg = document.getElementById('itemImg').value;
 
         try {
+            const itemName = document.getElementById('itemName').value;
+            const itemPrice = parseFloat(document.getElementById('itemPrice').value);
+            const itemCategory = parseFloat(document.getElementById('itemCategory').value);
+            const itemImg = document.getElementById('itemImg').value;
+
             const item = new Item(itemPrice, itemName, itemCategory, itemImg);
 
             const response = await Api.addItem(item);
             if (response.success) {
                 this.showAlertMessage("success", response.message);
-                this.createAdminItems();
+                this.adminItemsPage();
             } else {
                 this.showAlertMessage("danger", "Errore durante l'inserimento dell'item. Si prega di riprovare.");
             }
@@ -1046,18 +1076,27 @@ class App {
      */
     onClickAddUser = async (event) => {
         event.preventDefault();
-        const userName = document.getElementById('userName').value;
-        const userSurname = document.getElementById('userSurname').value;
-        const userEmail = document.getElementById('userEmail').value;
-        const password = document.getElementById('password').value;
-        const user = new User(userName, userSurname, userEmail, password);
 
-        const response = await Api.doSignUp(user);
-        if (response.success) {
-            this.showAlertMessage('success', response.message);
-            this.createAdminUsers();
-        } else {
-            this.showAlertMessage('danger', 'Errore durante l\'aggiunta dell\'user. Si prega di riprovare.');
+        try {
+            const userName = document.getElementById('userName').value;
+            const userSurname = document.getElementById('userSurname').value;
+            const userEmail = document.getElementById('userEmail').value;
+            const password = document.getElementById('password').value;
+
+            if (!userName || !userSurname || !userEmail || !password) {
+                throw new Error('Tutti i campi sono obbligatori.');
+            }
+            const user = new User(userName, userSurname, userEmail, password);
+
+            const response = await Api.doSignUp(user);
+            if (response.success) {
+                this.showAlertMessage('success', response.message);
+                this.adminUsersPage();
+            } else {
+                this.showAlertMessage('danger', 'Errore durante l\'aggiunta dell\'user. Si prega di riprovare.');
+            }
+        } catch (error) {
+            this.showAlertMessage('danger', error);
         }
 
     }
@@ -1069,23 +1108,27 @@ class App {
      */
     onClickDeleteUser = async (event) => {
         event.preventDefault();
-        const userId = parseInt(event.target.value);
-        const response = await Api.deleteUser(userId);
-        if (response.success) {
-            // Recupera gli utenti dal localStorage
-            let users = JSON.parse(localStorage.getItem('users')) || [];
 
-            // Filtra l'array per rimuovere l'utente con l'userId specificato
-            users = users.filter(user => user.id !== userId);
+        try {
+            const userId = parseInt(event.target.value);
+            const response = await Api.deleteUser(userId);
+            if (response.success) {
+                // Recupera gli utenti dal localStorage
+                let users = JSON.parse(localStorage.getItem('users')) || [];
 
-            // Aggiorna il localStorage con l'array filtrato
-            localStorage.setItem('users', JSON.stringify(users));
+                // Filtra l'array per rimuovere l'utente con l'userId specificato
+                users = users.filter(user => user.id !== userId);
 
-            // Mostra un messaggio di successo e aggiorna la UI
-            this.showAlertMessage('success', response.message);
-            this.createAdminUsers();
-        } else {
-            this.showAlertMessage('danger', 'Errore durante l\'eliminazione dell\'user. Si prega di riprovare.');
+                // Aggiorna il localStorage con l'array filtrato
+                localStorage.setItem('users', JSON.stringify(users));
+
+                // Mostra un messaggio di successo e aggiorna la UI
+                this.showAlertMessage('success', response.message);
+                this.adminUsersPage();
+            }
+
+        } catch (error) {
+            this.showAlertMessage('danger', error.message || 'Errore durante l\'eliminazione dell\'user. Si prega di riprovare.');
         }
     }
 
@@ -1096,38 +1139,41 @@ class App {
      * @param {HTMLElement} storeTable - The table element where the items will be displayed.
      */
     updateStoreHTML = async (items, storeTable) => {
+        try {
+            const user = JSON.parse(localStorage.getItem('user'));
+            const wishlist = await Api.getWishlistByUser(user.id);
 
-        const user = JSON.parse(localStorage.getItem('user'));
-        const wishlist = await Api.getWishlistByUser(user.id);
+            for (let item of items) {
+                const itemRow = createStoreCard(item);
+                storeTable.insertAdjacentHTML('beforeend', itemRow);
+                // Seleziona il productCard corrispondente all'item corrente
+                const productCard = document.querySelector(`#product-card-follow-${item.id}`);
 
-        for (let item of items) {
-            const itemRow = createStoreCard(item);
-            storeTable.insertAdjacentHTML('beforeend', itemRow);
-            // Seleziona il productCard corrispondente all'item corrente
-            const productCard = document.querySelector(`#product-card-follow-${item.id}`);
-
-            if (wishlist.error) {
-                productCard.insertAdjacentHTML('beforeend', addFollowButton(item.id));
-            } else {
-                const itemFound = wishlist.filter(itemWish => itemWish.idWishItem == item.id);
-                if (itemFound.length > 0) {
-                    productCard.insertAdjacentHTML('beforeend', removeFollowButton(item.id));
-                    if (itemFound[0].visibility > 0) {
-                        productCard.insertAdjacentHTML('beforeend', addPubIcon());
-                    } else {
-                        productCard.insertAdjacentHTML('beforeend', addPrvIcon());
-                    }
-                } else {
+                if (wishlist.error) {
                     productCard.insertAdjacentHTML('beforeend', addFollowButton(item.id));
+                } else {
+                    const itemFound = wishlist.filter(itemWish => itemWish.idWishItem == item.id);
+                    if (itemFound.length > 0) {
+                        productCard.insertAdjacentHTML('beforeend', removeFollowButton(item.id));
+                        if (itemFound[0].visibility > 0) {
+                            productCard.insertAdjacentHTML('beforeend', addPubIcon());
+                        } else {
+                            productCard.insertAdjacentHTML('beforeend', addPrvIcon());
+                        }
+                    } else {
+                        productCard.insertAdjacentHTML('beforeend', addFollowButton(item.id));
+                    }
                 }
             }
+
+            this.addEventListenersToButtons(".btn-add", this.addCart.bind(this));
+            this.addEventListenersToButtons(".btn-favourite-add", this.addItemWishList.bind(this));
+            this.addEventListenersToButtons(".btn-favourite-remove", this.removeItemWishList.bind(this));
+            this.addEventListenersToButtons(".btn-comment-add", this.addComment.bind(this));
+
+        } catch (error) {
+            this.showAlertMessage('danger', error.message || 'Si è verificato un errore durante l\'aggiornamento del negozio.');
         }
-
-        this.addEventListenersToButtons(".btn-add", this.addCart.bind(this));
-        this.addEventListenersToButtons(".btn-favourite-add", this.addItemWishList.bind(this));
-        this.addEventListenersToButtons(".btn-favourite-remove", this.removeItemWishList.bind(this));
-        this.addEventListenersToButtons(".btn-comment-add", this.addComment.bind(this));
-
     }
 
     /**
@@ -1136,9 +1182,14 @@ class App {
      * @param {function} event - The function to call when a button is clicked.
      */
     addEventListenersToButtons(buttonClass, event) {
-        const buttons = document.querySelectorAll(buttonClass);
-        for (const btn of buttons) {
-            btn.addEventListener("click", event);
+
+        try {
+            const buttons = document.querySelectorAll(buttonClass);
+            for (const btn of buttons) {
+                btn.addEventListener("click", event);
+            }
+        } catch (error) {
+            this.showAlertMessage('danger', error.message || 'Errore durante l\'aggiunta degli event listener ai pulsanti.');
         }
     }
 
@@ -1156,18 +1207,18 @@ class App {
      */
     addCart = async (event) => {
         event.preventDefault();
-    
-        const itemId = event.target.value;
-        const user = JSON.parse(localStorage.getItem('user')); // Assicurati che l'utente sia già memorizzato nel localStorage
-        if (!user) {
-            console.error("User not found. Please log in.");
-            return;
-        }
-        
-        const cartKey = `cart_${user.id}`;
-        this.itemCart = JSON.parse(localStorage.getItem(cartKey)) || {}; // Carica il carrello specifico dell'utente
-    
+
         try {
+            const itemId = event.target.value;
+            const user = JSON.parse(localStorage.getItem('user'));
+            if (!user) {
+                this.showAlertMessage('danger', 'Please log in to add items to your cart.');
+                return;
+            }
+
+            const cartKey = `cart_${user.id}`;
+            this.itemCart = JSON.parse(localStorage.getItem(cartKey)) || {};
+
             const items = await Api.getItems();
             if (!this.itemCart[itemId]) {
                 this.itemCart[itemId] = items.filter(product => product.id == itemId)[0];
@@ -1176,10 +1227,10 @@ class App {
                 this.itemCart[itemId].quantity++;
             }
             this.showAlertMessage('success', 'Item added to cart');
-            localStorage.setItem(cartKey, JSON.stringify(this.itemCart)); // Salva il carrello specifico dell'utente
+            localStorage.setItem(cartKey, JSON.stringify(this.itemCart));
             this.updateCartHtml();
         } catch (error) {
-            console.error("Error adding item to cart:", error);
+            this.showAlertMessage('danger', 'An error occurred while adding the item to your cart. Please try again.');
             page.redirect('/');
         }
     }
@@ -1188,29 +1239,33 @@ class App {
      * Update cart with item added at the cart in the HTML
      */
     updateCartHtml = () => {
-        const user = JSON.parse(localStorage.getItem('user')); // Assicurati che l'utente sia già memorizzato nel localStorage
-        if (!user) {
-            console.error("User not found. Please log in.");
-            return;
-        }
-    
-        const cartKey = `cart_${user.id}`;
-        this.itemCart = JSON.parse(localStorage.getItem(cartKey)) || {}; // Carica il carrello specifico dell'utente
-        
-        const listCart = document.querySelector('.listCart');
-        listCart.innerHTML = '';
-        if (this.itemCart) {
-            Object.values(this.itemCart).forEach(x => {
-                if (x) {
-                    const newItem = createCartCard(x, x.quantity);
-                    listCart.insertAdjacentHTML('beforeend', newItem);
-                }
-            });
-    
-            const buttons = document.querySelectorAll(".btnQnt");
-            for (const btn of buttons) {
-                btn.addEventListener("click", this.changeQntCart);
+        try {
+            const user = JSON.parse(localStorage.getItem('user')); // Assicurati che l'utente sia già memorizzato nel localStorage
+            if (!user) {
+                console.error("User not found. Please log in.");
+                return;
             }
+
+            const cartKey = `cart_${user.id}`;
+            this.itemCart = JSON.parse(localStorage.getItem(cartKey)) || {}; // Carica il carrello specifico dell'utente
+
+            const listCart = document.querySelector('.listCart');
+            listCart.innerHTML = '';
+            if (this.itemCart) {
+                Object.values(this.itemCart).forEach(x => {
+                    if (x) {
+                        const newItem = createCartCard(x, x.quantity);
+                        listCart.insertAdjacentHTML('beforeend', newItem);
+                    }
+                });
+
+                const buttons = document.querySelectorAll(".btnQnt");
+                for (const btn of buttons) {
+                    btn.addEventListener("click", this.changeQntCart);
+                }
+            }
+        } catch (error) {
+            this.showAlertMessage('danger', 'An error occurred while updating your cart. Please try again.');
         }
     }
 
@@ -1222,34 +1277,38 @@ class App {
     changeQntCart = async (event) => {
 
         event.preventDefault();
-        const itemId = event.target.value;
-        const btnType = event.target.name;
-    
-        const user = JSON.parse(localStorage.getItem('user')); // Recupera l'utente corrente
-        if (!user) {
-            console.error("User not found. Please log in.");
-            return;
-        }
-    
-        const cartKey = `cart_${user.id}`;
-        this.itemCart = JSON.parse(localStorage.getItem(cartKey)) || {}; // Carica il carrello specifico dell'utente
-    
-        if (this.itemCart[itemId]) {
-            if (btnType === '+') {
-                this.itemCart[itemId].quantity++;
-            } else if (btnType === '-') {
-                this.itemCart[itemId].quantity--;
-                if (this.itemCart[itemId].quantity <= 0) {
-                    delete this.itemCart[itemId];
-                }
+
+        try {
+            const itemId = event.target.value;
+            const btnType = event.target.name;
+
+            const user = JSON.parse(localStorage.getItem('user')); // Recupera l'utente corrente
+            if (!user) {
+                this.showAlertMessage('danger', 'Please log in to update your cart.');
+                return;
             }
-        } else {
-            console.error("Item not found in cart.");
-            return;
+
+            const cartKey = `cart_${user.id}`;
+            this.itemCart = JSON.parse(localStorage.getItem(cartKey)) || {}; // Carica il carrello specifico dell'utente
+
+            if (this.itemCart[itemId]) {
+                if (btnType === '+') {
+                    this.itemCart[itemId].quantity++;
+                } else if (btnType === '-') {
+                    this.itemCart[itemId].quantity--;
+                    if (this.itemCart[itemId].quantity <= 0) {
+                        delete this.itemCart[itemId];
+                    }
+                }
+            } else {
+                throw new Error("Item not found in cart.");
+            }
+
+            localStorage.setItem(cartKey, JSON.stringify(this.itemCart)); // Salva il carrello aggiornato
+            this.updateCartHtml(); // Aggiorna l'HTML del carrello
+        } catch (error) {
+            this.showAlertMessage('danger', error.message || 'An error occurred while updating your cart. Please try again.');
         }
-    
-        localStorage.setItem(cartKey, JSON.stringify(this.itemCart)); // Salva il carrello aggiornato
-        this.updateCartHtml(); // Aggiorna l'HTML del carrello
     }
 
     /**
@@ -1263,17 +1322,21 @@ class App {
      * @throws {Error} If `leftSidebar` is null.
      */
     manageFilters() {
-        if (!this.leftSidebar) {
-            throw new Error('leftSidebar is null');
-        }
-
-        this.leftSidebar.querySelectorAll("li").forEach(li_el => {
-            if (li_el) {
-                li_el.addEventListener("click", event => {
-                    this.onClickFilter(event);
-                });
+        try {
+            if (!this.leftSidebar) {
+                throw new Error('leftSidebar is null');
             }
-        });
+
+            this.leftSidebar.querySelectorAll("li").forEach(li_el => {
+                if (li_el) {
+                    li_el.addEventListener("click", event => {
+                        this.onClickFilter(event);
+                    });
+                }
+            });
+        } catch (error) {
+            this.showAlertMessage('danger', 'Si è verificato un errore durante la gestione dei filtri. Si prega di riprovare.');
+        }
     }
 
     /**
@@ -1282,16 +1345,20 @@ class App {
      * @return {Promise<string[]>} A promise that resolves to an array of category names.
      */
     getTypes = async () => {
-        let categories = [];
-        const items = await Api.getCategories();
-        // Itera su ogni item per estrarre le categorie
-        items.forEach(m => {
-            categories = categories.concat(m.obj);
-        });
-        // Filtra le categorie rimuovendo i duplicati
-        categories = categories.filter((item, index) => categories.indexOf(item) === index);
-        // Ordina le categorie in ordine alfabetico
-        return categories.sort();
+        try {
+            let categories = [];
+            const items = await Api.getCategories();
+            // Itera su ogni item per estrarre le categorie
+            items.forEach(m => {
+                categories = categories.concat(m.obj);
+            });
+            // Filtra le categorie rimuovendo i duplicati
+            categories = categories.filter((item, index) => categories.indexOf(item) === index);
+            // Ordina le categorie in ordine alfabetico
+            return categories.sort();
+        } catch (error) {
+            this.showAlertMessage('danger', 'Si è verificato un errore durante il recupero delle categorie. Si prega di riprovare.');
+        }
     }
 
     /**
@@ -1504,10 +1571,10 @@ class App {
             const modalId = `#commentModal-${itemId}`;
             const modal = document.querySelector(modalId);
             const messageText = document.getElementById(`message-text-${itemId}`);
-        
+
             // Quando l'utente clicca su "Save choice", risolvi la Promise con la scelta dell'utente
             const saveButton = modal.querySelector('.btn-saveComment');
-            saveButton.onclick = function() {
+            saveButton.onclick = function () {
                 try {
                     const text = messageText.value;
                     resolve(text);
@@ -1517,7 +1584,7 @@ class App {
             };
         });
     }
-    
+
     /**
      * Handles the click event on the "Add comment" button.
      * @param {Event} event - The event object.
@@ -1536,8 +1603,6 @@ class App {
             if (response) {
                 this.showAlertMessage('success', response.message);
             }
-
-
         } catch (error) {
             if (error) {
                 const errorMsg = error;
@@ -1555,12 +1620,12 @@ class App {
     removeComment = async (event) => {
         event.preventDefault();
         const commentId = parseInt(event.target.dataset.id, 10);
-    
+
         try {
             const response = await Api.removeComment(commentId);
             if (response.success) {
                 this.showAlertMessage('success', response.message);
-    
+
                 // Rimuovi la card del commento eliminato dal DOM
                 const commentCard = event.target.closest('.card');
                 if (commentCard) {
@@ -1582,25 +1647,25 @@ class App {
      * After the user inputs the text, it will send a request to the server to update the comment.
      * If the request is successful, it will update the comment text in the DOM and show a success message to the user.
      * @param {Event} event - The event object.
-     */    
+     */
     updateComment = async (event) => {
         event.preventDefault();
         const commentId = parseInt(event.target.dataset.id, 10);
-    
+
         try {
             // Ottieni il testo del commento aggiornato dall'utente tramite il modale
             const text = await this.showModalAndGetText(commentId);
-    
+
             // Invia il commento aggiornato al server tramite l'API
             const response = await Api.updateComment(text, commentId);
-    
+
             if (response.success) {
                 // Mostra un messaggio di successo all'utente
                 this.showAlertMessage('success', response.message);
-    
+
                 // Trova l'elemento del commento nel DOM
                 const commentElement = document.querySelector(`.card-text-${commentId}`);
-    
+
                 if (commentElement) {
                     // Aggiorna il testo del commento nel DOM
                     commentElement.textContent = text;
@@ -1609,7 +1674,7 @@ class App {
                     this.createHistoryComments();
                 }
             }
-    
+
         } catch (error) {
             if (error) {
                 // Mostra un messaggio di errore se qualcosa va storto
@@ -1622,7 +1687,7 @@ class App {
     /**
      * Updates a comment in the database and in the DOM.
      * @param {Event} event - The event object.
-     */    
+     */
     updateItem = async (event) => {
         event.preventDefault();
         const commentId = parseInt(event.target.dataset.id, 10);
@@ -1808,7 +1873,7 @@ class App {
             this.appContainer.innerHTML = "";
             this.appContainer.innerHTML = createSearchItemTable();
             this.populateCategories();
-            this.addEventListenersToButtons('.btn-searchButton', this.performSearch);
+            this.addEventListenersToButtons('.btn-searchButton', this.performSearchItem);
 
         } catch (error) {
             if (error) {
@@ -1897,7 +1962,7 @@ class App {
      * Perform a search of items by category and price range.
      * @returns {Promise<void>}
      */
-    performSearch = async () => {
+    performSearchItem = async () => {
         let selectedCategory = parseInt((document.getElementById('inputGroupSelect01').value), 10);
         let priceRangeMin = 0;
         let priceRangeMax = parseInt((document.getElementById('customRange3').value), 10);
@@ -1910,6 +1975,7 @@ class App {
                 const errorMsg = error;
                 // Add an alert message in DOM
                 this.showAlertMessage('danger', errorMsg);
+                page.redirect('/login');
             }
         }
     }
@@ -1937,12 +2003,15 @@ class App {
             } else if (keyword && !selectedUser && !selectedItem) {
                 const comments = await Api.getCommentsbyKeyword(keyword);
                 this.displayResultsComments(comments);
+            } else {
+                this.showAlertMessage('danger', 'Per favore, seleziona un utente, un item o una inserire una keyword');
             }
         } catch (error) {
             if (error) {
                 const errorMsg = error;
                 // Add an alert message in DOM
                 this.showAlertMessage('danger', errorMsg);
+                page.redirect('/login');
             }
         }
     }

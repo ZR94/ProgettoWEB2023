@@ -40,7 +40,7 @@ function createSignUpForm() {
             </div>
             <div class="mb-4">
                 <div class="form-check">
-                    <input class="form-check-input" type="checkbox" value="" id="invalidCheck" required>
+                    <input class="form-check-input-01" type="checkbox" value="" id="invalidCheck" required>
                         <label class="form-check-label" for="invalidCheck">
                             Agree to terms and conditions
                         </label>
@@ -49,6 +49,14 @@ function createSignUpForm() {
                         </div>
                 </div>
             </div>
+            <div class="mb-4">
+                <div class="form-check">
+                    <input class="form-check-input-02" type="checkbox" value="" id="adminCheck" />
+                    <label class="form-check-label" for="adminCheck">
+                        Register as Administrator
+                    </label>
+                </div>
+            </div>            
             <div class="mb-4">
                 <button class="btn btn-primary" type="submit">Confirm</button>
             </div>

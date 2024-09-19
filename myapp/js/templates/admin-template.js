@@ -94,7 +94,7 @@ function createUsersPage() {
             <div class="modal-dialog">
                 <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="userModalLabel">Aggiungi/Modifica Utente</h5>
+                    <h5 class="modal-title" id="userModalLabel">Aggiungi Utente</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
@@ -119,7 +119,7 @@ function createUsersPage() {
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Chiudi</button>
-                    <button type="button" class="btn btn-primary btn-user-add" id="saveUser" data-bs-dismiss="modal">Salva Utente</button>
+                    <button type="button" class="btn btn-primary btn-user-add" id="saveUser" data-bs-dismiss="modal">Conferma</button>
                 </div>
                 </div>
             </div>
