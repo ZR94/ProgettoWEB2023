@@ -17,7 +17,7 @@ main {
 
 h1 {
     font-family: 'Montserrat', sans-serif;
-    font-size: 150px;
+    font-size: 10vw;
     font-weight: bold;
     color: white;
     text-align: center;
@@ -32,9 +32,9 @@ h1 {
 }
 
 h2 {
+    font-size: 5vw;
     font-family: 'Montserrat', sans-serif;
     margin-top: 20px;
-    font-size: 60px;
     text-transform: uppercase;
     font-weight: 400;
     color: #333;
@@ -44,6 +44,11 @@ h3 {
     margin-top: 20px;
     margin-bottom: 20px;
     font-weight: 900;
+}
+
+h5 {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: bold;
 }
 
 th {
@@ -109,6 +114,10 @@ td {
     margin: 0 auto;
 }
 
+.card-home {
+    width: 450px;
+}
+
 .card:hover {
     transform: scale(1.05);
 }
@@ -157,6 +166,15 @@ td {
     list-style: circle inside;
 }
 
+.listCart {
+    max-height: 80vh; 
+    overflow-y: auto;
+}
+
+.cart-img {
+    width: 80px
+}
+
 .footer-wrapper {
     background-color: #2e2e2e;
     padding-top: 1%;
@@ -194,7 +212,6 @@ td {
     margin-top: 10px;
     z-index: 1;
     box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
-    /* Un piccolo ombreggiamento per evidenziarlo */
 }
 
 #my-items .col {
@@ -205,20 +222,12 @@ td {
 
 #my-items .card {
     width: 100%;
-    /* Fa sì che tutte le card abbiano la stessa larghezza */
     max-width: 300px;
-    /* Limita la larghezza massima delle card */
 }
 
 .container {
     max-width: 1200px;
     margin: auto;
-}
-
-.contact-title {
-    font-size: 2.5rem;
-    font-weight: bold;
-    color: #333;
 }
 
 .contact-subtitle {
@@ -254,27 +263,20 @@ td {
     position: absolute;
 }
 
-/* Ensure all card images have the same size */
 .card-img-top-wishlist {
     height: 200px;
-    /* Adjust height as needed */
     object-fit: cover;
-    /* Ensure the image covers the container without distortion */
 }
 
-/* Optional: Adjust card dimensions to ensure uniformity */
 .card-wishlist {
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    /* Ensures the content is evenly spaced */
     height: 100%;
 }
 
-/* Add spacing between card columns */
 .col-md-4 {
     margin-bottom: 20px;
-    /* Adjust spacing between rows of cards */
 }
 
 #wishlistBody {
@@ -296,22 +298,16 @@ td {
 
 .card.card-purchase {
     height: auto;
-    /* Imposta l'altezza automatica per adattarsi al contenuto */
     max-height: 8rem;
-    /* Imposta l'altezza massima della card */
     overflow: hidden;
-    /* Nasconde il contenuto che eccede l'altezza massima */
     background-color: bisque;
 }
 
 .card.card-purchase .card-body {
     display: flex;
     flex-direction: column;
-    /* Dispone il contenuto in colonna */
     justify-content: center;
-    /* Centra verticalmente il contenuto all'interno della card */
     height: 100%;
-    /* Assicura che il body della card occupi tutta l'altezza della card */
 }
 
 .table-striped>tbody>tr>td {
@@ -349,7 +345,6 @@ td {
     flex-direction: column;
     justify-content: space-between;
     height: 100%;
-    /* Assicurare che tutte le card abbiano la stessa altezza */
 }
 
 .pricing-card h3 {
@@ -372,5 +367,20 @@ td {
 }
 
 .nav-link:hover {
-    color: #adb5bd; /* Grigio chiaro al passaggio del mouse */
+    color: #adb5bd; 
+}
+
+.map-responsive {
+    width: 100%;
+    height: 400;
+    border:0;
+}
+
+.text-uppercase {
+    color: #b59f4e;
+}
+
+h2.custom-title {
+    font-size: 5vw;
+    margin-bottom: 10px;
 }

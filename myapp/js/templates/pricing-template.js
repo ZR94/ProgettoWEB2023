@@ -5,7 +5,7 @@ function createPricingForm() {
     <div class="container">
         <div class="row">
             <div class="col-12">
-                <h2 class="text-center mb-4">PERSONAL TRAINING & MEMBERSHIP</h2>
+                <h2 class="text-center custom-title mb-2">PERSONAL TRAINING & MEMBERSHIP</h2>
                 <p class="text-center text-muted">*Based on 1-on-1 personal training sessions. Semi-private (2-3 clients): $10 off for each client. Must train at the same time to qualify.</p>
             </div>
         </div>
@@ -28,7 +28,7 @@ function createPricingForm() {
             <!-- 50-Min Sessions -->
             <div class="col-sm-12 col-md-4 mb-3 ms-0 d-flex">
                 <div class="pricing-card">
-                    <h3 class="text-uppercase" style="color: #b59f4e;">50-min sessions</h3>
+                    <h3 class="text-uppercase">50-min sessions</h3>
                     <p class="price">$108</p>
                     <p class="text-muted">/session</p>
                     <p class="text-muted">

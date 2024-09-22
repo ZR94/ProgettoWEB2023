@@ -191,7 +191,7 @@ app.delete('/api/user/:userId', isLoggedIn, (req, res) => {
  * Retrieves a list of all the users in the database.
  * @returns {Promise<Object[]>} A promise that resolves to an array of user objects.
  */
-app.get('/api/users', isLoggedIn, (req, res) => {
+app.get('/api/user/all', isLoggedIn, (req, res) => {
   dao.getAllUsers()
     .then(users => res.json(users))
     .catch(error => res.status(500).json(error));
@@ -280,7 +280,7 @@ app.post('/api/item', isLoggedIn, (req, res) => {
  * Retrieves a list of all the items in the database.
  * @returns {Promise<Object[]>} A promise that resolves to an array of objects containing the items.
  */
-app.get('/api/items', isLoggedIn, (req, res) => {
+app.get('/api/item/all', isLoggedIn, (req, res) => {
   dao.getAllItems()
     .then(items => res.json(items))
     .catch(error => res.status(500).json(error));
@@ -291,7 +291,7 @@ app.get('/api/items', isLoggedIn, (req, res) => {
  * @param {number} itemId - The ID of the item to retrieve.
  * @returns {Promise<Object>} A promise that resolves to an object with the item's information.
  */
-app.get('/api/items/:id', isLoggedIn, (req, res) => {
+app.get('/api/item/:id', isLoggedIn, (req, res) => {
   const itemId = req.params.id;
   dao.getItemById(itemId)
     .then(item => res.json(item))
@@ -304,7 +304,7 @@ app.get('/api/items/:id', isLoggedIn, (req, res) => {
  * @param {string} req.params.categoryName - The name of the category.
  * @returns {Promise<Object[]>} A promise that resolves to an array of objects containing the items.
  */
-app.get('/api/items/categories/:categoryName', isLoggedIn, (req, res) => {
+app.get('/api/item/categories/:categoryName', isLoggedIn, (req, res) => {
   const categoryName = req.params.categoryName;
   let result;
   if (categoryName === 'all-categories') {

@@ -24,6 +24,11 @@ function createSearchItemTable() {
                         <div class="input-group mb-3">
                             <label for="customRange3" class="form-label">Fascia Prezzo</label>
                             <input type="range" class="form-range" min="0" max="200" step="5" id="customRange3">
+
+                            <div class="d-flex justify-content-between w-100">
+                                <span id="minPriceLabel">$ 0</span>
+                                <span id="maxPriceLabel">$ 200</span>
+                            </div>
                         </div>
 
                         <div class="col-12 text-center mb-4">

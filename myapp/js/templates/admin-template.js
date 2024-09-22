@@ -34,6 +34,7 @@ function createAdminProfile(user) {
     <div class="container mt-5 adminContainer">
 
         <h3>Profilo Personale</h3>
+        <h3>(Administrator)</h3>
         <div id="adminProfile">
             <div class="row g-3">
                 <div class="col-md-4">
@@ -222,7 +223,7 @@ function loadItems(item) {
     <div class="card adminCard col-md-4 mb-3 me-1 ms-1">
         <div class="card-body">
             <h5 class="card-title">${item.name}</h5>
-            <p class="card-text">Prezzo: $${item.price}</p>
+            <p class="card-text">Prezzo: $ ${item.price.toFixed(2)}</p>
             <button class="btn btn-primary btn-sm btn-item-comments mb-3" data-bs-toggle="modal" data-bs-target="#userCommentsModal" value="${item.id}">Vedi Commenti</button>
             <button class="btn btn-danger btn-sm btn-item-delete mb-3" value="${item.id}">Elimina</button>
         </div>
@@ -236,7 +237,7 @@ function cardShowItems(item) {
     <div class="card col-md-4 mb-3 me-1 ms-1">
         <div class="card-body-admin">
             <h5 class="align-items-center fw-bold mt-2 mb-2">${item.name}</h5>
-            <img src="${item.img}" class="img-fluid mb-3" style="width: 80px;" alt="Generic placeholder image">
+            <img src="${item.img}" class="img-fluid mb-3" alt="Generic placeholder image">
             <div class="float"></div>
             <button type="button" class="btn btn-danger btn-sm btn-favourite-delete" data-bs-dismiss="modal" id="unfollow-${item.id}" value="${item.id}">Elimina</button>
         </div>

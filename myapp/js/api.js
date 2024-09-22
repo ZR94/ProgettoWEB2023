@@ -99,7 +99,7 @@ class Api {
      * @throws {Error} - If there is an error fetching the users, this promise will reject with an error object.
      */
     static getUsers = async () => {
-        let response = await fetch('/api/users');
+        let response = await fetch('/api/user/all');
 
         try {
             if (!response.ok) {
@@ -248,7 +248,7 @@ class Api {
      * @throws {Error} - If there is an error retrieving the items, this promise will reject with an error object.
      */
     static getFilterItems = async (categoryName) => {
-        let response = await fetch(`/api/items/categories/${categoryName}`);
+        let response = await fetch(`/api/item/categories/${categoryName}`);
 
         try {
             if (!response.ok) {
@@ -270,7 +270,7 @@ class Api {
      * Get the list of items store
      */
     static getItems = async () => {
-        let response = await fetch('/api/items');
+        let response = await fetch('/api/item/all');
 
         try {
             if (!response.ok) {
@@ -345,7 +345,7 @@ class Api {
      * @throws {Error} - If there is an error retrieving the item, this promise will reject with an error object.
      */
     static getItemById = async (itemId) => {
-        let response = await fetch(`/api/items/${itemId}`);
+        let response = await fetch(`/api/item/${itemId}`);
 
         try {
             if (!response.ok) {
@@ -405,30 +405,6 @@ class Api {
 
             const wishlistJson = await response.json();
             return wishlistJson;
-
-        } catch (error) {
-            throw error;
-        }
-    }
-
-    /**
-     * Retrieve the list of item titles for a given category.
-     * @param {string} categoryName - The name of the category to retrieve the items for.
-     * @returns {Promise<Object[]>} - A promise that resolves to an array of item objects, with the shape
-     * { id: number, name: string, price: number }, containing the titles of items in the category.
-     * @throws {Error} - If there is an error retrieving the items, this promise will reject with an error object.
-     */
-    static getFilterTitle = async (categoryName) => {
-        try {
-            let response = await fetch(`/api/items/titles/${categoryName}`);
-            
-            if (!response.ok) {
-                const errorResponse = await response.json();
-                throw new Error(errorResponse.message || 'Error while retrieving the list of item titles');
-            }
-
-            const itemJson = await response.json();
-            return itemJson;
 
         } catch (error) {
             throw error;

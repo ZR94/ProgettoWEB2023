@@ -12,19 +12,19 @@ function createStoreTable() {
                 </div> 
                 <div class="list-group list-group-flush border" >
                     <a href="#" data-id="all" class="list-group-item list-group-item-action active" aria-current="true">
-                        <img src="./svg/list.svg" alt="tutti gli items nella wishlist"> Tutti</a>
+                        <img src="./svg/list.svg" alt="tutti gli items nella wishlist"> All</a>
                     <a href="#" data-id="favourities" class="list-group-item list-group-item-action">
                         <img src="./svg/exclamation-circle.svg" alt="Favourities"> Favourities</a>
                     <a href="#" data-id="private" class="list-group-item list-group-item-action">
-                        <img src="./svg/eye-slash.svg" alt="visibilità privata"> Privati</a>
+                        <img src="./svg/eye-slash.svg" alt="visibilità privata"> Private</a>
                     <a href="#" data-id="public" class="list-group-item list-group-item-action">
-                        <img src="./svg/eye.svg" alt="visibilità pubblica"> Pubblici</a>
+                        <img src="./svg/eye.svg" alt="visibilità pubblica"> Pubblic</a>
                 </div>
                 <div class="list-group list-group-flush border mt-2">
                     <span id="category" class="list-group-item dropdown">
                         <div class="dropdown">
                             <span class="dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
-                                <img src="./svg/filter.svg" alt="filtro per catagoria"> Categorie
+                                <img src="./svg/filter.svg" alt="filtro per catagoria"> Categories
                             </span>
                             <ul class="dropdown-menu">
                                 <!-- le varie voci (categorie) sono inserite da JS -->
@@ -38,11 +38,10 @@ function createStoreTable() {
             <!-- Contenuto principale -->
             <div class="col-sm-8 col-12">
                 <!-- Titolo Store -->
-                <h2 class="my-4 text-center">FAST LEAN FIT GEAR.</h2>
+                <h2 class="my-4 text-center custom-title">FAST LEAN FIT GEAR.</h2>
 
                 <div class="row row-cols-1 row-cols-md-3 g-4" id="my-items"></div>
                 
-
                 <div class="listProduct">
                     <div class="offcanvas offcanvas-end" data-bs-scroll="true" data-bs-backdrop="false" 
                         tabindex="-1" id="offcanvasScrolling" aria-labelledby="offcanvasScrollingLabel">
@@ -53,7 +52,7 @@ function createStoreTable() {
                         <div class="" id="checkout-form"> 
 
                             <!-- Contenitore scrollabile per gli articoli -->
-                            <div class="offcanvas-body listCart" style="max-height: 80vh; overflow-y: auto;"></div>
+                            <div class="offcanvas-body listCart"></div>
                             
                             <!-- Contenitore fisso per il pulsante di checkout -->
                             <div class="checkout-container">
@@ -75,13 +74,13 @@ function createStoreCard(item) {
     return `
     <div class="col">
         <div class="card h-100" id="${item.id}">
-                <img src="${item.img}" class="card-img-top" alt="...">
+                <img src="${item.img}" class="card-img-top" alt="Generic placeholder image">
             <div class="card-body">
                 <h5 class="card-title">${item.name}</h5>
                 <p class="card-text"></p>
             </div>
             <div class="card-footer-price" id= "product-card-follow-${item.id}">
-                <p> <small class="text-body-secondary">Price: ${item.price}</small> </p>
+                <p> <small class="text-body-secondary">Price: $ ${item.price.toFixed(2)}</small> </p>
                 
             </div>
 
@@ -161,8 +160,8 @@ function createCartCard(item, quantity) {
     return `
     <div class="d-flex align-items-center mb-5 cartCard">
         <div class="flex-shrink-0">
-        <img src="${item.img}" class="img-fluid" style="width: 80px;" alt="Generic placeholder image">
-            <p class="align-items-center fw-bold">$ ${item.price}</p>
+        <img src="${item.img}" class="img-fluid cart-img" alt="Generic placeholder image">
+            <p class="align-items-center fw-bold">$ ${item.price.toFixed(2)}</p>
         </div>
         <div class="float">
             <h5 class="align-items-center fw-bold">${item.name}</h5>
