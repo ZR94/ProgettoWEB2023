@@ -73,7 +73,6 @@ class App {
             this.loggedUser = JSON.parse(localStorage.getItem('user'));
             if (this.loggedUser != null) {
                 this.appContainer.innerHTML = this.userWishListPage();
-
             }
         });
 
@@ -223,25 +222,6 @@ class App {
     }
 
     /**
-     * Show an alert message in the DOM.
-     * @param {string} type - The type of the alert (e.g. 'success', 'danger', etc.).
-     * @param {string} message - The message to be displayed in the alert.
-     */
-    showAlertMessage = (type, message) => {
-        // Get the alert message container element
-        const alertMessage = document.getElementById('alert-message');
-
-        // Set the innerHTML of the container to the alert message
-        alertMessage.innerHTML = createAlert(type, message);
-
-        // Automatically remove the flash message after 3 seconds
-        setTimeout(() => {
-            // Reset the innerHTML of the container to an empty string
-            alertMessage.innerHTML = '';
-        }, 3000);
-    }
-
-    /**
     * Perform the logout
     */
     logout = async () => {
@@ -261,21 +241,7 @@ class App {
         }
     }
 
-    /**
-     * Render the navbar and show the logout link
-     */
-    renderNavBar = (active) => {
-        try {
-            if (!this.loginLink || !this.logoutLink) {
-                throw new Error('Elementi loginLink o logoutLink mancanti');
-            }
-            this.loginLink.innerHTML = "";
-            this.loginLink.innerHTML = '<a class="nav-link" href="/userPage">' + `${active}` + '</a>';
-            this.logoutLink.classList.remove('invisible');
-        } catch (error) {
-            this.showAlertMessage('danger', error);
-        }
-    }
+    //------------- USER ------------
 
     /**
      * Renders the personal user page with the user's information.
@@ -329,7 +295,242 @@ class App {
     }
 
     /**
-     * Asynchronously creates the admin users page.
+     * Create the user's wishlist page.
+     *
+     * @returns {Promise<void>}
+     */
+    userWishListPage = async () => {
+
+        try {
+            const user = JSON.parse(localStorage.getItem('user'));
+            const wishlist = await Api.getWishlistByUser(user.id);
+            let userAdmin = await Api.getLoggedUser(user.id);
+
+            if(userAdmin.admin === 1){
+                this.appContainer.innerHTML = "";
+                this.appContainer.innerHTML = navbarAdminPage('wishlist');
+            } else {
+                this.appContainer.innerHTML = "";
+                this.appContainer.innerHTML = navbarUserPage('wishlist');
+            }
+            const bodyPage = document.querySelector('.bodyPage');
+            bodyPage.innerHTML = createWishlistPage();
+            document.getElementById('userName').textContent = user.name;
+
+            // Add each item in the wishlist to the table
+            this.insertItemWishList(wishlist);
+            this.createCategoriesListWish();
+
+        } catch (error) {
+            if (error) {
+                const errorMsg = error;
+                // add an alert message in DOM
+                this.showAlertMessage('danger', errorMsg);
+            }
+            page.redirect('/');
+        }
+
+    }
+
+    /**
+     * Create the user's purchase history page.
+     *
+     * @returns {Promise<void>} Promise that resolves when the page is rendered
+     */
+    historyPurchasePage = async () => {
+
+        try {
+            const user = JSON.parse(localStorage.getItem('user'));
+            const history = await Api.getHistoryPurchase(user.id);
+            let userAdmin = await Api.getLoggedUser(user.id);
+
+            if(userAdmin.admin === 1){
+                this.appContainer.innerHTML = "";
+                this.appContainer.innerHTML = navbarAdminPage('history');
+            } else {
+                this.appContainer.innerHTML = "";
+                this.appContainer.innerHTML = navbarUserPage('history');
+            }
+            const bodyPage = document.querySelector('.bodyPage');
+            bodyPage.innerHTML = createHistoryPurchasePage();
+
+            const purchaseHistoryRow = document.getElementById('purchase-history-row');
+
+            // Add each purchase to the table, organizing them by date and time
+            if (history.length > 0) {
+                let previousDateTime = null;
+                let currentTotal = 0;
+
+                for (let item of history) {
+                    if (item.dateTime !== previousDateTime) {
+                        // Add a total row to the previous table if it exists
+                        if (previousDateTime !== null) {
+                            let historyTables = purchaseHistoryRow.querySelectorAll(".table > tbody");
+                            let historyTable = historyTables[historyTables.length - 1];
+                            historyTable.insertAdjacentHTML('beforeend', createTotalRow(currentTotal));
+                        }
+
+                        // Create a new table when the time changes
+                        purchaseHistoryRow.insertAdjacentHTML('beforeend', createTablePurchase());
+                        // Select the newly added table
+                        let historyTables = purchaseHistoryRow.querySelectorAll(".table > tbody");
+                        let historyTable = historyTables[historyTables.length - 1]; // Last added table
+                        // Add the title of the dateTime to the new table
+                        let trDateTime = document.createElement("tr");
+                        let tdDateTime = document.createElement("td");
+                        const [date, time] = item.dateTime.split(' ');
+                        tdDateTime.innerHTML = `<p class="card-text dateTime">Acquisto effettuato il giorno: ${date} alle ore: ${time}</p>`;
+                        trDateTime.appendChild(tdDateTime);
+                        historyTable.appendChild(trDateTime);
+
+                        // Reset the current total for the new table
+                        currentTotal = 0;
+                    }
+
+                    // Add the card inside the current table
+                    let historyTables = purchaseHistoryRow.querySelectorAll(".table > tbody");
+                    let historyTable = historyTables[historyTables.length - 1]; // Last added table
+                    let tr = document.createElement("tr");
+                    let td = document.createElement("td");
+
+                    // Imposta lo stile per centrare il contenuto nella cella
+                    td.style.textAlign = "center";
+                    td.style.verticalAlign = "middle"; // Centra verticalmente
+
+                    const getItem = await Api.getItemById(item.idPurchaseItem);
+                    td.innerHTML = createCardPurchase(getItem, item.qta);
+                    tr.appendChild(td);
+                    historyTable.appendChild(tr);
+
+                    // Update the current total
+                    currentTotal += getItem.price * item.qta;
+
+                    // Update the previousDateTime with the current item
+                    previousDateTime = item.dateTime;
+                }
+
+                // Add a total row to the last table
+                let historyTables = purchaseHistoryRow.querySelectorAll(".table > tbody");
+                let historyTable = historyTables[historyTables.length - 1];
+                historyTable.insertAdjacentHTML('beforeend', createTotalRow(currentTotal));
+            } else {
+                let tr = document.createElement("tr");
+                let td = document.createElement("td");
+
+                // Assegna una classe univoca al td
+                td.classList.add('no-purchase-message');
+
+                td.innerHTML = "Nessun acquisto ancora effettuato";
+                tr.appendChild(td);
+                purchaseHistoryRow.appendChild(tr);
+            }
+
+        } catch (error) {
+            if (error) {
+                const errorMsg = error;
+                // add an alert message in DOM
+                this.showAlertMessage('danger', errorMsg);
+            }
+            page.redirect('/');
+        }
+    }
+    
+    /**
+     * Handle the click event on the "Comment" button in the User page.
+     * This function sets up the modal for adding a new comment and
+     * updates the title and input field of the modal with the
+     * recipient user's name.
+     */
+    onClickComment = async () => {
+
+        try {
+            const user = JSON.parse(localStorage.getItem('user'));
+            const exampleModal = document.getElementById('commentModal')
+            if (exampleModal) {
+                exampleModal.addEventListener('show.bs.modal', event => {
+                    // Button that triggered the modal
+                    const button = event.relatedTarget
+                    // Extract info from data-bs-* attributes
+                    const recipient = button.getAttribute('data-bs-whatever')
+                    // Update the modal's content.
+                    const modalTitle = exampleModal.querySelector('.modal-title')
+                    const modalBodyInput = exampleModal.querySelector('.modal-body input')
+
+                    modalTitle.textContent = `New comment to ${recipient}`
+                    modalBodyInput.value = recipient
+                })
+            }
+        } catch (error) {
+            if (error) {
+                const errorMsg = error;
+                // add an alert message in DOM
+                this.showAlertMessage('danger', errorMsg);
+            }
+        }
+    }
+
+    /**
+     * Handle the click event on the "Save" button in the User page.
+     * This function gets the values of the form fields and sends them
+     * to the server to save the user's information.
+     */
+    onClickSaveInfo = async () => {
+
+        document.getElementById('saveButton').addEventListener('click', async () => {
+            try {
+                const user = JSON.parse(localStorage.getItem('user'));
+
+                const birthdate = document.getElementById('birthdate').value;
+                const address = document.getElementById('address').value;
+                const city = document.getElementById('city').value;
+
+                const dataInfo = {
+                    birthdate: birthdate,
+                    address: address,
+                    city: city
+                };
+
+                const response = await Api.addUserInfo(user.id, dataInfo);
+
+                if (response.success) {
+                    this.showAlertMessage("success", response.message);
+                } else {
+                    this.showAlertMessage("danger", response.message);
+                }
+            } catch (err) {
+                this.showAlertMessage("danger", "Si è verificato un errore: " + err.message);
+            }
+        });
+    }
+
+    /**
+     * Handle the click event on the "Delete Account" button in the User page.
+     * This function gets the user's ID from the localStorage and sends it to the server to delete the user's account.
+     */
+    onClickDeleteAccount = async () => {
+
+        try {
+            document.getElementById('confirmDeleteButton').addEventListener('click', async () => {
+                const user = JSON.parse(localStorage.getItem('user'));
+
+                const response = await Api.deleteUser(user.id);
+                if (response.success) {
+                    localStorage.removeItem('user');
+                    this.showAlertMessage("success", response.message);
+                    page.redirect('/login');
+                } else {
+                    this.showAlertMessage("danger", "Errore durante l'eliminazione dell'account. Si prega di riprovare.");
+                }
+            });
+        } catch (error) {
+            this.showAlertMessage('danger', error);
+        }
+    }
+
+    //------------- ADMIN ------------
+
+    /**
+     * Creates the admin users page.
      *
      * @returns {Promise<void>} Promise that resolves when the page is rendered
      */
@@ -424,36 +625,120 @@ class App {
     }
 
     /**
-     * Create the user's wishlist page.
-     *
-     * @returns {Promise<void>}
+     * Handle the click event on the "Delete Item" button in the Admin page.
+     * This function gets the item's ID from the button's value and sends it to the server to delete the item.
+     * @param {Event} event - The click event on the button.
      */
-    userWishListPage = async () => {
-
+    onClickDeleteItem = async (event) => {
         try {
-            const user = JSON.parse(localStorage.getItem('user'));
-            const wishlist = await Api.getWishlistByUser(user.id);
+            event.preventDefault();
+            const itemId = parseInt(event.target.value);
+            const response = await Api.removeItem(itemId);
 
-            this.appContainer.innerHTML = "";
-            this.appContainer.innerHTML = navbarUserPage('wishlist');
-            const bodyPage = document.querySelector('.bodyPage');
-            bodyPage.innerHTML = createWishlistPage();
-            document.getElementById('userName').textContent = user.name;
-
-            // Add each item in the wishlist to the table
-            this.insertItemWishList(wishlist);
-            this.createCategoriesListWish();
-
-        } catch (error) {
-            if (error) {
-                const errorMsg = error;
-                // add an alert message in DOM
-                this.showAlertMessage('danger', errorMsg);
+            if (response.success) {
+                this.showAlertMessage('success', response.message);
+                this.adminItemsPage();
+            } else {
+                this.showAlertMessage('danger', 'Errore durante l\'eliminazione dell\'item. Si prega di riprovare.');
             }
-            page.redirect('/');
+        } catch (error) {
+            this.showAlertMessage('danger', error);
         }
 
     }
+
+    /**
+     * Handle the click event on the "Add Item" button in the Admin page.
+     * This function gets the item's details from the form and sends it to the server to add the item.
+     * @param {Event} event - The click event on the button.
+     */
+    onClickAddItem = async (event) => {
+        event.preventDefault();
+
+        try {
+            const itemName = document.getElementById('itemName').value;
+            const itemPrice = parseFloat(document.getElementById('itemPrice').value);
+            const itemCategory = parseFloat(document.getElementById('itemCategory').value);
+            const itemImg = document.getElementById('itemImg').value;
+
+            const item = new Item(itemPrice, itemName, itemCategory, itemImg);
+
+            const response = await Api.addItem(item);
+            if (response.success) {
+                this.showAlertMessage("success", response.message);
+                this.adminItemsPage();
+            } else {
+                this.showAlertMessage("danger", "Errore durante l'inserimento dell'item. Si prega di riprovare.");
+            }
+        } catch (error) {
+            this.showAlertMessage("danger", "Errore durante l'inserimento dell'item. Si prega di riprovare.");
+        }
+    }
+
+    /**
+     * Handle the click event on the "Add User" button in the Admin page.
+     * This function gets the user's details from the form and sends it to the server to add the user.
+     * @param {Event} event - The click event on the button.
+     */
+    onClickAddUser = async (event) => {
+        event.preventDefault();
+
+        try {
+            const userName = document.getElementById('userName').value;
+            const userSurname = document.getElementById('userSurname').value;
+            const userEmail = document.getElementById('userEmail').value;
+            const password = document.getElementById('password').value;
+
+            if (!userName || !userSurname || !userEmail || !password) {
+                throw new Error('Tutti i campi sono obbligatori.');
+            }
+            const user = new User(userName, userSurname, userEmail, password);
+
+            const response = await Api.doSignUp(user);
+            if (response.success) {
+                this.showAlertMessage('success', response.message);
+                this.adminUsersPage();
+            } else {
+                this.showAlertMessage('danger', 'Errore durante l\'aggiunta dell\'user. Si prega di riprovare.');
+            }
+        } catch (error) {
+            this.showAlertMessage('danger', error);
+        }
+
+    }
+
+    /**
+     * Handle the click event on the "Delete User" button in the Admin page.
+     * This function gets the user's ID from the button and sends it to the server to delete the user.
+     * @param {Event} event - The click event on the button.
+     */
+    onClickDeleteUser = async (event) => {
+        event.preventDefault();
+
+        try {
+            const userId = parseInt(event.target.value);
+            const response = await Api.deleteUser(userId);
+            if (response.success) {
+                // Recupera gli utenti dal localStorage
+                let users = JSON.parse(localStorage.getItem('users')) || [];
+
+                // Filtra l'array per rimuovere l'utente con l'userId specificato
+                users = users.filter(user => user.id !== userId);
+
+                // Aggiorna il localStorage con l'array filtrato
+                localStorage.setItem('users', JSON.stringify(users));
+
+                // Mostra un messaggio di successo e aggiorna la UI
+                this.showAlertMessage('success', response.message);
+                this.adminUsersPage();
+            }
+
+        } catch (error) {
+            this.showAlertMessage('danger', error.message || 'Errore durante l\'eliminazione dell\'user. Si prega di riprovare.');
+        }
+    }
+
+    //------------- WISHLIST -------------
 
     /**
      * Insert the items in the wishlist into the page.
@@ -495,103 +780,6 @@ class App {
 
         } catch (error) {
             console.error("Errore durante l'inserimento degli elementi nella wishlist:", error);
-        }
-    }
-
-    /**
-     * Create the user's purchase history page.
-     *
-     * @returns {Promise<void>} Promise that resolves when the page is rendered
-     */
-    historyPurchasePage = async () => {
-
-        try {
-            const user = JSON.parse(localStorage.getItem('user'));
-            const history = await Api.getHistoryPurchase(user.id);
-            this.appContainer.innerHTML = "";
-            this.appContainer.innerHTML = navbarUserPage('history');
-
-            const bodyPage = document.querySelector('.bodyPage');
-            bodyPage.innerHTML = createHistoryPurchasePage();
-
-            const purchaseHistoryRow = document.getElementById('purchase-history-row');
-
-            // Add each purchase to the table, organizing them by date and time
-            if (history.length > 0) {
-                let previousDateTime = null;
-                let currentTotal = 0;
-
-                for (let item of history) {
-                    if (item.dateTime !== previousDateTime) {
-                        // Add a total row to the previous table if it exists
-                        if (previousDateTime !== null) {
-                            let historyTables = purchaseHistoryRow.querySelectorAll(".table > tbody");
-                            let historyTable = historyTables[historyTables.length - 1];
-                            historyTable.insertAdjacentHTML('beforeend', createTotalRow(currentTotal));
-                        }
-
-                        // Create a new table when the time changes
-                        purchaseHistoryRow.insertAdjacentHTML('beforeend', createTablePurchase());
-                        // Select the newly added table
-                        let historyTables = purchaseHistoryRow.querySelectorAll(".table > tbody");
-                        let historyTable = historyTables[historyTables.length - 1]; // Last added table
-                        // Add the title of the dateTime to the new table
-                        let trDateTime = document.createElement("tr");
-                        let tdDateTime = document.createElement("td");
-                        const [date, time] = item.dateTime.split(' ');
-                        tdDateTime.innerHTML = `<p class="card-text dateTime">Acquisto effettuato il giorno: ${date} alle ore: ${time}</p>`;
-                        trDateTime.appendChild(tdDateTime);
-                        historyTable.appendChild(trDateTime);
-
-                        // Reset the current total for the new table
-                        currentTotal = 0;
-                    }
-
-                    // Add the card inside the current table
-                    let historyTables = purchaseHistoryRow.querySelectorAll(".table > tbody");
-                    let historyTable = historyTables[historyTables.length - 1]; // Last added table
-                    let tr = document.createElement("tr");
-                    let td = document.createElement("td");
-
-                    // Imposta lo stile per centrare il contenuto nella cella
-                    td.style.textAlign = "center";
-                    td.style.verticalAlign = "middle"; // Centra verticalmente
-
-                    const getItem = await Api.getItemById(item.idPurchaseItem);
-                    td.innerHTML = createCardPurchase(getItem, item.qta);
-                    tr.appendChild(td);
-                    historyTable.appendChild(tr);
-
-                    // Update the current total
-                    currentTotal += getItem.price * item.qta;
-
-                    // Update the previousDateTime with the current item
-                    previousDateTime = item.dateTime;
-                }
-
-                // Add a total row to the last table
-                let historyTables = purchaseHistoryRow.querySelectorAll(".table > tbody");
-                let historyTable = historyTables[historyTables.length - 1];
-                historyTable.insertAdjacentHTML('beforeend', createTotalRow(currentTotal));
-            } else {
-                let tr = document.createElement("tr");
-                let td = document.createElement("td");
-
-                // Assegna una classe univoca al td
-                td.classList.add('no-purchase-message');
-
-                td.innerHTML = "Nessun acquisto ancora effettuato";
-                tr.appendChild(td);
-                purchaseHistoryRow.appendChild(tr);
-            }
-
-        } catch (error) {
-            if (error) {
-                const errorMsg = error;
-                // add an alert message in DOM
-                this.showAlertMessage('danger', errorMsg);
-            }
-            page.redirect('/');
         }
     }
 
@@ -638,29 +826,6 @@ class App {
             }
         }
 
-    }
-
-    /**
-     * Show a modal to get visibility choice from user and return the choice.
-     *
-     * @return {Promise<number>} A promise that resolves to the visibility choice made by the user.
-     */
-    showModalAndGetVisibility = (itemId) => {
-        return new Promise((resolve, reject) => {
-            const modalId = `#staticBackdrop-${itemId}`;
-            const modal = document.querySelector(modalId);
-
-            // Quando l'utente clicca su "Save choice", risolvi la Promise con la scelta dell'utente
-            const saveButton = modal.querySelector('.btn-saveChoice');
-            saveButton.onclick = function () {
-                try {
-                    const visibility = parseInt(modal.querySelector('input[name="visibilityOptions"]:checked').value, 10);
-                    resolve(visibility);
-                } catch (error) {
-                    reject('Non si è selezionata la visibilità. Prego riprovare.');
-                }
-            };
-        });
     }
 
     /**
@@ -713,6 +878,111 @@ class App {
         }
 
     }
+
+    /**
+     * Populates the categories dropdown menu with the list of all users' names.
+     * Adds event listeners to handle user clicks in the dropdown menu.
+     * 
+     * This function uses the `getUsers` method to retrieve the list of all users
+     * from the server, and then iterates over the list to create the menu items.
+     * The `createFiltersByCategory` method is called to add event listeners to the
+     * menu items.
+     * 
+     * @return {Promise<void>}
+     */
+    createCategoriesListWish = async () => {
+        const leftSidebar = document.querySelector("#left-sidebar");
+        let dd_menu = leftSidebar.querySelector(".dropdown-menu");
+        let users = await Api.getUsers();
+        users.forEach(user => {
+            dd_menu.insertAdjacentHTML('beforeend',
+                `<li><a class="dropdown-item" data-id="${user.id}" href="#">${user.name}</a></li>`);
+        });
+        // Add event listeners to handle category clicks in the dropdown menu
+        this.createFiltersByCategory(this.categoryClickWish);
+    }
+
+    /**
+     * Handles the click event on a user link in the left sidebar.
+     * @param {Event} event - The click event object.
+     */
+    categoryClickWish = async (event) => {
+        event.preventDefault();
+        const el = event.target;
+        const currentUser = JSON.parse(localStorage.getItem('user'));
+        // Get the id from the element's data-id property
+        const userId = parseInt(el.dataset.id, 10);
+        const visibilityPublic = 1;
+        // Remove the 'active' class from the currently active main menu link
+        const leftSidebar = document.querySelector("#left-sidebar");
+        leftSidebar.querySelectorAll('.active').forEach(
+            el => el.classList.remove('active')
+        );
+        // Add the 'active' class to the "Categories" main menu link and the clicked category
+        document.getElementById("users").classList.add('active');
+        el.classList.add('active');
+
+        const selectedUserName = await Api.getLoggedUser(userId);
+        document.getElementById('userName').textContent = selectedUserName.name;
+
+        if (userId === currentUser.id) {
+            const itemsWish = await Api.getWishlistByUser(userId);
+            this.insertItemWishList(itemsWish);
+        } else {
+            const itemsWish = await Api.getWishlistByVisibility(userId, visibilityPublic);
+            this.insertItemWishList(itemsWish);
+        }
+        // Update the active category state in the sidebar
+        this.updateActiveCategory(userId);
+    }
+
+    /**
+     * Shows the wishlist of a user.
+     * @param {Event} event - The event triggered by the user.
+     */
+    showWhislist = async (event) => {
+        try {
+            // Prevent the default action of the event
+            event.preventDefault();
+            // Get the user ID from the event target
+            const userId = event.target.value;
+            // Get the wishlist of the user
+            const wishlist = await Api.getWishlistByUser(userId);
+            // Get the DOM element to display the wishlist items
+            const wishItemsList = document.getElementById('wishItemsList');
+            // Clear the wishlist items in the DOM
+            wishItemsList.innerHTML = '';
+
+            // If there are no items in the wishlist, display a message
+            if (wishlist.error) {
+                wishItemsList.insertAdjacentHTML('beforeend', '<p>Non ci sono item nella wishlist di questo utente</p>');
+            } else {
+                // If there are items in the wishlist, display them
+                if (wishlist.length > 0) {
+                    // Iterate over each item in the wishlist
+                    for (const item of wishlist) {
+                        // Get the details of the item
+                        const getItem = await Api.getItemById(item.idWishItem);
+                        // Create a card to display the item details
+                        const card = cardShowItems(getItem);
+                        // Add the card to the DOM
+                        wishItemsList.insertAdjacentHTML('beforeend', card);
+                    }
+                }
+            }
+
+            this.addEventListenersToButtons('.btn-favourite-delete', this.removeItemWishList);
+
+        } catch (error) {
+            // If there is an error, display the error message
+            if (error) {
+                const errorMsg = error;
+                this.showAlertMessage('danger', errorMsg);
+            }
+        }
+    }
+
+    //------------- STORE -------------
 
     /**
      * Create the HTML table for showing the items
@@ -927,212 +1197,6 @@ class App {
     }
 
     /**
-     * Handle the click event on the "Comment" button in the User page.
-     * This function sets up the modal for adding a new comment and
-     * updates the title and input field of the modal with the
-     * recipient user's name.
-     */
-    onClickComment = async () => {
-
-        try {
-            const user = JSON.parse(localStorage.getItem('user'));
-            const exampleModal = document.getElementById('commentModal')
-            if (exampleModal) {
-                exampleModal.addEventListener('show.bs.modal', event => {
-                    // Button that triggered the modal
-                    const button = event.relatedTarget
-                    // Extract info from data-bs-* attributes
-                    const recipient = button.getAttribute('data-bs-whatever')
-                    // Update the modal's content.
-                    const modalTitle = exampleModal.querySelector('.modal-title')
-                    const modalBodyInput = exampleModal.querySelector('.modal-body input')
-
-                    modalTitle.textContent = `New comment to ${recipient}`
-                    modalBodyInput.value = recipient
-                })
-            }
-        } catch (error) {
-            if (error) {
-                const errorMsg = error;
-                // add an alert message in DOM
-                this.showAlertMessage('danger', errorMsg);
-            }
-        }
-    }
-
-    /**
-     * Handle the click event on the "Save" button in the User page.
-     * This function gets the values of the form fields and sends them
-     * to the server to save the user's information.
-     */
-    onClickSaveInfo = async () => {
-
-        document.getElementById('saveButton').addEventListener('click', async () => {
-            try {
-                const user = JSON.parse(localStorage.getItem('user'));
-
-                const birthdate = document.getElementById('birthdate').value;
-                const address = document.getElementById('address').value;
-                const city = document.getElementById('city').value;
-
-                const dataInfo = {
-                    birthdate: birthdate,
-                    address: address,
-                    city: city
-                };
-
-                const response = await Api.addUserInfo(user.id, dataInfo);
-
-                if (response.success) {
-                    this.showAlertMessage("success", response.message);
-                } else {
-                    this.showAlertMessage("danger", response.message);
-                }
-            } catch (err) {
-                this.showAlertMessage("danger", "Si è verificato un errore: " + err.message);
-            }
-        });
-    }
-
-    /**
-     * Handle the click event on the "Delete Account" button in the User page.
-     * This function gets the user's ID from the localStorage and sends it to the server to delete the user's account.
-     */
-    onClickDeleteAccount = async () => {
-
-        try {
-            document.getElementById('confirmDeleteButton').addEventListener('click', async () => {
-                const user = JSON.parse(localStorage.getItem('user'));
-
-                const response = await Api.deleteUser(user.id);
-                if (response.success) {
-                    localStorage.removeItem('user');
-                    this.showAlertMessage("success", response.message);
-                    page.redirect('/login');
-                } else {
-                    this.showAlertMessage("danger", "Errore durante l'eliminazione dell'account. Si prega di riprovare.");
-                }
-            });
-        } catch (error) {
-            this.showAlertMessage('danger', error);
-        }
-    }
-
-    /**
-     * Handle the click event on the "Delete Item" button in the Admin page.
-     * This function gets the item's ID from the button's value and sends it to the server to delete the item.
-     * @param {Event} event - The click event on the button.
-     */
-    onClickDeleteItem = async (event) => {
-        try {
-            event.preventDefault();
-            const itemId = parseInt(event.target.value);
-            const response = await Api.removeItem(itemId);
-
-            if (response.success) {
-                this.showAlertMessage('success', response.message);
-                this.adminItemsPage();
-            } else {
-                this.showAlertMessage('danger', 'Errore durante l\'eliminazione dell\'item. Si prega di riprovare.');
-            }
-        } catch (error) {
-            this.showAlertMessage('danger', error);
-        }
-
-    }
-
-    /**
-     * Handle the click event on the "Add Item" button in the Admin page.
-     * This function gets the item's details from the form and sends it to the server to add the item.
-     * @param {Event} event - The click event on the button.
-     */
-    onClickAddItem = async (event) => {
-        event.preventDefault();
-
-        try {
-            const itemName = document.getElementById('itemName').value;
-            const itemPrice = parseFloat(document.getElementById('itemPrice').value);
-            const itemCategory = parseFloat(document.getElementById('itemCategory').value);
-            const itemImg = document.getElementById('itemImg').value;
-
-            const item = new Item(itemPrice, itemName, itemCategory, itemImg);
-
-            const response = await Api.addItem(item);
-            if (response.success) {
-                this.showAlertMessage("success", response.message);
-                this.adminItemsPage();
-            } else {
-                this.showAlertMessage("danger", "Errore durante l'inserimento dell'item. Si prega di riprovare.");
-            }
-        } catch (error) {
-            this.showAlertMessage("danger", "Errore durante l'inserimento dell'item. Si prega di riprovare.");
-        }
-    }
-
-    /**
-     * Handle the click event on the "Add User" button in the Admin page.
-     * This function gets the user's details from the form and sends it to the server to add the user.
-     * @param {Event} event - The click event on the button.
-     */
-    onClickAddUser = async (event) => {
-        event.preventDefault();
-
-        try {
-            const userName = document.getElementById('userName').value;
-            const userSurname = document.getElementById('userSurname').value;
-            const userEmail = document.getElementById('userEmail').value;
-            const password = document.getElementById('password').value;
-
-            if (!userName || !userSurname || !userEmail || !password) {
-                throw new Error('Tutti i campi sono obbligatori.');
-            }
-            const user = new User(userName, userSurname, userEmail, password);
-
-            const response = await Api.doSignUp(user);
-            if (response.success) {
-                this.showAlertMessage('success', response.message);
-                this.adminUsersPage();
-            } else {
-                this.showAlertMessage('danger', 'Errore durante l\'aggiunta dell\'user. Si prega di riprovare.');
-            }
-        } catch (error) {
-            this.showAlertMessage('danger', error);
-        }
-
-    }
-
-    /**
-     * Handle the click event on the "Delete User" button in the Admin page.
-     * This function gets the user's ID from the button and sends it to the server to delete the user.
-     * @param {Event} event - The click event on the button.
-     */
-    onClickDeleteUser = async (event) => {
-        event.preventDefault();
-
-        try {
-            const userId = parseInt(event.target.value);
-            const response = await Api.deleteUser(userId);
-            if (response.success) {
-                // Recupera gli utenti dal localStorage
-                let users = JSON.parse(localStorage.getItem('users')) || [];
-
-                // Filtra l'array per rimuovere l'utente con l'userId specificato
-                users = users.filter(user => user.id !== userId);
-
-                // Aggiorna il localStorage con l'array filtrato
-                localStorage.setItem('users', JSON.stringify(users));
-
-                // Mostra un messaggio di successo e aggiorna la UI
-                this.showAlertMessage('success', response.message);
-                this.adminUsersPage();
-            }
-
-        } catch (error) {
-            this.showAlertMessage('danger', error.message || 'Errore durante l\'eliminazione dell\'user. Si prega di riprovare.');
-        }
-    }
-
-    /**
      * Updates the HTML of the store page with the given items.
      * Also adds the "Add to Cart" and "Add to Wishlist" buttons to each item.
      * @param {Array} items - The array of items to display in the store.
@@ -1174,31 +1238,6 @@ class App {
         } catch (error) {
             this.showAlertMessage('danger', error.message || 'Si è verificato un errore durante l\'aggiornamento del negozio.');
         }
-    }
-
-    /**
-     * Adds click event listeners to buttons.
-     * @param {string} buttonClass - The class name of the buttons to add event listeners to.
-     * @param {function} event - The function to call when a button is clicked.
-     */
-    addEventListenersToButtons(buttonClass, event) {
-
-        try {
-            const buttons = document.querySelectorAll(buttonClass);
-            for (const btn of buttons) {
-                btn.addEventListener("click", event);
-            }
-        } catch (error) {
-            this.showAlertMessage('danger', error.message || 'Errore durante l\'aggiunta degli event listener ai pulsanti.');
-        }
-    }
-
-    /**
-     * Returns the HTML string for the public icon.
-     * @return {string} - The HTML string for the public icon.
-     */
-    static pubIcon() {
-        return `<img src='./svg/eye.svg' alt='visibilità pubblica'>`
     }
 
     /**
@@ -1387,29 +1426,6 @@ class App {
     }
 
     /**
-     * Populates the categories dropdown menu with the list of all users' names.
-     * Adds event listeners to handle user clicks in the dropdown menu.
-     * 
-     * This function uses the `getUsers` method to retrieve the list of all users
-     * from the server, and then iterates over the list to create the menu items.
-     * The `createFiltersByCategory` method is called to add event listeners to the
-     * menu items.
-     * 
-     * @return {Promise<void>}
-     */
-    createCategoriesListWish = async () => {
-        const leftSidebar = document.querySelector("#left-sidebar");
-        let dd_menu = leftSidebar.querySelector(".dropdown-menu");
-        let users = await Api.getUsers();
-        users.forEach(user => {
-            dd_menu.insertAdjacentHTML('beforeend',
-                `<li><a class="dropdown-item" data-id="${user.id}" href="#">${user.name}</a></li>`);
-        });
-        // Add event listeners to handle category clicks in the dropdown menu
-        this.createFiltersByCategory(this.categoryClickWish);
-    }
-
-    /**
      * Adds event listeners to handle category clicks in the dropdown menu.
      * 
      * This function iterates over all the `li` elements in the `leftSidebar` element.
@@ -1490,40 +1506,6 @@ class App {
     }
 
     /**
-     * Handles the click event on a user link in the left sidebar.
-     * @param {Event} event - The click event object.
-     */
-    categoryClickWish = async (event) => {
-        event.preventDefault();
-        const el = event.target;
-        const currentUser = JSON.parse(localStorage.getItem('user'));
-        // Get the id from the element's data-id property
-        const userId = parseInt(el.dataset.id, 10);
-        const visibilityPublic = 1;
-        // Remove the 'active' class from the currently active main menu link
-        const leftSidebar = document.querySelector("#left-sidebar");
-        leftSidebar.querySelectorAll('.active').forEach(
-            el => el.classList.remove('active')
-        );
-        // Add the 'active' class to the "Categories" main menu link and the clicked category
-        document.getElementById("users").classList.add('active');
-        el.classList.add('active');
-
-        const selectedUserName = await Api.getLoggedUser(userId);
-        document.getElementById('userName').textContent = selectedUserName.name;
-
-        if (userId === currentUser.id) {
-            const itemsWish = await Api.getWishlistByUser(userId);
-            this.insertItemWishList(itemsWish);
-        } else {
-            const itemsWish = await Api.getWishlistByVisibility(userId, visibilityPublic);
-            this.insertItemWishList(itemsWish);
-        }
-        // Update the active category state in the sidebar
-        this.updateActiveCategory(userId);
-    }
-
-    /**
      * Handles the click event on a category link in the left sidebar.
      * @param {Event} event - The click event object.
      */
@@ -1561,29 +1543,7 @@ class App {
         dd_menu.querySelector(`a[data-id="${filterCat}"`).classList.add('active');
     }
 
-    /**
-     * Shows a modal dialog to get the comment text from the user.
-     * @param {number} itemId - The ID of the item for which the comment is being added.
-     * @returns {Promise<string>} - A promise that resolves with the comment text entered by the user.
-     */
-    showModalAndGetText = (itemId) => {
-        return new Promise((resolve, reject) => {
-            const modalId = `#commentModal-${itemId}`;
-            const modal = document.querySelector(modalId);
-            const messageText = document.getElementById(`message-text-${itemId}`);
-
-            // Quando l'utente clicca su "Save choice", risolvi la Promise con la scelta dell'utente
-            const saveButton = modal.querySelector('.btn-saveComment');
-            saveButton.onclick = function () {
-                try {
-                    const text = messageText.value;
-                    resolve(text);
-                } catch (error) {
-                    reject('Non è stato aggiunto il teste del commento. Prego riprovare.');
-                }
-            };
-        });
-    }
+    //------------- COMMENT ------------
 
     /**
      * Handles the click event on the "Add comment" button.
@@ -1685,32 +1645,6 @@ class App {
     }
 
     /**
-     * Updates a comment in the database and in the DOM.
-     * @param {Event} event - The event object.
-     */
-    updateItem = async (event) => {
-        event.preventDefault();
-        const commentId = parseInt(event.target.dataset.id, 10);
-
-        try {
-            const text = await this.showModalAndGetText('btn-update-comment');
-            const response = await Api.updateComment(text, commentId);
-            if (response.success) {
-                this.showAlertMessage('success', "Commento modificato con successo");
-                this.createHistoryComments();
-            }
-
-        } catch (error) {
-            if (error) {
-                const errorMsg = error;
-                // add an alert message in DOM
-                this.showAlertMessage('danger', errorMsg);
-            }
-
-        }
-    }
-
-    /**
      * Shows the comments of a user in the page.
      * @param {Event} event - The event object.
      */
@@ -1782,52 +1716,6 @@ class App {
     }
 
     /**
-     * Asynchronously shows the wishlist of a user.
-     * @param {Event} event - The event triggered by the user.
-     */
-    showWhislist = async (event) => {
-        try {
-            // Prevent the default action of the event
-            event.preventDefault();
-            // Get the user ID from the event target
-            const userId = event.target.value;
-            // Get the wishlist of the user
-            const wishlist = await Api.getWishlistByUser(userId);
-            // Get the DOM element to display the wishlist items
-            const wishItemsList = document.getElementById('wishItemsList');
-            // Clear the wishlist items in the DOM
-            wishItemsList.innerHTML = '';
-
-            // If there are no items in the wishlist, display a message
-            if (wishlist.error) {
-                wishItemsList.insertAdjacentHTML('beforeend', '<p>Non ci sono item nella wishlist di questo utente</p>');
-            } else {
-                // If there are items in the wishlist, display them
-                if (wishlist.length > 0) {
-                    // Iterate over each item in the wishlist
-                    for (const item of wishlist) {
-                        // Get the details of the item
-                        const getItem = await Api.getItemById(item.idWishItem);
-                        // Create a card to display the item details
-                        const card = cardShowItems(getItem);
-                        // Add the card to the DOM
-                        wishItemsList.insertAdjacentHTML('beforeend', card);
-                    }
-                }
-            }
-
-            this.addEventListenersToButtons('.btn-favourite-delete', this.removeItemWishList);
-
-        } catch (error) {
-            // If there is an error, display the error message
-            if (error) {
-                const errorMsg = error;
-                this.showAlertMessage('danger', errorMsg);
-            }
-        }
-    }
-
-    /**
      * This function is used to display the user's history of comments made
      * @returns {Promise<void>}
      */
@@ -1835,8 +1723,16 @@ class App {
         try {
             const user = JSON.parse(localStorage.getItem('user'));
             const comments = await Api.getCommentsbyUserId(user.id);
-            this.appContainer.innerHTML = "";
-            this.appContainer.innerHTML = navbarUserPage('historyComments');
+            let userAdmin = await Api.getLoggedUser(user.id);
+
+            if(userAdmin.admin === 1){
+                this.appContainer.innerHTML = "";
+                this.appContainer.innerHTML = navbarAdminPage('historyComments');
+            } else {
+                this.appContainer.innerHTML = "";
+                this.appContainer.innerHTML = navbarUserPage('historyComments');
+            }
+
             const bodyPage = document.querySelector('.bodyPage');
             bodyPage.innerHTML = createHistoryCommentsPage();
             const commentsHistoryRow = document.getElementById('comments-history-row');
@@ -1863,6 +1759,8 @@ class App {
             }
         }
     }
+
+    //------------- SEARCH ------------
 
     /**
      * This function is used to display the search form for items.
@@ -2060,6 +1958,115 @@ class App {
             resultsContainer.insertAdjacentHTML('beforeend', card);
         });
 
+    }
+
+    //------------- OTHER ------------
+
+    /**
+     * Show an alert message in the DOM.
+     * @param {string} type - The type of the alert (e.g. 'success', 'danger', etc.).
+     * @param {string} message - The message to be displayed in the alert.
+     */
+    showAlertMessage = (type, message) => {
+        // Get the alert message container element
+        const alertMessage = document.getElementById('alert-message');
+
+        // Set the innerHTML of the container to the alert message
+        alertMessage.innerHTML = createAlert(type, message);
+
+        // Automatically remove the flash message after 3 seconds
+        setTimeout(() => {
+            // Reset the innerHTML of the container to an empty string
+            alertMessage.innerHTML = '';
+        }, 3000);
+    }
+
+    /**
+     * Show a modal to get visibility choice from user and return the choice.
+     *
+     * @return {Promise<number>} A promise that resolves to the visibility choice made by the user.
+     */
+    showModalAndGetVisibility = (itemId) => {
+        return new Promise((resolve, reject) => {
+            const modalId = `#staticBackdrop-${itemId}`;
+            const modal = document.querySelector(modalId);
+
+            // Quando l'utente clicca su "Save choice", risolvi la Promise con la scelta dell'utente
+            const saveButton = modal.querySelector('.btn-saveChoice');
+            saveButton.onclick = function () {
+                try {
+                    const visibility = parseInt(modal.querySelector('input[name="visibilityOptions"]:checked').value, 10);
+                    resolve(visibility);
+                } catch (error) {
+                    reject('Non si è selezionata la visibilità. Prego riprovare.');
+                }
+            };
+        });
+    }
+
+    /**
+     * Shows a modal dialog to get the comment text from the user.
+     * @param {number} itemId - The ID of the item for which the comment is being added.
+     * @returns {Promise<string>} - A promise that resolves with the comment text entered by the user.
+     */
+    showModalAndGetText = (itemId) => {
+        return new Promise((resolve, reject) => {
+            const modalId = `#commentModal-${itemId}`;
+            const modal = document.querySelector(modalId);
+            const messageText = document.getElementById(`message-text-${itemId}`);
+
+            // Quando l'utente clicca su "Save choice", risolvi la Promise con la scelta dell'utente
+            const saveButton = modal.querySelector('.btn-saveComment');
+            saveButton.onclick = function () {
+                try {
+                    const text = messageText.value;
+                    resolve(text);
+                } catch (error) {
+                    reject('Non è stato aggiunto il teste del commento. Prego riprovare.');
+                }
+            };
+        });
+    }
+
+    /**
+     * Adds click event listeners to buttons.
+     * @param {string} buttonClass - The class name of the buttons to add event listeners to.
+     * @param {function} event - The function to call when a button is clicked.
+     */
+    addEventListenersToButtons(buttonClass, event) {
+
+        try {
+            const buttons = document.querySelectorAll(buttonClass);
+            for (const btn of buttons) {
+                btn.addEventListener("click", event);
+            }
+        } catch (error) {
+            this.showAlertMessage('danger', error.message || 'Errore durante l\'aggiunta degli event listener ai pulsanti.');
+        }
+    }
+
+    /**
+     * Returns the HTML string for the public icon.
+     * @return {string} - The HTML string for the public icon.
+     */
+    static pubIcon() {
+        return `<img src='./svg/eye.svg' alt='visibilità pubblica'>`
+    }
+
+    /**
+     * Render the navbar and show the logout link
+     */
+    renderNavBar = (active) => {
+        try {
+            if (!this.loginLink || !this.logoutLink) {
+                throw new Error('Elementi loginLink o logoutLink mancanti');
+            }
+            this.loginLink.innerHTML = "";
+            this.loginLink.innerHTML = '<a class="nav-link" href="/userPage">' + `${active}` + '</a>';
+            this.logoutLink.classList.remove('invisible');
+        } catch (error) {
+            this.showAlertMessage('danger', error);
+        }
     }
 
 }

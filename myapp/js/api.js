@@ -64,6 +64,8 @@ class Api {
         await fetch('/api/sessions/current', { method: 'DELETE' });
     }
 
+    //------------- USER ------------
+
     /**
      * Delete a user by their ID
      * @param {string} userId - The ID of the user to delete
@@ -72,7 +74,6 @@ class Api {
      */
     static deleteUser = async (userId) => {
         try {
-            // Send a DELETE request to the API to delete the user
             let response = await fetch(`/api/user/${userId}`, {
                 method: 'DELETE',
                 headers: {
@@ -80,19 +81,14 @@ class Api {
                 }
             });
 
-            // If the response is successful,
             if (response.ok) {
                 const result = await response.json();
                 return result;
-            }
-            // If the response is not successful, throw an error
-            else {
+            } else {
                 const errorData = await response.json();
                 throw errorData;
             }
-        }
-        // If there is an error sending the request or parsing the response, alert the user and reject the promise
-        catch (error) {
+        } catch (error) {
             throw error;
         }
     }
@@ -103,19 +99,14 @@ class Api {
      * @throws {Error} - If there is an error fetching the users, this promise will reject with an error object.
      */
     static getUsers = async () => {
-        // Send a GET request to the API to fetch all users
         let response = await fetch('/api/users');
 
-        // Parse the response as JSON
         const usersJson = await response.json();
 
-        // If the response is successful, return the users
         if (response.ok) {
             return usersJson;
-        }
-        // If the response is not successful, throw an error with the error message from the server
-        else {
-            throw usersJson;  // an object with the error coming from the server
+        } else {
+            throw usersJson;
         }
     }
 
@@ -126,19 +117,14 @@ class Api {
      * @throws {Error} - If there is an error fetching the user, this promise will reject with an error object.
      */
     static getLoggedUser = async (userId) => {
-        // Send a GET request to the API to fetch the user with the specified ID
         let response = await fetch(`/api/user/${userId}`);
 
-        // Parse the response as JSON
         const userJson = await response.json();
 
-        // If the response is successful, return the user
         if (response.ok) {
             return userJson;
-        }
-        // If the response is not successful, throw an error with the error message from the server
-        else {
-            throw userJson;  // an object with the error coming from the server
+        } else {
+            throw userJson; 
         }
     }
 
@@ -150,14 +136,15 @@ class Api {
      * @throws {Error} - If there is an error adding the information, this promise will reject with an error object.
      */
     static addUserInfo = async (userId, dataInfo) => {
+
+        let response = await fetch(`/api/user/${userId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ dataInfo }),
+        });
         try {
-            let response = await fetch(`/api/user/${userId}`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ dataInfo }),
-            });
             if (response.ok) {
                 const responseData = await response.json();
                 return responseData;
@@ -170,6 +157,89 @@ class Api {
         }
     }
 
+    //------------- PURCHASE ------------
+
+    /**
+     * Fetches the history of purchases made by the user with the given ID from the server.
+     * @param {number} userId - The ID of the user.
+     * @returns {Promise<Object[]>} - A promise that resolves to an array of purchase objects.
+     * @throws {Object} - If there is an error during the fetch, this promise will reject with an error object.
+     */
+    static getHistoryPurchase = async (userId) => {
+        let response = await fetch(`/api/user/${userId}/history`);
+        const historyJson = await response.json();
+        if (response.ok) {
+            return historyJson;
+        } else {
+            throw historyJson;
+        }
+    }
+
+    /**
+     * Perform a checkout with the given list of purchases.
+     * @param {Object[]} listPurchase - The list of purchases to checkout.
+     * @returns {Promise<Object>} - A promise that resolves to the response object from the server.
+     * @throws {Error} - If there is an error during the checkout, this promise will reject with an error object.
+     */
+    static doCheckout = async (listPurchase) => {
+        let response = await fetch('/api/checkout', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ listPurchase }),
+        });
+        if (response.ok) {
+            const res = await response.json();
+            return res;
+        }
+        else {
+            try {
+                const errDetail = await response.json();
+                throw errDetail.message;
+            }
+            catch (err) {
+                throw err;
+            }
+        }
+    }
+
+    /**
+    * Get the list of categories
+    */
+    static getCategories = async () => {
+        let response = await fetch('/api/categories');
+        const categoriesJson = await response.json();
+        if (response.ok) {
+            return categoriesJson;
+        } else {
+            throw categoriesJson;  // an object with the error coming from the server
+        }
+    }
+
+    /**
+     * Retrieve items from the store that match the given category name.
+     * @param {string} categoryName - The name of the category to filter by.
+     * @returns {Promise<Object[]>} - A promise that resolves to an array of item objects that match the category.
+     * @throws {Error} - If there is an error retrieving the items, this promise will reject with an error object.
+     */
+    static getFilterItems = async (categoryName) => {
+
+        let response = await fetch(`/api/items/categories/${categoryName}`);
+        const itemsJson = await response.json();
+        try {
+            if (response.ok) {
+                return itemsJson;
+            } else {
+                throw itemsJson;
+            }
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    //------------- ITEMS ------------
+
     /**
      * Get the list of items store
      */
@@ -179,7 +249,7 @@ class Api {
         if (response.ok) {
             return itemsJson;
         } else {
-            throw itemsJson;  // an object with the error coming from the server
+            throw itemsJson;
         }
     }
 
@@ -247,31 +317,11 @@ class Api {
             const itemsJson = await response.json();
             return itemsJson;
         } else {
-            throw itemsJson;  // an object with the error coming from the server
+            throw itemsJson;
         }
     }
 
-    /**
-     * Retrieve items from the store that match the given category name.
-     * @param {string} categoryName - The name of the category to filter by.
-     * @returns {Promise<Object[]>} - A promise that resolves to an array of item objects that match the category.
-     * @throws {Error} - If there is an error retrieving the items, this promise will reject with an error object.
-     */
-    static getFilterItems = async (categoryName) => {
-        try {
-            let response = await fetch(`/api/items/categories/${categoryName}`);
-            const itemsJson = await response.json();
-
-            if (response.ok) {
-                return itemsJson;
-            } else {
-                throw itemsJson;  // Un oggetto con l'errore proveniente dal server
-            }
-        } catch (error) {
-            console.error('Error fetching Items:', error);
-            throw error;  // Rilancia l'errore per essere gestito dal chiamante
-        }
-    }
+    //------------- WISHLIST ------------
 
     /**
      * Retrieve the wishlist for a given user.
@@ -282,16 +332,17 @@ class Api {
     static getWishlistByUser = async (userId) => {
         try {
             let response = await fetch(`/api/wishlist/${userId}`);
-            const wishlistJson = await response.json();
 
-            if (response.ok) {
-                return wishlistJson;
-            } else {
-                throw wishlistJson;  // Un oggetto con l'errore proveniente dal server
+            if (!response.ok) {
+                const errorResponse = await response.json();
+                throw new Error(errorResponse.message || 'Errore nella richiesta della wishlist');
             }
+
+            const wishlistJson = await response.json();
+            return wishlistJson;
+
         } catch (error) {
-            console.error('Error fetching wishlist:', error);
-            throw error;  // Rilancia l'errore per essere gestito dal chiamante
+            throw error;
         }
     }
 
@@ -312,11 +363,10 @@ class Api {
             if (response.ok) {
                 return wishlistJson;
             } else {
-                throw wishlistJson;  // Un oggetto con l'errore proveniente dal server
+                throw wishlistJson;
             }
         } catch (error) {
-            console.error('Error fetching wishlist:', error);
-            throw error;  // Rilancia l'errore per essere gestito dal chiamante
+            throw error;
         }
     }
 
@@ -335,11 +385,10 @@ class Api {
             if (response.ok) {
                 return itemsJson;
             } else {
-                throw itemsJson;  // Un oggetto con l'errore proveniente dal server
+                throw itemsJson;
             }
         } catch (error) {
-            console.error('Error fetching Items:', error);
-            throw error;  // Rilancia l'errore per essere gestito dal chiamante
+            throw error;
         }
     }
 
@@ -389,55 +438,21 @@ class Api {
             },
         });
 
-        if (!response.ok) {
-            const errDetail = await response.json();
-            throw new Error(errDetail.message || 'Unknown error');
-        }
-
-        return response;
-    }
-
-    /**
-     * Get the list of categories
-    */
-    static getCategories = async () => {
-        let response = await fetch('/api/categories');
-        const categoriesJson = await response.json();
-        if (response.ok) {
-            return categoriesJson;
-        } else {
-            throw categoriesJson;  // an object with the error coming from the server
-        }
-    }
-
-    /**
-     * Perform a checkout with the given list of purchases.
-     * @param {Object[]} listPurchase - The list of purchases to checkout.
-     * @returns {Promise<Object>} - A promise that resolves to the response object from the server.
-     * @throws {Error} - If there is an error during the checkout, this promise will reject with an error object.
-     */
-    static doCheckout = async (listPurchase) => {
-        let response = await fetch('/api/checkout', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ listPurchase }),
-        });
-        if (response.ok) {
-            const res = await response.json();
-            return res;
-        }
-        else {
-            try {
+        try {
+            if (!response.ok) {
                 const errDetail = await response.json();
-                throw errDetail.message;
+                throw new Error(errDetail.message || 'Error while removing the item from the wishlist');
             }
-            catch (err) {
-                throw err;
-            }
+
+            const responseData = await response.json();
+            return responseData;
+
+        } catch (error) {
+            throw new Error(error.message || 'Network error');
         }
     }
+
+    //------------- COMMENT ------------
 
     /**
      * Add a comment to a given item.
@@ -484,13 +499,17 @@ class Api {
             },
         });
 
-        if (!response.ok) {
-            const errDetail = await response.json();
-            throw new Error(errDetail.message || 'Unknown error');
-        }
+        try {
+            if (!response.ok) {
+                const errDetail = await response.json();
+                throw new Error(errDetail.message || 'An error occurred while removing the comment.');
+            }
 
-        const responseData = await response.json();
-        return responseData;
+            const responseData = await response.json();
+            return responseData;
+        } catch (err) {
+            throw new Error(err.message || 'Network error');
+        }
 
     }
 
@@ -522,6 +541,8 @@ class Api {
         }
     }
 
+    //------------- SEARCH ------------
+
     /**
      * Fetches the comments made by the user with the given ID from the server.
      * @param {number} userId - The ID of the user.
@@ -530,11 +551,18 @@ class Api {
      */
     static getCommentsbyUserId = async (userId) => {
         let response = await fetch(`/api/search/user/${userId}/comments`);
-        const commentsJson = await response.json();
-        if (response.ok) {
+
+        try {
+            if (!response.ok) {
+                const errDetail = await response.json();
+                throw new Error(errDetail.message || 'No comments found.');
+            }
+
+            const commentsJson = await response.json();
             return commentsJson;
-        } else {
-            throw commentsJson;  // an object with the error coming from the server
+
+        } catch (error) {
+            throw new Error(error.message || 'Network error');
         }
     }
 
@@ -552,7 +580,7 @@ class Api {
                 return commentsJson;
             } else {
                 const errDetail = await response.json();
-                throw new Error(errDetail.message || 'No comments found containing the keyword.');
+                throw new Error(errDetail.message || 'No comments found.');
             }
         } catch (error) {
             throw new Error(error.message || 'Network error');
@@ -574,7 +602,7 @@ class Api {
                 return commentsJson;
             } else {
                 const errDetail = await response.json();
-                throw new Error(errDetail.message || 'No comments found containing the keyword.');
+                throw new Error(errDetail.message || 'No comments found.');
             }
         } catch (error) {
             throw new Error(error.message || 'Network error');
@@ -599,22 +627,6 @@ class Api {
             }
         } catch (error) {
             throw new Error(error.message || 'Network error');
-        }
-    }
-
-    /**
-     * Fetches the history of purchases made by the user with the given ID from the server.
-     * @param {number} userId - The ID of the user.
-     * @returns {Promise<Object[]>} - A promise that resolves to an array of purchase objects.
-     * @throws {Object} - If there is an error during the fetch, this promise will reject with an error object.
-     */
-    static getHistoryPurchase = async (userId) => {
-        let response = await fetch(`/api/user/${userId}/history`);
-        const historyJson = await response.json();
-        if (response.ok) {
-            return historyJson;
-        } else {
-            throw historyJson;  // an object with the error coming from the server
         }
     }
 

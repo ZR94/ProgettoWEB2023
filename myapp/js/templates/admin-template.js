@@ -5,13 +5,22 @@ function navbarAdminPage(active) {
     <div class="container col-md-auto navbarAdmin">
       <ul class="nav nav-tabs">
         <li class="nav-item">
-          <a class="nav-link text-dark ${active === 'userPage' ? 'active' : ''}" ${active === 'userPage' ? 'aria-current="page"' : ''} href="/userPage" >Profilo</a>
+          <a class="nav-link text-dark ${active === 'userPage' ? 'active' : ''}" ${active === 'userPage' ? 'aria-current="page"' : ''} href="/userPage" >Profile</a>
         </li>
         <li class="nav-item" id="user-wishlist">
           <a class="nav-link text-dark ${active === 'users' ? 'active' : ''}" ${active === 'users' ? 'aria-current="page"' : ''} href="/users">Users</a>
         </li>
         <li class="nav-item">
           <a class="nav-link text-dark ${active === 'items' ? 'active' : ''}" ${active === 'items' ? 'aria-current="page"' : ''} href="/items">Items</a>
+        </li>
+        <li class="nav-item" id="user-wishlist">
+          <a class="nav-link text-dark ${active === 'wishlist' ? 'active' : ''}" ${active === 'wishlist' ? 'aria-current="page"' : ''} href="/wishlist">WishList</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link text-dark ${active === 'history' ? 'active' : ''}" ${active === 'history' ? 'aria-current="page"' : ''} href="/history">Purchase history</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link text-dark ${active === 'historyComments' ? 'active' : ''}" ${active === 'historyComments' ? 'aria-current="page"' : ''} href="/historyComments">Comments</a>
         </li>
       </ul>
       <div class="container col-md-auto bodyPage" id="adminContent"></div> 
@@ -83,10 +92,10 @@ function createAdminProfile(user) {
 
 function createUsersPage() {
     return `
-        <div id="users" class="container mt-5 users">
+        <div id="users" class="container users">
             <h3>Gestione Utenti</h3>
             <div class="row g-3 justify-content-center usersList" id="usersList"></div>
-            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#userModal" id="addUser">Aggiungi Utente</button>
+            <button class="btn btn-primary mb-5" data-bs-toggle="modal" data-bs-target="#userModal" id="addUser">Aggiungi Utente</button>
         </div>
 
         <!-- Modal for Add/Edit User -->
@@ -132,7 +141,7 @@ function createItemsPage() {
         <div id="items" class="container mt-5 items">
             <h3>Gestione Items</h3>
             <div class="row g-3 justify-content-center itemsList" id="itemsList"></div>
-            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#itemModal" id="addItem">Aggiungi Item</button>
+            <button class="btn btn-primary mb-5" data-bs-toggle="modal" data-bs-target="#itemModal" id="addItem">Aggiungi Item</button>
         </div>
 
         <!-- Modal for Add Item -->
@@ -177,13 +186,13 @@ function createItemsPage() {
 
 function loadUsers(user) {
     return `
-        <div class="card col-md-4 mb-3 me-3" style="width: 18rem; height: 14rem;">
+        <div class="card adminCard col-md-4 mb-3 me-1 ms-1">
             <div class="card-body justify-content-center">
                 <h5 class="card-title">${user.name} ${user.surname}</h5>
                 <p class="card-text">${user.email}</p>
-                <button class="btn btn-primary btn-sm btn-user-wishlist" data-bs-toggle="modal" data-bs-target="#userWishlistModal" value="${user.id}">Vedi Wishlist</button>
-                <button class="btn btn-primary btn-sm btn-user-comments" data-bs-toggle="modal" data-bs-target="#userCommentsModal" value="${user.id}">Vedi Commenti</button>
-                <button class="btn btn-danger btn-sm btn-user-delete" value="${user.id}">Elimina</button>
+                <button class="btn btn-primary btn-sm btn-user-wishlist mb-1" data-bs-toggle="modal" data-bs-target="#userWishlistModal" value="${user.id}">Vedi Wishlist</button>
+                <button class="btn btn-primary btn-sm btn-user-comments mb-3" data-bs-toggle="modal" data-bs-target="#userCommentsModal" value="${user.id}">Vedi Commenti</button>
+                <button class="btn btn-danger btn-sm btn-user-delete mb-3" value="${user.id}">Elimina</button>
             </div>
         </div>
 
@@ -196,10 +205,10 @@ function loadUsers(user) {
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
-                        <div class="row g-3 justify-content-center" id="wishItemsList"></div>
+                        <div class="row g-3 justify-content-center p-2" id="wishItemsList"></div>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Chiudi</button>
+                        <button type="button" class="btn btn-secondary " data-bs-dismiss="modal">Chiudi</button>
                     </div>
                 </div>
             </div>
@@ -210,12 +219,12 @@ function loadUsers(user) {
 
 function loadItems(item) {
     return `
-    <div class="card col-md-4 mb-3 me-3">
+    <div class="card adminCard col-md-4 mb-3 me-1 ms-1">
         <div class="card-body">
             <h5 class="card-title">${item.name}</h5>
             <p class="card-text">Prezzo: $${item.price}</p>
-            <button class="btn btn-primary btn-sm btn-item-comments" data-bs-toggle="modal" data-bs-target="#userCommentsModal" value="${item.id}">Vedi Commenti</button>
-            <button class="btn btn-danger btn-sm btn-item-delete" value="${item.id}">Elimina</button>
+            <button class="btn btn-primary btn-sm btn-item-comments mb-3" data-bs-toggle="modal" data-bs-target="#userCommentsModal" value="${item.id}">Vedi Commenti</button>
+            <button class="btn btn-danger btn-sm btn-item-delete mb-3" value="${item.id}">Elimina</button>
         </div>
     </div>
 
@@ -224,10 +233,10 @@ function loadItems(item) {
 
 function cardShowItems(item) {
     return `
-    <div class="card col-md-4 mb-3 me-3">
+    <div class="card col-md-4 mb-3 me-1 ms-1">
         <div class="card-body-admin">
-            <h5 class="align-items-center fw-bold">${item.name}</h5>
-            <img src="${item.img}" class="img-fluid" style="width: 80px;" alt="Generic placeholder image">
+            <h5 class="align-items-center fw-bold mt-2 mb-2">${item.name}</h5>
+            <img src="${item.img}" class="img-fluid mb-3" style="width: 80px;" alt="Generic placeholder image">
             <div class="float"></div>
             <button type="button" class="btn btn-danger btn-sm btn-favourite-delete" data-bs-dismiss="modal" id="unfollow-${item.id}" value="${item.id}">Elimina</button>
         </div>

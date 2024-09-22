@@ -5,16 +5,16 @@ function navbarUserPage(active) {
     <div class="container col-md-auto navbarUser">
       <ul class="nav nav-tabs">
         <li class="nav-item">
-          <a class="nav-link text-dark ${active === 'userPage' ? 'active' : ''}" ${active === 'userPage' ? 'aria-current="page"' : ''} href="/userPage">Profilo</a>
+          <a class="nav-link text-dark ${active === 'userPage' ? 'active' : ''}" ${active === 'userPage' ? 'aria-current="page"' : ''} href="/userPage">Profile</a>
         </li>
         <li class="nav-item" id="user-wishlist">
           <a class="nav-link text-dark ${active === 'wishlist' ? 'active' : ''}" ${active === 'wishlist' ? 'aria-current="page"' : ''} href="/wishlist">WishList</a>
         </li>
         <li class="nav-item">
-          <a class="nav-link text-dark ${active === 'history' ? 'active' : ''}" ${active === 'history' ? 'aria-current="page"' : ''} href="/history">Cronologia acquisti</a>
+          <a class="nav-link text-dark ${active === 'history' ? 'active' : ''}" ${active === 'history' ? 'aria-current="page"' : ''} href="/history">Purchase history</a>
         </li>
         <li class="nav-item">
-          <a class="nav-link text-dark ${active === 'historyComments' ? 'active' : ''}" ${active === 'historyComments' ? 'aria-current="page"' : ''} href="/historyComments">Commenti</a>
+          <a class="nav-link text-dark ${active === 'historyComments' ? 'active' : ''}" ${active === 'historyComments' ? 'aria-current="page"' : ''} href="/historyComments">Comments</a>
         </li>
       </ul>
       <div class="container col-md-auto bodyPage"></div> 
@@ -136,8 +136,8 @@ function createCard(item) {
 
 function createHistoryPurchasePage() {
   return `
-  <div class="container">
-  <h3 class="offcanvas-title" id="offcanvasScrollingLabel">History Purchase</h3>
+  <div class="container mb-3">
+  <h3 class="offcanvas-title mb-4" id="offcanvasScrollingLabel">History Purchase</h3>
   <div class="row" id="purchase-history-row">
     <!-- Le tabelle saranno inserite qui -->
   </div>
@@ -162,11 +162,10 @@ function createTablePurchase() {
 
 function createCardPurchase(item, qta) {
   return `
-  <div class="card card-purchase mb-3">
+  <div class="card card-purchase ">
     <div class="card-body">
-      <h5 class="card-title fw-bold">${item.name}</h5>
-      <p class="card-text">Price: $${item.price.toFixed(2)}</p>
-      <p class="card-text">Quantity: ${qta}</p>
+      <h6 class="card-title fw-bold">${item.name}</h6>
+      <p class="card-text">Price: $${item.price.toFixed(2)} Quantity: ${qta}</p>
     </div>
   </div>
   `;
@@ -202,14 +201,14 @@ function createHistoryCommentsPage() {
 
 function cardShowCommentsUser(comment, itemName) {
   return `
-  <div class="card col-md-4 mb-3 me-3">
+  <div class="card col-md-4 mb-3 me-1 ms-1">
     <div class="card-body">
         <!-- Nome dell'oggetto (item) -->
         <h5 class="card-title">${itemName}</h5>
         
         <!-- Testo del commento -->
         <p class="card-text card-text-${comment.id}">${comment.text}</p>
-        <button class="btn btn-secondary btn-sm btn-update-comment-${comment.id}" data-bs-toggle="modal" data-bs-dismiss="modal" data-bs-target="#commentModal-${comment.id}" data-id="${comment.id}">Modifica</button>
+        <button class="btn btn-secondary btn-sm btn-update-comment-${comment.id} mb-1" data-bs-toggle="modal" data-bs-dismiss="modal" data-bs-target="#commentModal-${comment.id}" data-id="${comment.id}">Modifica</button>
         <button class="btn btn-danger btn-sm btn-remove-comment-${comment.id}" data-bs-dismiss="modal" data-id="${comment.id}">Elimina</button>
     </div>
   </div>

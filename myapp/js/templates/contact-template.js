@@ -4,7 +4,7 @@ function createContactForm() {
         <!-- Titolo principale -->
         <div class="row mb-5">
             <div class="col text-center">
-                <h1 class="contact-title">Contact</h1>
+                <h1 class="contact-title">CONTACT</h1>
             </div>
         </div>
 

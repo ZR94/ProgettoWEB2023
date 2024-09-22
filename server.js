@@ -75,9 +75,7 @@ app.use(session({
 app.use(passport.initialize());
 app.use(passport.session());
 
-// === REST API (item, user, session) === //
-
-// POST /users
+// === REST API === //
 
 // Sign up
 app.post('/api/user', [
@@ -116,12 +114,9 @@ app.post('/api/user', [
       }
     })
     .catch((error) => {
-        return res.status(409).json({ success: false, message: error.message });
+      return res.status(409).json({ success: false, message: error.message });
     });
 });
-
-
-// POST /sessions 
 
 // Login
 app.post('/api/sessions', function (req, res, next) {
@@ -140,35 +135,26 @@ app.post('/api/sessions', function (req, res, next) {
   })(req, res, next);
 });
 
-app.post('/api/checkout', isLoggedIn, (req, res) => {
-  const listPurchase = req.body.listPurchase;
-
-  const insertAllPurchases = async () => {
-    const promises = listPurchase.map(purchase => dao.createPurchase(purchase));
-    await Promise.all(promises);
-  };
-
-  insertAllPurchases()
-    .then(() => res.status(200).json({ message: 'Item added to purchase successfully' }))
-    .catch((err) => res.status(err.status || 500).json({ error: err.msg || 'An error occurred' }));
-
+// Logout
+app.delete('/api/sessions/current', isLoggedIn, function (req, res) {
+  req.logout(function (err) {
+    if (err) { return res.status(503).json(err); }
+  });
+  res.end();
 });
 
-app.post('/api/comments', [
-  check('comment.idUser').notEmpty().withMessage('User ID is required'),
-  check('comment.idItem').notEmpty().withMessage('Item ID is required'),
-  check('comment.text').notEmpty().withMessage('Comment text is required'),
-], (req, res) => {
+//------------- USER ------------
 
-  const idUser = req.body.comment.idUser;
-  const idItem = req.body.comment.idItem;
-  const text = req.body.comment.text;
-  dao.addComment(idUser, idItem, text)
-    .then(() => res.status(200).json({ success: true, message: 'Comment added successfully' }))
-    .catch((err) => res.status(err.status || 500).json({ error: err.msg || 'An error occurred' }));
-});
-
-app.post('/api/user/:userId', [], (req, res) => {
+/**
+ * Add user information (birthdate, address, city) to the database.
+ * 
+ * @param {string} birthdate - The user's birthdate.
+ * @param {string} address - The user's address.
+ * @param {string} city - The user's city.
+ * @param {number} idUser - The user's ID.
+ * @returns {Promise<Object>} A promise that resolves to an object with a success message or an error message.
+ */
+app.post('/api/user/:userId', isLoggedIn, (req, res) => {
 
   const idUser = req.params.userId;
   const { birthdate, address, city } = req.body.dataInfo;
@@ -188,7 +174,171 @@ app.post('/api/user/:userId', [], (req, res) => {
     .catch((err) => res.status(err.status || 500).json({ success: false, error: err.msg || 'An error occurred' }));
 });
 
-// Aggiunge un item alla wishlist dell'utente, dato il suo id.
+/**
+ * Deletes the user with the specified ID from the database.
+ * @param {number} userId - The ID of the user to delete.
+ * @returns {Promise<Object>} A promise that resolves to an object with a success message or an error message.
+ */
+app.delete('/api/user/:userId', isLoggedIn, (req, res) => {
+  const userId = req.params.userId;
+
+  dao.deleteUser(userId)
+    .then(() => res.status(200).json({ success: true, message: 'Account eliminato con successo' }))
+    .catch((err) => res.status(err.status || 500).json({ success: false, message: err.msg || 'Errore durante l\'eliminazione dell\'account' }));
+});
+
+/**
+ * Retrieves a list of all the users in the database.
+ * @returns {Promise<Object[]>} A promise that resolves to an array of user objects.
+ */
+app.get('/api/users', isLoggedIn, (req, res) => {
+  dao.getAllUsers()
+    .then(users => res.json(users))
+    .catch(error => res.status(500).json(error));
+});
+
+/**
+ * Retrieves a user by ID from the database.
+ * @param {number} id - The ID of the user to retrieve.
+ * @returns {Promise<Object>} A promise that resolves to an object with the user's information.
+ */
+app.get('/api/user/:id', isLoggedIn, (req, res) => {
+  const userId = req.params.id;
+  dao.getUserById(userId)
+    .then(user => res.json(user))
+    .catch(error => res.status(500).json(error));
+});
+
+/**
+ * Retrieves the purchase history of a user by ID.
+ * @param {number} userId - The ID of the user to retrieve the history of.
+ * @returns {Promise<Object[]>} A promise that resolves to an array of objects containing the purchase history of the user.
+ */
+app.get('/api/user/:userId/history', isLoggedIn, (req, res) => {
+  const userId = req.params.userId;
+  dao.getHistoryByUserId(userId)
+    .then((history) => res.json(history))
+    .catch((error) => res.status(404).json(error));
+});
+
+//------------- PURCHASE ------------
+
+/**
+ * Retrieves a list of all the categories in the database.
+ * @returns {Promise<Object[]>} A promise that resolves to an array of category objects.
+ */
+app.get('/api/categories', (req, res) => {
+  dao.getAllCategories()
+    .then(categories => res.json(categories))
+    .catch(error => res.status(500).json(error));
+});
+
+/**
+ * Handle the checkout process.
+ * @param {Object[]} req.body.listPurchase - A list of objects containing the items to purchase.
+ * @returns {Promise<Object>} A promise that resolves to an object with a success message or an error message.
+ */
+app.post('/api/checkout', isLoggedIn, (req, res) => {
+  const listPurchase = req.body.listPurchase;
+
+  const insertAllPurchases = async () => {
+    const promises = listPurchase.map(purchase => dao.createPurchase(purchase));
+    await Promise.all(promises);
+  };
+
+  insertAllPurchases()
+    .then(() => res.status(200).json({ message: 'Purchase completed successfully' }))
+    .catch((err) => res.status(err.status || 500).json({ error: err.msg || 'An error occurred' }));
+
+});
+
+//------------- ITEM ------------
+
+/**
+ * Create a new item in the database.
+ * @param {Object} req.body.item - The item to create.
+ * @param {number} req.body.item.price - The price of the item.
+ * @param {string} req.body.item.name - The name of the item.
+ * @param {string} req.body.item.category - The category of the item.
+ * @param {string} req.body.item.img - The image URL of the item.
+ * @returns {Promise<Object>} A promise that resolves to an object with a success message or an error message.
+ */
+app.post('/api/item', isLoggedIn, (req, res) => {
+  const item = {
+    price: req.body.item.price,
+    name: req.body.item.name,
+    category: req.body.item.category,
+    img: req.body.item.img,
+  };
+  dao.createItem(item)
+    .then(() => res.status(201).json({ success: true, message: 'Item creato con successo' }))
+    .catch((err) => res.status(503).json({ error: err.msg || 'Database error during the item creation' }));
+
+})
+
+/**
+ * Retrieves a list of all the items in the database.
+ * @returns {Promise<Object[]>} A promise that resolves to an array of objects containing the items.
+ */
+app.get('/api/items', isLoggedIn, (req, res) => {
+  dao.getAllItems()
+    .then(items => res.json(items))
+    .catch(error => res.status(500).json(error));
+});
+
+/**
+ * Retrieves an item by ID from the database.
+ * @param {number} itemId - The ID of the item to retrieve.
+ * @returns {Promise<Object>} A promise that resolves to an object with the item's information.
+ */
+app.get('/api/items/:id', isLoggedIn, (req, res) => {
+  const itemId = req.params.id;
+  dao.getItemById(itemId)
+    .then(item => res.json(item))
+    .catch(error => res.status(500).json(error));
+});
+
+/**
+ * Retrieves a list of all the items of a given category from the database.
+ * If the category name is 'all-categories', it returns all the items.
+ * @param {string} req.params.categoryName - The name of the category.
+ * @returns {Promise<Object[]>} A promise that resolves to an array of objects containing the items.
+ */
+app.get('/api/items/categories/:categoryName', isLoggedIn, (req, res) => {
+  const categoryName = req.params.categoryName;
+  let result;
+  if (categoryName === 'all-categories') {
+    result = dao.getAllItems();
+  } else {
+    result = dao.getItemsByCategory(categoryName)
+  }
+  result
+    .then((categories) => res.json(categories))
+    .catch((error) => res.status(404).json(error));
+});
+
+/**
+ * Deletes an item from the database.
+ * @param {number} itemId - The ID of the item to delete.
+ * @returns {Promise<Object>} A promise that resolves to an object with a success message or an error message.
+ */
+app.delete('/api/item/:itemId', isLoggedIn, (req, res) => {
+  const itemId = req.params.itemId;
+
+  dao.deleteItem(itemId)
+    .then(() => res.status(200).json({ success: true, message: 'Item eliminato con successo' }))
+    .catch((err) => res.status(err.status || 500).json({ success: false, message: err.msg || 'Errore durante l\'eliminazione dell\'item' }));
+});
+
+//------------- WISHLIST ------------
+
+/**
+ * Adds an item to the wishlist of a user.
+ * @param {number} userId - The user's ID.
+ * @param {number} itemId - The item's ID.
+ * @param {string} visibility - The visibility of the item. Can be 'public', 'private', or 'all'.
+ * @returns {Promise<Object>} A promise that resolves to an object with a success message or an error message.
+ */
 app.post('/api/user/:userId/wishlist', isLoggedIn, [
   check('item.id').notEmpty(),
 ], (req, res) => {
@@ -204,39 +354,13 @@ app.post('/api/user/:userId/wishlist', isLoggedIn, [
     .catch((err) => res.status(err.status || 500).json({ error: err.msg || 'An error occurred' }));
 });
 
-app.post('/api/item', isLoggedIn, (req, res) => {
-  const item = {
-    price: req.body.item.price,
-    name: req.body.item.name,
-    category: req.body.item.category,
-    img: req.body.item.img,
-  };
-  dao.createItem(item)
-    .then(() => res.status(201).json({ success: true, message: 'Item creato con successo' }))
-    .catch((err) => res.status(503).json({ error: err.msg || 'Database error during the item creation' }));
-
-})
-
-// DELETE /sessions/current
-
-// Logout
-app.delete('/api/sessions/current', isLoggedIn, function (req, res) {
-  req.logout(function (err) {
-    if (err) { return res.status(503).json(err); }
-  });
-  res.end();
-});
-
-app.delete('/api/user/:userId', (req, res) => {
-  const userId = req.params.userId;
-
-  dao.deleteUser(userId)
-    .then(() => res.status(200).json({ success: true, message: 'Account eliminato con successo' }))
-    .catch((err) => res.status(err.status || 500).json({ success: false, message: err.msg || 'Errore durante l\'eliminazione dell\'account' }));
-});
-
-// Rimuove un item dalla wishlist dell’utente, dato il suo id.
-app.delete('/api/user/:userId/wishlist/:itemId', (req, res) => {
+/**
+ * Deletes an item from the wishlist of a user.
+ * @param {number} userId - The user's ID.
+ * @param {number} itemId - The item's ID.
+ * @returns {Promise<Object>} A promise that resolves to an object with a success property and a message property describing the result of the operation.
+ */
+app.delete('/api/user/:userId/wishlist/:itemId', isLoggedIn, (req, res) => {
   const userId = req.params.userId;
   const itemId = req.params.itemId;
   dao.deleteItemInWishList(userId, itemId)
@@ -254,66 +378,25 @@ app.delete('/api/user/:userId/wishlist/:itemId', (req, res) => {
     );
 });
 
-// Rimuove un commento dell’utente, dato il suo id.
-app.delete('/api/comments/:commentId', (req, res) => {
-  const commentId = req.params.commentId;
-  dao.deleteComment(commentId)
-    .then(() => res.status(200).json({ success: true, message: 'Commento eliminato con successo' }))
-    .catch((err) => res.status(503).json({ error: err.msg || 'Database error during the item creation' }));
-});
-
-app.delete('/api/item/:itemId', (req, res) => {
-  const itemId = req.params.itemId;
-
-  dao.deleteItem(itemId)
-    .then(() => res.status(200).json({ success: true, message: 'Item eliminato con successo' }))
-    .catch((err) => res.status(err.status || 500).json({ success: false, message: err.msg || 'Errore durante l\'eliminazione dell\'item' }));
-});
-
-// GET /items
-
-app.get('/api/items', isLoggedIn, (req, res) => {
-  dao.getAllItems()
-    .then(items => res.json(items))
-    .catch(error => res.status(500).json(error));
-});
-
-app.get('/api/users', isLoggedIn, (req, res) => {
-  dao.getAllUsers()
-    .then(users => res.json(users))
-    .catch(error => res.status(500).json(error));
-});
-
-app.get('/api/categories', (req, res) => {
-  dao.getAllCategories()
-    .then(categories => res.json(categories))
-    .catch(error => res.status(500).json(error));
-});
-
-app.get('/api/items/:id', (req, res) => {
-  const itemId = req.params.id;
-  dao.getItemById(itemId)
-    .then(item => res.json(item))
-    .catch(error => res.status(500).json(error));
-});
-
-app.get('/api/user/:id', isLoggedIn, (req, res) => {
-  const userId = req.params.id;
-  dao.getUserById(userId)
-    .then(user => res.json(user))
-    .catch(error => res.status(500).json(error));
-});
-
-// GET /api/wishlist/:id
-
-app.get('/api/wishlist/:id', (req, res) => {
+/**
+ * Gets the wishlist of a user.
+ * @param {number} id - The user's ID.
+ * @returns {Promise<Object[]>} - A promise that resolves to an array of objects containing the wishlist items.
+ */
+app.get('/api/wishlist/:id', isLoggedIn, (req, res) => {
   const userId = req.params.id;
   dao.getWishlistByUserId(userId)
     .then((wishlist) => res.json(wishlist))
     .catch((error) => res.status(404).json(error));
 });
 
-app.get('/api/wishlist/:id/:visibility', (req, res) => {
+/**
+ * Gets the wishlist of a user filtered by visibility.
+ * @param {number} id - The user's ID.
+ * @param {string} visibility - The visibility of the wishlist items. Can be 'public', 'private' or 'all'.
+ * @returns {Promise<Object[]>} - A promise that resolves to an array of objects containing the wishlist items with the specified visibility.
+ */
+app.get('/api/wishlist/:id/:visibility', isLoggedIn, (req, res) => {
   const userId = req.params.id;
   const visibility = req.params.visibility;
   dao.getWishlistByVisibility(userId, visibility)
@@ -321,19 +404,64 @@ app.get('/api/wishlist/:id/:visibility', (req, res) => {
     .catch((error) => res.status(404).json(error));
 });
 
-app.get('/api/items/categories/:categoryName', isLoggedIn, (req, res) => {
-  const categoryName = req.params.categoryName;
-  let result;
-  if (categoryName === 'all-categories') {
-    result = dao.getAllItems();
-  } else {
-    result = dao.getItemsByCategory(categoryName)
-  }
-  result
-    .then((categories) => res.json(categories))
-    .catch((error) => res.status(404).json(error));
+
+//------------- COMMENT ------------
+
+/**
+ * Deletes a comment from the database.
+ * @param {number} commentId - The ID of the comment to delete.
+ * @returns {Promise<Object>} - A promise that resolves to an object with a success property and a message property describing the result of the operation.
+ */
+app.delete('/api/comments/:commentId', isLoggedIn, (req, res) => {
+  const commentId = req.params.commentId;
+  dao.deleteComment(commentId)
+    .then(() => res.status(200).json({ success: true, message: 'Commento eliminato con successo' }))
+    .catch((err) => res.status(503).json({ error: err.msg || 'Database error during the item creation' }));
 });
 
+/**
+ * Updates a comment in the database.
+ * @param {number} idComment - The ID of the comment to update.
+ * @param {string} text - The new text of the comment.
+ * @returns {Promise<Object>} - A promise that resolves to an object with a success property and a message property describing the result of the operation.
+ */
+app.put('/api/comments/:idComment', isLoggedIn, (req, res) => {
+  const idComment = req.params.idComment;
+  const text = req.body.text;
+  dao.updateComment(idComment, text)
+    .then(() => res.status(201).json({ success: true, message: 'Commento aggiornato con successo' }))
+    .catch((err) => res.status(503).json({ error: err.msg || 'Database error during the item creation' }));
+}
+);
+
+/**
+ * Adds a comment to the database.
+ * @param {number} idUser - The ID of the user that made the comment.
+ * @param {number} idItem - The ID of the item being commented.
+ * @param {string} text - The text of the comment.
+ * @returns {Promise<Object>} - A promise that resolves to an object with a success property and a message property describing the result of the operation.
+ */
+app.post('/api/comments', isLoggedIn, [
+  check('comment.idUser').notEmpty().withMessage('User ID is required'),
+  check('comment.idItem').notEmpty().withMessage('Item ID is required'),
+  check('comment.text').notEmpty().withMessage('Comment text is required'),
+], (req, res) => {
+
+  const idUser = req.body.comment.idUser;
+  const idItem = req.body.comment.idItem;
+  const text = req.body.comment.text;
+  dao.addComment(idUser, idItem, text)
+    .then(() => res.status(200).json({ success: true, message: 'Comment added successfully' }))
+    .catch((err) => res.status(err.status || 500).json({ error: err.msg || 'An error occurred' }));
+});
+
+//------------- SEARCH ------------
+
+/**
+ * Retrieves the comments of a user by ID.
+ * @param {number} userId - The ID of the user to retrieve the comments of.
+ * @returns {Promise<Object[]>} - A promise that resolves to an array of objects containing the comments of the user.
+ */
 app.get('/api/search/user/:userId/comments', isLoggedIn, (req, res) => {
   const userId = req.params.userId;
   dao.getCommentByUserId(userId)
@@ -341,6 +469,11 @@ app.get('/api/search/user/:userId/comments', isLoggedIn, (req, res) => {
     .catch((error) => res.status(404).json(error));
 });
 
+/**
+ * Retrieves the comments of an item by ID.
+ * @param {number} itemId - The ID of the item to retrieve the comments of.
+ * @returns {Promise<Object[]>} - A promise that resolves to an array of objects containing the comments of the item.
+ */
 app.get('/api/search/items/:itemId/comments', isLoggedIn, (req, res) => {
   const itemId = req.params.itemId;
   dao.getCommentByItemId(itemId)
@@ -348,6 +481,12 @@ app.get('/api/search/items/:itemId/comments', isLoggedIn, (req, res) => {
     .catch((error) => res.status(404).json(error));
 });
 
+/**
+ * Retrieves the comments of a user on an item by IDs.
+ * @param {number} userId - The ID of the user to retrieve the comments of.
+ * @param {number} itemId - The ID of the item to retrieve the comments of.
+ * @returns {Promise<Object[]>} - A promise that resolves to an array of objects containing the comments of the user on the item.
+ */
 app.get('/api/search/user/:userId/items/:itemId/comments', isLoggedIn, (req, res) => {
   const userId = req.params.userId;
   const itemId = req.params.itemId;
@@ -356,6 +495,11 @@ app.get('/api/search/user/:userId/items/:itemId/comments', isLoggedIn, (req, res
     .catch((error) => res.status(404).json(error));
 })
 
+/**
+ * Retrieves all the comments that contain a given keyword from the database.
+ * @param {string} keyword - The keyword to search in the comments.
+ * @returns {Promise<Object[]>} - A promise that resolves to an array of objects containing the comments.
+ */
 app.get('/api/search/comments/:keyword', isLoggedIn, (req, res) => {
   const keyword = req.params.keyword;
   dao.getCommentsByKeyword(keyword)
@@ -363,13 +507,13 @@ app.get('/api/search/comments/:keyword', isLoggedIn, (req, res) => {
     .catch((error) => res.status(404).json(error));
 });
 
-app.get('/api/user/:userId/history', isLoggedIn, (req, res) => {
-  const userId = req.params.userId;
-  dao.getHistoryByUserId(userId)
-    .then((history) => res.json(history))
-    .catch((error) => res.status(404).json(error));
-});
-
+/**
+ * Retrieves all the items of a given category and price range from the database.
+ * @param {string} category - The name of the category.
+ * @param {number} priceMin - The minimum price of the items.
+ * @param {number} priceMax - The maximum price of the items.
+ * @returns {Promise<Object[]>} - A promise that resolves to an array of objects containing the items.
+ */
 app.get('/api/search/:category/:priceMin/:priceMax', isLoggedIn, (req, res) => {
   const category = req.params.category;
   const priceMin = req.params.priceMin;
@@ -379,14 +523,7 @@ app.get('/api/search/:category/:priceMin/:priceMax', isLoggedIn, (req, res) => {
     .catch((error) => res.status(404).json(error));
 });
 
-app.put('/api/comments/:idComment', isLoggedIn, (req, res) => {
-  const idComment = req.params.idComment;
-  const text = req.body.text;
-  dao.updateComment(idComment, text)
-    .then(() => res.status(201).json({ success: true, message: 'Commento aggiornato con successo' }))
-    .catch((err) => res.status(503).json({ error: err.msg || 'Database error during the item creation' }));
-}
-);
+//------------- OTHERS ------------
 
 app.get('*', (req, res) => {
   res.sendFile(path.resolve(__dirname, 'myapp/index.html'));

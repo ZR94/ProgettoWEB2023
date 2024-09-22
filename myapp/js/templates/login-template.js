@@ -27,13 +27,7 @@ function createLoginForm() {
   
       <div class="d-flex justify-content-between mb-3">
   
-        <div class="mb-4 bodySmall">
-  
-          <input type="hidden" name="remember_me" value="0">
-          <input type="checkbox" name="remember_me" id="remember_me" value="1" class="m-l-0-xs" checked="checked">
-          <label for="remember_me">Remember Me</label>
-          
-        </div>
+        <div class="mb-4 bodySmall"></div>
       </div>
   
       <div class="d-flex justify-content-center mb-3">

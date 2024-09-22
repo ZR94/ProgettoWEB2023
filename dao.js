@@ -3,121 +3,7 @@
 const db = require('./db.js');
 const bcrypt = require('bcrypt');
 
-/**
- * Creates a new item in the database
- * @param {Object} item - The item object with its properties.
- * @returns {Promise<number>} A promise that resolves to the ID of the newly created item.
- */
-exports.createItem = function (item) {
-    return new Promise((resolve, reject) => {
-        const sql = 'INSERT INTO item(price, name, img, category) VALUES (?, ?, ?, ?)';
-        db.run(sql, [item.price, item.name, item.img, item.category], (err) => {
-            if (err) {
-                reject(err);
-                return;
-            }
-            resolve(this.lastID);
-        });
-    });
-};
-
-/**
- * Deletes an item from the database
- * @param {number} id - The ID of the item to delete.
- * @returns {Promise<void>} A promise that resolves when the item has been deleted.
- */
-exports.deleteItem = function (id) {
-    return new Promise((resolve, reject) => {
-        const sql = 'DELETE FROM item WHERE idItem = ?';
-        db.run(sql, [id], (err) => {
-            if (err) {
-                reject(err);
-                return;
-            }
-            resolve();
-        });
-    });
-};
-
-/**
- * Retrieves all items from the database
- * @returns {Promise<Object[]>} A promise that resolves to an array of item objects, each with properties id, price, name, img, and category
- */
-exports.getAllItems = function () {
-    return new Promise((resolve, reject) => {
-        const sql = 'SELECT * FROM item';
-        db.all(sql, (err, rows) => {
-            if (err) {
-                reject(err);
-                return;
-            }
-
-            const items = rows.map((row) => ({ id: row.idItem, price: row.price, name: row.name, img: row.img, category: row.category }));
-            resolve(items);
-        });
-    });
-};
-
-/**
- * Retrieves all categories from the database
- * @returns {Promise<Object[]>} A promise that resolves to an array of category objects, each with properties id and obj
- */
-exports.getAllCategories = function () {
-    return new Promise((resolve, reject) => {
-        const sql = 'SELECT * FROM category';
-        db.all(sql, (err, rows) => {
-            if (err) {
-                reject(err);
-                return;
-            }
-
-            const categories = rows.map((row) => ({ id: row.idCategory, obj: row.obj }));
-            resolve(categories);
-        });
-    });
-};
-
-/**
- * Retrieves all users from the database
- * @returns {Promise<Object[]>} A promise that resolves to an array of user objects, each with properties id, name, surname, and email
- */
-exports.getAllUsers = function () {
-    return new Promise((resolve, reject) => {
-        const sql = 'SELECT * FROM user';
-        db.all(sql, (err, rows) => {
-            if (err) {
-                reject(err);
-                return;
-            }
-
-            const users = rows.map((row) => ({ id: row.idUser, name: row.name, surname: row.surname, email: row.email }));
-            resolve(users);
-        });
-    });
-};
-
-/**
- * Retrieves an item by its ID from the database
- * @param {number} id - Item's unique ID
- * @returns {Promise<Object>} A promise that resolves to an object with properties id, price, name, img, and category
- */
-exports.getItemById = function (id) {
-    return new Promise((resolve, reject) => {
-        const sql = 'SELECT * FROM item WHERE idItem = ?';
-        db.get(sql, [id], (err, row) => {
-            if (err)
-                reject(err);
-            else if (row === undefined)
-                resolve({ error: 'Item not found.' });
-            else {
-                const item = {
-                    id: row.idItem, price: row.price, name: row.name, img: row.img, category: row.category
-                }
-                resolve(item);
-            }
-        });
-    });
-};
+//------------- USER ------------
 
 /**
  * Creates a new user in the database, after checking if the email already exists
@@ -150,25 +36,6 @@ exports.createUser = function (user) {
     });
 };
 
-
-/**
- * Creates a new purchase in the database
- * @param {Object} purchase - Purchase data: idUser, idItem, qta, price, and dateTime
- * @returns {Promise<number>} A promise that resolves to the id of the newly created purchase
- */
-exports.createPurchase = function (purchase) {
-    return new Promise((resolve, reject) => {
-        const sql = 'INSERT INTO purchase(idPurchaseUser, idPurchaseItem, qta, price, dateTime) VALUES (?, ?, ?, ?, ?)';
-        db.run(sql, [purchase.idUser, purchase.idItem, purchase.qta, purchase.price, purchase.dateTime], (err) => {
-            if (err) {
-                reject(err);
-                return;
-            }
-            resolve(purchase.idPurchase);
-        });
-    });
-};
-
 /**
  * Deletes a user from the database
  * @param {number} id - The id of the user to delete
@@ -187,18 +54,20 @@ exports.deleteUser = function (id) {
 };
 
 /**
- * Deletes an item from the database
- * @param {number} id - The id of the item to delete
- * @returns {Promise<Object>} A promise that resolves to an object with a success property set to true and a message property with a success message
+ * Retrieves all users from the database
+ * @returns {Promise<Object[]>} A promise that resolves to an array of user objects, each with properties id, name, surname, and email
  */
-exports.deleteItem = function (id) {
+exports.getAllUsers = function () {
     return new Promise((resolve, reject) => {
-        const sql = 'DELETE FROM item WHERE idItem = ?';
-        db.run(sql, [id], (err) => {
-            if (err) reject(err);
-            else {
-                resolve({ success: true, message: 'Item eliminato con successo' });
+        const sql = 'SELECT * FROM user';
+        db.all(sql, (err, rows) => {
+            if (err) {
+                reject(err);
+                return;
             }
+
+            const users = rows.map((row) => ({ id: row.idUser, name: row.name, surname: row.surname, email: row.email }));
+            resolve(users);
         });
     });
 };
@@ -281,6 +150,148 @@ exports.addInfoUser = function (birthdate, address, city, idUser) {
         });
     });
 };
+
+//------------- PURCHASE ------------
+
+/**
+ * Creates a new purchase in the database
+ * @param {Object} purchase - Purchase data: idUser, idItem, qta, price, and dateTime
+ * @returns {Promise<number>} A promise that resolves to the id of the newly created purchase
+ */
+exports.createPurchase = function (purchase) {
+    return new Promise((resolve, reject) => {
+        const sql = 'INSERT INTO purchase(idPurchaseUser, idPurchaseItem, qta, price, dateTime) VALUES (?, ?, ?, ?, ?)';
+        db.run(sql, [purchase.idUser, purchase.idItem, purchase.qta, purchase.price, purchase.dateTime], (err) => {
+            if (err) {
+                reject(err);
+                return;
+            }
+            resolve(purchase.idPurchase);
+        });
+    });
+};
+
+/**
+ * Gets the purchase history of the user with the given ID from the database.
+ * @param {number} userId - The ID of the user.
+ * @returns {Promise<Object[]>} - A promise that resolves to an array of objects containing the purchase history.
+ */
+exports.getHistoryByUserId = function (userId) {
+    return new Promise((resolve, reject) => {
+        const sql = 'SELECT * FROM purchase WHERE idPurchaseUser = ?';
+        db.all(sql, [userId], (err, rows) => {
+            if (err)
+                reject(err);
+            else if (rows.length === 0)
+                resolve({ error: 'History not found.' });
+            else {
+                const history = rows.map((row) => ({ idPurchase: row.idPurchase, idPurchaseUser: row.idPurchaseUser, idPurchaseItem: row.idPurchaseItem, qta: row.qta, price: row.price, dateTime: row.dateTime }));
+                resolve(history.sort((a, b) => a.idPurchaseUser - b.idPurchaseUser));
+            }
+        });
+    });
+}
+
+/**
+ * Retrieves all categories from the database
+ * @returns {Promise<Object[]>} A promise that resolves to an array of category objects, each with properties id and obj
+ */
+exports.getAllCategories = function () {
+    return new Promise((resolve, reject) => {
+        const sql = 'SELECT * FROM category';
+        db.all(sql, (err, rows) => {
+            if (err) {
+                reject(err);
+                return;
+            }
+
+            const categories = rows.map((row) => ({ id: row.idCategory, obj: row.obj }));
+            resolve(categories);
+        });
+    });
+};
+
+//------------- ITEM ------------
+
+/**
+ * Creates a new item in the database
+ * @param {Object} item - The item object with its properties.
+ * @returns {Promise<number>} A promise that resolves to the ID of the newly created item.
+ */
+exports.createItem = function (item) {
+    return new Promise((resolve, reject) => {
+        const sql = 'INSERT INTO item(price, name, img, category) VALUES (?, ?, ?, ?)';
+        db.run(sql, [item.price, item.name, item.img, item.category], (err) => {
+            if (err) {
+                reject(err);
+                return;
+            }
+            resolve(this.lastID);
+        });
+    });
+};
+
+/**
+ * Deletes an item from the database
+ * @param {number} id - The ID of the item to delete.
+ * @returns {Promise<void>} A promise that resolves when the item has been deleted.
+ */
+exports.deleteItem = function (id) {
+    return new Promise((resolve, reject) => {
+        const sql = 'DELETE FROM item WHERE idItem = ?';
+        db.run(sql, [id], (err) => {
+            if (err) {
+                reject(err);
+                return;
+            }
+            resolve();
+        });
+    });
+};
+
+/**
+ * Retrieves all items from the database
+ * @returns {Promise<Object[]>} A promise that resolves to an array of item objects, each with properties id, price, name, img, and category
+ */
+exports.getAllItems = function () {
+    return new Promise((resolve, reject) => {
+        const sql = 'SELECT * FROM item';
+        db.all(sql, (err, rows) => {
+            if (err) {
+                reject(err);
+                return;
+            }
+
+            const items = rows.map((row) => ({ id: row.idItem, price: row.price, name: row.name, img: row.img, category: row.category }));
+            resolve(items);
+        });
+    });
+};
+
+/**
+ * Retrieves an item by its ID from the database
+ * @param {number} id - Item's unique ID
+ * @returns {Promise<Object>} A promise that resolves to an object with properties id, price, name, img, and category
+ */
+exports.getItemById = function (id) {
+    return new Promise((resolve, reject) => {
+        const sql = 'SELECT * FROM item WHERE idItem = ?';
+        db.get(sql, [id], (err, row) => {
+            if (err)
+                reject(err);
+            else if (row === undefined)
+                resolve({ error: 'Item not found.' });
+            else {
+                const item = {
+                    id: row.idItem, price: row.price, name: row.name, img: row.img, category: row.category
+                }
+                resolve(item);
+            }
+        });
+    });
+};
+
+//------------- WISHLIST ------------
 
 /**
  * Gets the wishlist of a user by their ID.
@@ -378,49 +389,7 @@ exports.deleteItemInWishList = function (userId, itemId) {
     });
 };
 
-/**
- * Retrieves all items of a given category from the database
- * @param {string} categoryName - The name of the category.
- * @returns {Promise<Object[]>} A promise that resolves to an array of item objects, each with properties id, price, name, img, category, idCategory, and obj.
- */
-exports.getItemsByCategory = function (categoryName) {
-    return new Promise((resolve, reject) => {
-        const sql = "SELECT * FROM item JOIN category ON category.idCategory = item.category WHERE category.obj = ?";
-        db.all(sql, [categoryName], (err, row) => {
-            if (err)
-                reject(err);
-            else if (row.length === 0)
-                resolve({ error: 'Items not found.' });
-            else {
-                const item = row.map((row) => ({ id: row.idItem, price: row.price, name: row.name, img: row.img, category: row.category, idCategory: row.idCategory, obj: row.obj }));
-                resolve(item);
-            }
-        });
-    });
-};
-
-/**
- * Retrieves all items of a given category and price range from the database
- * @param {string} category - The name of the category.
- * @param {number} priceMin - The minimum price of the items.
- * @param {number} priceMax - The maximum price of the items.
- * @returns {Promise<Object[]>} A promise that resolves to an array of item objects, each with properties id, price, name, img, category, idCategory, and obj.
- */
-exports.getItemsByCategoryAndPrice = function (category, priceMin, priceMax) {
-    return new Promise((resolve, reject) => {
-        const sql = "SELECT * FROM item JOIN category ON category.idCategory = item.category WHERE category.idCategory = ? AND item.price BETWEEN ? AND ?";
-        db.all(sql, [category, priceMin, priceMax], (err, row) => {
-            if (err)
-                reject(err);
-            else if (row.length === 0)
-                resolve({ error: 'Items not found.' });
-            else {
-                const item = row.map((row) => ({ id: row.idItem, price: row.price, name: row.name, img: row.img, category: row.category, idCategory: row.idCategory, obj: row.obj }));
-                resolve(item);
-            }
-        });
-    });
-}
+//------------- COMMENT ------------
 
 /**
  * Adds a comment to the database.
@@ -482,6 +451,52 @@ exports.updateComment = (id, text) => {
         });
     });
 };
+
+//------------- SEARCH ------------
+
+/**
+ * Retrieves all items of a given category from the database
+ * @param {string} categoryName - The name of the category.
+ * @returns {Promise<Object[]>} A promise that resolves to an array of item objects, each with properties id, price, name, img, category, idCategory, and obj.
+ */
+exports.getItemsByCategory = function (categoryName) {
+    return new Promise((resolve, reject) => {
+        const sql = "SELECT * FROM item JOIN category ON category.idCategory = item.category WHERE category.obj = ?";
+        db.all(sql, [categoryName], (err, row) => {
+            if (err)
+                reject(err);
+            else if (row.length === 0)
+                resolve({ error: 'Items not found.' });
+            else {
+                const item = row.map((row) => ({ id: row.idItem, price: row.price, name: row.name, img: row.img, category: row.category, idCategory: row.idCategory, obj: row.obj }));
+                resolve(item);
+            }
+        });
+    });
+};
+
+/**
+ * Retrieves all items of a given category and price range from the database
+ * @param {string} category - The name of the category.
+ * @param {number} priceMin - The minimum price of the items.
+ * @param {number} priceMax - The maximum price of the items.
+ * @returns {Promise<Object[]>} A promise that resolves to an array of item objects, each with properties id, price, name, img, category, idCategory, and obj.
+ */
+exports.getItemsByCategoryAndPrice = function (category, priceMin, priceMax) {
+    return new Promise((resolve, reject) => {
+        const sql = "SELECT * FROM item JOIN category ON category.idCategory = item.category WHERE category.idCategory = ? AND item.price BETWEEN ? AND ?";
+        db.all(sql, [category, priceMin, priceMax], (err, row) => {
+            if (err)
+                reject(err);
+            else if (row.length === 0)
+                resolve({ error: 'Items not found.' });
+            else {
+                const item = row.map((row) => ({ id: row.idItem, price: row.price, name: row.name, img: row.img, category: row.category, idCategory: row.idCategory, obj: row.obj }));
+                resolve(item);
+            }
+        });
+    });
+}
 
 /**
  * Gets all the comments of a user from the database.
@@ -578,24 +593,3 @@ exports.getCommentsByKeyword = function (keyword) {
         });
     });
 };
-
-/**
- * Gets the purchase history of the user with the given ID from the database.
- * @param {number} userId - The ID of the user.
- * @returns {Promise<Object[]>} - A promise that resolves to an array of objects containing the purchase history.
- */
-exports.getHistoryByUserId = function (userId) {
-    return new Promise((resolve, reject) => {
-        const sql = 'SELECT * FROM purchase WHERE idPurchaseUser = ?';
-        db.all(sql, [userId], (err, rows) => {
-            if (err)
-                reject(err);
-            else if (rows.length === 0)
-                resolve({ error: 'History not found.' });
-            else {
-                const history = rows.map((row) => ({ idPurchase: row.idPurchase, idPurchaseUser: row.idPurchaseUser, idPurchaseItem: row.idPurchaseItem, qta: row.qta, price: row.price, dateTime: row.dateTime }));
-                resolve(history.sort((a, b) => a.idPurchaseUser - b.idPurchaseUser));
-            }
-        });
-    });
-}
