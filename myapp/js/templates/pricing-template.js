@@ -12,7 +12,7 @@ function createPricingForm() {
 
         <div class="row justify-content-center">
             <!-- 30-Min Sessions -->
-            <div class="col-sm-12 col-md-4 mb-4 d-flex">
+            <div class="col-sm-12 col-md-4 mb-3 me-0 d-flex">
                 <div class="pricing-card">
                     <h3 class="text-uppercase">30-min sessions</h3>
                     <p class="price">$78</p>
@@ -26,7 +26,7 @@ function createPricingForm() {
             </div>
 
             <!-- 50-Min Sessions -->
-            <div class="col-sm-12 col-md-4 mb-4 d-flex">
+            <div class="col-sm-12 col-md-4 mb-3 ms-0 d-flex">
                 <div class="pricing-card">
                     <h3 class="text-uppercase" style="color: #b59f4e;">50-min sessions</h3>
                     <p class="price">$108</p>
@@ -41,7 +41,7 @@ function createPricingForm() {
             </div>
 
             <!-- Membership -->
-            <div class="col-sm-12 col-md-4 mb-4 d-flex">
+            <div class="col-sm-12 col-md-4 mb-3 ms-0 d-flex">
                 <div class="pricing-card">
                     <h3 class="text-uppercase">FLF membership</h3>
                     <p class="price">$88</p>
