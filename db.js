@@ -2,7 +2,7 @@
 
 const sqlite = require('sqlite3');
 
-const db = new sqlite.Database('DBprogetto.db', (err) => {
+const db = new sqlite.Database('DbNegozio.db', (err) => {
   if (err) throw err;
 });
 
