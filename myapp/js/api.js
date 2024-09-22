@@ -101,12 +101,17 @@ class Api {
     static getUsers = async () => {
         let response = await fetch('/api/users');
 
-        const usersJson = await response.json();
+        try {
+            if (!response.ok) {
+                const errDetail = await response.json();
+                throw new Error(errDetail.message || 'Error while getting the users');
+            }
 
-        if (response.ok) {
+            const usersJson = await response.json();
             return usersJson;
-        } else {
-            throw usersJson;
+
+        } catch (error) {
+            throw new Error(error.message || 'Network error');
         }
     }
 
@@ -119,12 +124,17 @@ class Api {
     static getLoggedUser = async (userId) => {
         let response = await fetch(`/api/user/${userId}`);
 
-        const userJson = await response.json();
+        try {
+            if (!response.ok) {
+                const errDetail = await response.json();
+                throw new Error(errDetail.message || 'Error while getting the logged user');
+            }
 
-        if (response.ok) {
-            return userJson;
-        } else {
-            throw userJson; 
+            const usersJson = await response.json();
+            return usersJson;
+
+        } catch (error) {
+            throw new Error(error.message || 'Network error');
         }
     }
 
@@ -167,11 +177,18 @@ class Api {
      */
     static getHistoryPurchase = async (userId) => {
         let response = await fetch(`/api/user/${userId}/history`);
-        const historyJson = await response.json();
-        if (response.ok) {
+
+        try {
+            if (!response.ok) {
+                const errDetail = await response.json();
+                throw new Error(errDetail.message || 'Error while removing the item from the wishlist');
+            }
+
+            const historyJson = await response.json();
             return historyJson;
-        } else {
-            throw historyJson;
+
+        } catch (error) {
+            throw new Error(error.message || 'Network error');
         }
     }
 
@@ -209,11 +226,18 @@ class Api {
     */
     static getCategories = async () => {
         let response = await fetch('/api/categories');
-        const categoriesJson = await response.json();
-        if (response.ok) {
-            return categoriesJson;
-        } else {
-            throw categoriesJson;  // an object with the error coming from the server
+        
+        try {
+            if (!response.ok) {
+                const errDetail = await response.json();
+                throw new Error(errDetail.message || 'Error while getting the categories');
+            }
+
+            const responseData = await response.json();
+            return responseData;
+
+        } catch (error) {
+            throw new Error(error.message || 'Network error');
         }
     }
 
@@ -224,17 +248,19 @@ class Api {
      * @throws {Error} - If there is an error retrieving the items, this promise will reject with an error object.
      */
     static getFilterItems = async (categoryName) => {
-
         let response = await fetch(`/api/items/categories/${categoryName}`);
-        const itemsJson = await response.json();
+
         try {
-            if (response.ok) {
-                return itemsJson;
-            } else {
-                throw itemsJson;
+            if (!response.ok) {
+                const errDetail = await response.json();
+                throw new Error(errDetail.message || 'Error while filtering the items');
             }
+
+            const itemsJson = await response.json();
+            return itemsJson;
+
         } catch (error) {
-            throw error;
+            throw new Error(error.message || 'Network error');
         }
     }
 
@@ -245,11 +271,18 @@ class Api {
      */
     static getItems = async () => {
         let response = await fetch('/api/items');
-        const itemsJson = await response.json();
-        if (response.ok) {
+
+        try {
+            if (!response.ok) {
+                const errDetail = await response.json();
+                throw new Error(errDetail.message || 'Error while getting the items of the store');
+            }
+
+            const itemsJson = await response.json();
             return itemsJson;
-        } else {
-            throw itemsJson;
+
+        } catch (error) {
+            throw new Error(error.message || 'Network error');
         }
     }
 
@@ -313,11 +346,18 @@ class Api {
      */
     static getItemById = async (itemId) => {
         let response = await fetch(`/api/items/${itemId}`);
-        if (response.ok) {
+
+        try {
+            if (!response.ok) {
+                const errDetail = await response.json();
+                throw new Error(errDetail.message || 'Error while removing item from the store');
+            }
+
             const itemsJson = await response.json();
             return itemsJson;
-        } else {
-            throw itemsJson;
+
+        } catch (error) {
+            throw new Error(error.message || 'Network error');
         }
     }
 
@@ -335,7 +375,7 @@ class Api {
 
             if (!response.ok) {
                 const errorResponse = await response.json();
-                throw new Error(errorResponse.message || 'Errore nella richiesta della wishlist');
+                throw new Error(errorResponse.message || 'Error while retrieving the wishlist');
             }
 
             const wishlistJson = await response.json();
@@ -358,13 +398,14 @@ class Api {
         try {
             let response = await fetch(`/api/wishlist/${userId}/${visibility}`);
 
-            const wishlistJson = await response.json();
-
-            if (response.ok) {
-                return wishlistJson;
-            } else {
-                throw wishlistJson;
+            if (!response.ok) {
+                const errorResponse = await response.json();
+                throw new Error(errorResponse.message || 'Error while retrieving the wishlist');
             }
+
+            const wishlistJson = await response.json();
+            return wishlistJson;
+
         } catch (error) {
             throw error;
         }
@@ -380,13 +421,15 @@ class Api {
     static getFilterTitle = async (categoryName) => {
         try {
             let response = await fetch(`/api/items/titles/${categoryName}`);
-            const itemsJson = await response.json();
-
-            if (response.ok) {
-                return itemsJson;
-            } else {
-                throw itemsJson;
+            
+            if (!response.ok) {
+                const errorResponse = await response.json();
+                throw new Error(errorResponse.message || 'Error while retrieving the list of item titles');
             }
+
+            const itemJson = await response.json();
+            return itemJson;
+
         } catch (error) {
             throw error;
         }
