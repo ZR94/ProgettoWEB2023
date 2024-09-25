@@ -79,7 +79,7 @@ class Api {
      */
     static deleteUser = async (userId) => {
         try {
-            let response = await fetch(`/api/user/${userId}`, {
+            let response = await fetch(`/api/users/${userId}`, {
                 method: 'DELETE',
                 headers: {
                     'Content-Type': 'application/json',
@@ -104,7 +104,7 @@ class Api {
      * @throws {Error} - If there is an error fetching the users, this promise will reject with an error object.
      */
     static getUsers = async () => {
-        let response = await fetch('/api/user/all');
+        let response = await fetch('/api/users');
 
         try {
             if (!response.ok) {
@@ -127,7 +127,7 @@ class Api {
      * @throws {Error} - If there is an error fetching the user, this promise will reject with an error object.
      */
     static getLoggedUser = async (userId) => {
-        let response = await fetch(`/api/user/${userId}`);
+        let response = await fetch(`/api/users/${userId}`);
 
         try {
             if (!response.ok) {
@@ -152,7 +152,7 @@ class Api {
      */
     static addUserInfo = async (userId, dataInfo) => {
 
-        let response = await fetch(`/api/user/${userId}`, {
+        let response = await fetch(`/api/users/${userId}`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -181,7 +181,7 @@ class Api {
      * @throws {Object} - If there is an error during the fetch, this promise will reject with an error object.
      */
     static getHistoryPurchase = async (userId) => {
-        let response = await fetch(`/api/user/${userId}/history`);
+        let response = await fetch(`/api/users/${userId}/history`);
 
         try {
             if (!response.ok) {
@@ -275,7 +275,7 @@ class Api {
      * Get the list of items store
      */
     static getItems = async () => {
-        let response = await fetch('/api/item/all');
+        let response = await fetch('/api/items');
 
         try {
             if (!response.ok) {
@@ -299,7 +299,7 @@ class Api {
      */
     static addItem = async (item) => {
         try {
-            let response = await fetch('/api/item', {
+            let response = await fetch('/api/items', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -326,7 +326,7 @@ class Api {
      * @throws {Error} - If there is an error removing the item, this promise will reject with an error object.
      */
     static removeItem = async (id) => {
-        const response = await fetch(`/api/item/${id}`, {
+        const response = await fetch(`/api/items/${id}`, {
             method: 'DELETE',
             headers: {
                 'Content-Type': 'application/json',
@@ -350,7 +350,7 @@ class Api {
      * @throws {Error} - If there is an error retrieving the item, this promise will reject with an error object.
      */
     static getItemById = async (itemId) => {
-        let response = await fetch(`/api/item/${itemId}`);
+        let response = await fetch(`/api/items/${itemId}`);
 
         try {
             if (!response.ok) {
@@ -427,7 +427,7 @@ class Api {
      */
     static addItemWishlist = async (userId, item, visibility) => {
         try {
-            const response = await fetch(`/api/user/${userId}/wishlist`, {
+            const response = await fetch(`/api/users/${userId}/wishlist`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -455,7 +455,7 @@ class Api {
      * @throws {Error} - If there is an error removing the item, this promise will reject with an error object.
      */
     static removeItemFromWishlist = async (userId, itemId) => {
-        const response = await fetch(`/api/user/${userId}/wishlist/${itemId}`, {
+        const response = await fetch(`/api/users/${userId}/wishlist/${itemId}`, {
             method: 'DELETE',
             headers: {
                 'Content-Type': 'application/json',
@@ -574,7 +574,7 @@ class Api {
      * @throws {Object} - If there is an error during the fetch, this promise will reject with an error object.
      */
     static getCommentsbyUserId = async (userId) => {
-        let response = await fetch(`/api/search/user/${userId}/comments`);
+        let response = await fetch(`/api/search/users/${userId}/comments`);
 
         try {
             if (!response.ok) {
@@ -620,7 +620,7 @@ class Api {
      */
     static getCommentsbyUserIdandItemId = async (userId, itemId) => {
         try {
-            let response = await fetch(`/api/search/user/${userId}/items/${itemId}/comments`);
+            let response = await fetch(`/api/search/users/${userId}/items/${itemId}/comments`);
             if (response.ok) {
                 const commentsJson = await response.json();
                 return commentsJson;

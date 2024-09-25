@@ -15,7 +15,6 @@ const LocalStrategy = require('passport-local').Strategy; // username and passwo
 const session = require('express-session');
 const FileStore = require('session-file-store')(session);
 const dao = require('./dao.js');
-//const bcrypt = require('bcrypt');
 
 // init 
 const app = express();
@@ -46,17 +45,6 @@ passport.use(new LocalStrategy(
   }
 ));
 
-// serialize and de-serialize the user (user object <-> session)
-passport.serializeUser(function (user, done) {
-  done(null, user.id);
-});
-
-passport.deserializeUser(function (id, done) {
-  dao.getUserById(id).then(user => {
-    done(null, user);
-  });
-});
-
 // check if a given request is coming from an authenticated user
 const isLoggedIn = (req, res, next) => {
   if (req.isAuthenticated()) {
@@ -79,6 +67,17 @@ app.use(session({
 // init passport
 app.use(passport.initialize());
 app.use(passport.session());
+
+// serialize and de-serialize the user (user object <-> session)
+passport.serializeUser(function (user, done) {
+  done(null, user.id);
+});
+
+passport.deserializeUser(function (id, done) {
+  dao.getUserById(id).then(user => {
+    done(null, user);
+  });
+});
 
 // === REST API === //
 
@@ -159,7 +158,7 @@ app.delete('/api/sessions/current', isLoggedIn, function (req, res) {
  * @param {number} idUser - The user's ID.
  * @returns {Promise<Object>} A promise that resolves to an object with a success message or an error message.
  */
-app.post('/api/user/:userId', isLoggedIn, (req, res) => {
+app.post('/api/users/:userId', isLoggedIn, (req, res) => {
 
   const idUser = req.params.userId;
   const { birthdate, address, city } = req.body.dataInfo;
@@ -184,7 +183,7 @@ app.post('/api/user/:userId', isLoggedIn, (req, res) => {
  * @param {number} userId - The ID of the user to delete.
  * @returns {Promise<Object>} A promise that resolves to an object with a success message or an error message.
  */
-app.delete('/api/user/:userId', isLoggedIn, (req, res) => {
+app.delete('/api/users/:userId', isLoggedIn, (req, res) => {
   const userId = req.params.userId;
 
   dao.deleteUser(userId)
@@ -196,7 +195,7 @@ app.delete('/api/user/:userId', isLoggedIn, (req, res) => {
  * Retrieves a list of all the users in the database.
  * @returns {Promise<Object[]>} A promise that resolves to an array of user objects.
  */
-app.get('/api/user/all', isLoggedIn, (req, res) => {
+app.get('/api/users', isLoggedIn, (req, res) => {
   dao.getAllUsers()
     .then(users => res.json(users))
     .catch(error => res.status(500).json(error));
@@ -207,7 +206,7 @@ app.get('/api/user/all', isLoggedIn, (req, res) => {
  * @param {number} id - The ID of the user to retrieve.
  * @returns {Promise<Object>} A promise that resolves to an object with the user's information.
  */
-app.get('/api/user/:id', isLoggedIn, (req, res) => {
+app.get('/api/users/:id', isLoggedIn, (req, res) => {
   const userId = req.params.id;
   dao.getUserById(userId)
     .then(user => res.json(user))
@@ -219,7 +218,7 @@ app.get('/api/user/:id', isLoggedIn, (req, res) => {
  * @param {number} userId - The ID of the user to retrieve the history of.
  * @returns {Promise<Object[]>} A promise that resolves to an array of objects containing the purchase history of the user.
  */
-app.get('/api/user/:userId/history', isLoggedIn, (req, res) => {
+app.get('/api/users/:userId/history', isLoggedIn, (req, res) => {
   const userId = req.params.userId;
   dao.getHistoryByUserId(userId)
     .then((history) => res.json(history))
@@ -268,7 +267,7 @@ app.post('/api/checkout', isLoggedIn, (req, res) => {
  * @param {string} req.body.item.img - The image URL of the item.
  * @returns {Promise<Object>} A promise that resolves to an object with a success message or an error message.
  */
-app.post('/api/item', isLoggedIn, (req, res) => {
+app.post('/api/items', isLoggedIn, (req, res) => {
   const item = {
     price: req.body.item.price,
     name: req.body.item.name,
@@ -285,7 +284,7 @@ app.post('/api/item', isLoggedIn, (req, res) => {
  * Retrieves a list of all the items in the database.
  * @returns {Promise<Object[]>} A promise that resolves to an array of objects containing the items.
  */
-app.get('/api/item/all', isLoggedIn, (req, res) => {
+app.get('/api/items', isLoggedIn, (req, res) => {
   dao.getAllItems()
     .then(items => res.json(items))
     .catch(error => res.status(500).json(error));
@@ -296,7 +295,7 @@ app.get('/api/item/all', isLoggedIn, (req, res) => {
  * @param {number} itemId - The ID of the item to retrieve.
  * @returns {Promise<Object>} A promise that resolves to an object with the item's information.
  */
-app.get('/api/item/:id', isLoggedIn, (req, res) => {
+app.get('/api/items/:id', isLoggedIn, (req, res) => {
   const itemId = req.params.id;
   dao.getItemById(itemId)
     .then(item => res.json(item))
@@ -327,7 +326,7 @@ app.get('/api/item/categories/:categoryName', isLoggedIn, (req, res) => {
  * @param {number} itemId - The ID of the item to delete.
  * @returns {Promise<Object>} A promise that resolves to an object with a success message or an error message.
  */
-app.delete('/api/item/:itemId', isLoggedIn, (req, res) => {
+app.delete('/api/items/:itemId', isLoggedIn, (req, res) => {
   const itemId = req.params.itemId;
 
   dao.deleteItem(itemId)
@@ -344,7 +343,7 @@ app.delete('/api/item/:itemId', isLoggedIn, (req, res) => {
  * @param {string} visibility - The visibility of the item. Can be 'public', 'private', or 'all'.
  * @returns {Promise<Object>} A promise that resolves to an object with a success message or an error message.
  */
-app.post('/api/user/:userId/wishlist', isLoggedIn, [
+app.post('/api/users/:userId/wishlist', isLoggedIn, [
   check('item.id').notEmpty(),
 ], (req, res) => {
   const errors = validationResult(req);
@@ -365,7 +364,7 @@ app.post('/api/user/:userId/wishlist', isLoggedIn, [
  * @param {number} itemId - The item's ID.
  * @returns {Promise<Object>} A promise that resolves to an object with a success property and a message property describing the result of the operation.
  */
-app.delete('/api/user/:userId/wishlist/:itemId', isLoggedIn, (req, res) => {
+app.delete('/api/users/:userId/wishlist/:itemId', isLoggedIn, (req, res) => {
   const userId = req.params.userId;
   const itemId = req.params.itemId;
   dao.deleteItemInWishList(userId, itemId)
@@ -467,7 +466,7 @@ app.post('/api/comments', isLoggedIn, [
  * @param {number} userId - The ID of the user to retrieve the comments of.
  * @returns {Promise<Object[]>} - A promise that resolves to an array of objects containing the comments of the user.
  */
-app.get('/api/search/user/:userId/comments', isLoggedIn, (req, res) => {
+app.get('/api/search/users/:userId/comments', isLoggedIn, (req, res) => {
   const userId = req.params.userId;
   dao.getCommentByUserId(userId)
     .then((comments) => res.json(comments))
@@ -492,7 +491,7 @@ app.get('/api/search/items/:itemId/comments', isLoggedIn, (req, res) => {
  * @param {number} itemId - The ID of the item to retrieve the comments of.
  * @returns {Promise<Object[]>} - A promise that resolves to an array of objects containing the comments of the user on the item.
  */
-app.get('/api/search/user/:userId/items/:itemId/comments', isLoggedIn, (req, res) => {
+app.get('/api/search/users/:userId/items/:itemId/comments', isLoggedIn, (req, res) => {
   const userId = req.params.userId;
   const itemId = req.params.itemId;
   dao.getCommentByUserIdAndItemId(userId, itemId)

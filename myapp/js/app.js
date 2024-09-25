@@ -67,11 +67,9 @@ class App {
         page('/userPage', () => {
             this.loggedUser = JSON.parse(localStorage.getItem('user'));
             if (this.loggedUser != null) {
-                this.renderNavBar(this.loggedUser.name);
                 this.appContainer.innerHTML = "";
                 this.appContainer.innerHTML = this.userPersonalPage();
             }
-
         });
 
         page('/wishlist', () => {
@@ -116,6 +114,7 @@ class App {
             }
             this.appContainer.innerHTML = "";
             this.appContainer.innerHTML = this.showStore();
+
         });
 
         page('/contact', () => {
@@ -125,6 +124,7 @@ class App {
             }
             this.appContainer.innerHTML = "";
             this.appContainer.innerHTML = createContactForm();
+
         });
 
         page('/pricing', () => {
@@ -134,6 +134,7 @@ class App {
             }
             this.appContainer.innerHTML = "";
             this.appContainer.innerHTML = createPricingForm();
+
         });
 
         page('/', () => {
@@ -146,6 +147,7 @@ class App {
 
         });
 
+        this.activeLinkNavbar();
         document.querySelector('.btn-search-item').addEventListener('click', this.searchItems);
         document.querySelector('.btn-search-comment').addEventListener('click', this.searchComments);
 
@@ -2061,17 +2063,36 @@ class App {
     /**
      * Render the navbar and show the logout link
      */
-    renderNavBar = (active) => {
+    renderNavBar = (userName) => {
         try {
             if (!this.loginLink || !this.logoutLink) {
                 throw new Error('Elementi loginLink o logoutLink mancanti');
             }
             this.loginLink.innerHTML = "";
-            this.loginLink.innerHTML = '<a class="nav-link" href="/userPage">' + `${active}` + '</a>';
+            this.loginLink.innerHTML = '<a class="nav-link" href="/userPage">' + `${userName}` + '</a>';
             this.logoutLink.classList.remove('invisible');
+            this.activeLinkNavbar();
         } catch (error) {
             this.showAlertMessage('danger', error);
         }
+    }
+
+    /**
+     * Adds an event listener to all the navbar links to update the active link.
+     * When a link is clicked, it removes the 'active' class from all the links and
+     * adds it to the clicked link.
+     */
+    activeLinkNavbar = () => {
+        const navLinks = document.querySelectorAll('.nav-link');
+        navLinks.forEach(link => {
+            link.addEventListener('click', function () {
+                // Rimuovi la classe active da tutti i link
+                navLinks.forEach(nav => nav.classList.remove('active'));
+
+                // Aggiungi la classe active al link cliccato
+                this.classList.add('active');
+            });
+        });
     }
 
 }
