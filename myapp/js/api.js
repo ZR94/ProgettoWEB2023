@@ -253,7 +253,7 @@ class Api {
      * @throws {Error} - If there is an error retrieving the items, this promise will reject with an error object.
      */
     static getFilterItems = async (categoryName) => {
-        let response = await fetch(`/api/item/categories/${categoryName}`);
+        let response = await fetch(`/api/items/categories/${categoryName}`);
 
         try {
             if (!response.ok) {

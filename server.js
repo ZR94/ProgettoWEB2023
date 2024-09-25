@@ -308,7 +308,7 @@ app.get('/api/items/:id', isLoggedIn, (req, res) => {
  * @param {string} req.params.categoryName - The name of the category.
  * @returns {Promise<Object[]>} A promise that resolves to an array of objects containing the items.
  */
-app.get('/api/item/categories/:categoryName', isLoggedIn, (req, res) => {
+app.get('/api/items/categories/:categoryName', isLoggedIn, (req, res) => {
   const categoryName = req.params.categoryName;
   let result;
   if (categoryName === 'all-categories') {
