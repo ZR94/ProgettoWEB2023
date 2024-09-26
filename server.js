@@ -251,7 +251,7 @@ app.post('/api/checkout', isLoggedIn, (req, res) => {
   };
 
   insertAllPurchases()
-    .then(() => res.status(200).json({ message: 'Purchase completed successfully' }))
+    .then(() => res.status(200).json({success: true, message: 'Purchase completed successfully' }))
     .catch((err) => res.status(err.status || 500).json({ error: err.msg || 'An error occurred' }));
 
 });

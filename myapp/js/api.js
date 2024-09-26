@@ -211,18 +211,17 @@ class Api {
             },
             body: JSON.stringify({ listPurchase }),
         });
-        if (response.ok) {
+        try {
+            if (!response.ok) {
+                const errDetail = await response.json();
+                throw new Error(errDetail.message || 'Error while doing checkout');
+            }
+
             const res = await response.json();
             return res;
-        }
-        else {
-            try {
-                const errDetail = await response.json();
-                throw errDetail.message;
-            }
-            catch (err) {
-                throw err;
-            }
+            
+        } catch (error) {
+            throw new Error(error.message || 'Network error');
         }
     }
 
@@ -231,7 +230,7 @@ class Api {
     */
     static getCategories = async () => {
         let response = await fetch('/api/categories');
-        
+
         try {
             if (!response.ok) {
                 const errDetail = await response.json();

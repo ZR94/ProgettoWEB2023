@@ -36,12 +36,8 @@ class App {
         this.appContainer = appContainer;
         this.logoutLink = document.querySelector('#logout');
         this.loginLink = document.querySelector('#login');
-        this.followBtn = document.querySelector('#follow');
-        this.unfollowBtn = document.querySelector('#unfollow');
         this.loggedUser = null;
         this.itemCart = [];
-        this.wishlist = [];
-        this.item = [];
 
         // client-side routing with Page.js
         page('/login', () => {
@@ -313,7 +309,7 @@ class App {
             const wishlist = await Api.getWishlistByUser(user.id);
             let userAdmin = await Api.getLoggedUser(user.id);
 
-            if(userAdmin.admin === 1){
+            if (userAdmin.admin === 1) {
                 this.appContainer.innerHTML = "";
                 this.appContainer.innerHTML = navbarAdminPage('wishlist');
             } else {
@@ -351,7 +347,7 @@ class App {
             const history = await Api.getHistoryPurchase(user.id);
             let userAdmin = await Api.getLoggedUser(user.id);
 
-            if(userAdmin.admin === 1){
+            if (userAdmin.admin === 1) {
                 this.appContainer.innerHTML = "";
                 this.appContainer.innerHTML = navbarAdminPage('history');
             } else {
@@ -441,7 +437,7 @@ class App {
             page.redirect('/');
         }
     }
-    
+
     /**
      * Handle the click event on the "Comment" button in the User page.
      * This function sets up the modal for adding a new comment and
@@ -1054,24 +1050,28 @@ class App {
             const listPurchase = [];
             const dateTime = moment().format("DD/MM/YYYY HH:mm:ss");
 
-            // Itera attraverso gli elementi del carrello e crea l'ordine di acquisto
-            Object.values(this.itemCart).forEach(item => {
-                if (item) {
-                    const itemId = item.id;
-                    const itemQuantity = item.quantity;
-                    const itemPrice = item.price;
+            if (Object.keys(this.itemCart).length === 0) {
+                this.showAlertMessage('warning', 'Your cart is empty. Please add items to your cart before checking out.');
+            } else {
+                // Itera attraverso gli elementi del carrello e crea l'ordine di acquisto
+                Object.values(this.itemCart).forEach(item => {
+                    if (item) {
+                        const itemId = item.id;
+                        const itemQuantity = item.quantity;
+                        const itemPrice = item.price;
 
-                    let addPurchase = new Purchase(user.id, itemId, itemQuantity, itemPrice, dateTime);
-                    listPurchase.push(addPurchase);
+                        let addPurchase = new Purchase(user.id, itemId, itemQuantity, itemPrice, dateTime);
+                        listPurchase.push(addPurchase);
+                    }
+                });
+
+                // Effettua il checkout tramite l'API
+                const response = await Api.doCheckout(listPurchase);
+                if (response.success) {
+                    localStorage.removeItem(cartKey); // Rimuove il carrello specifico dell'utente
+                    this.showAlertMessage('success', response.message); // Mostra un messaggio di successo
+                    this.updateCartHtml(); // Aggiorna l'interfaccia utente del carrello
                 }
-            });
-
-            // Effettua il checkout tramite l'API
-            const response = await Api.doCheckout(listPurchase);
-            if (response) {
-                localStorage.removeItem(cartKey); // Rimuove il carrello specifico dell'utente
-                this.showAlertMessage('success', response.message); // Mostra un messaggio di successo
-                this.updateCartHtml(); // Aggiorna l'interfaccia utente del carrello
             }
         } catch (error) {
             console.error(error); // Log dell'errore per il debug
@@ -1732,7 +1732,7 @@ class App {
             const comments = await Api.getCommentsbyUserId(user.id);
             let userAdmin = await Api.getLoggedUser(user.id);
 
-            if(userAdmin.admin === 1){
+            if (userAdmin.admin === 1) {
                 this.appContainer.innerHTML = "";
                 this.appContainer.innerHTML = navbarAdminPage('historyComments');
             } else {
