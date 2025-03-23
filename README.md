@@ -1,5 +1,5 @@
-﻿# ProgettoWEB2023
-﻿# Ho realizzato un’applicazione web per l’acquisto di oggetti relativi alla palestra. L’applicazione supporta due tipologie di utenti che si possono registrare: 
+# ProgettoWEB2023
+# Ho realizzato un’applicazione web per l’acquisto di oggetti relativi alla palestra. L’applicazione supporta due tipologie di utenti che si possono registrare: 
 # i clienti e gli amministratori. Entrambe le tipologie, prima di poter effettuare qualsiasi operazione, devono registrarsi e, in seguito, eseguire il login. 
 # Gli utenti possono accedere allo store, dove potranno inserire nel loro carrello gli oggetti che desiderano acquistare; 
 # hanno anche la possibilità di aggiungere o togliere oggetti dalla loro wishlist e di visionare gli oggetti presenti nello store tramite appositi filtri, oppure per categoria. 
@@ -14,3 +14,4 @@
 # Un amministratore è anche un utente, ma non viceversa. Un’ulteriore funzionalità, che possono utilizzare tutte le tipologie di utenti loggati, è l’uso del pulsante "Search", 
 # posto in alto a destra, che permette di cercare oggetti per categoria e fascia di prezzo, oppure di cercare commenti per utente, oggetto, entrambe le categorie o per una parola contenuta nel commento. 
 # Un utente non registrato può registrarsi come utente e, in seguito, navigare liberamente per l’intero sito.
+# 
